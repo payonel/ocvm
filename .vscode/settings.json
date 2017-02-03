@@ -21,6 +21,10 @@
         "utility": "cpp",
         "array": "cpp",
         "fstream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "new": "cpp",
+        "*hexception": "cpp",
+        "*h*hcstdarg": "cpp",
+        "cwctype": "cpp"
     }
 }

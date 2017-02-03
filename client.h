@@ -1,4 +1,6 @@
 #pragma once
+#include "iframe.h"
+
 #include <string>
 #include <vector>
 
@@ -7,10 +9,11 @@ class LuaEnv;
 class Component;
 class Config;
 
-class Client
+class Client : public IFrame
 {
 public:
     Client(Host*);
+    ~Client();
     bool load(LuaEnv*);
     void close();
 private:

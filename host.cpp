@@ -13,6 +13,7 @@ Host::Host(const string& env_path) : _env_path(env_path)
 
 Host::~Host()
 {
+    close();
 }
 
 string Host::machinePath() const

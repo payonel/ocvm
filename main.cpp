@@ -3,6 +3,7 @@
 #include "client.h"
 #include "shell.h"
 #include "luaenv.h"
+#include "log.h"
 
 int main(int argc, char** argv)
 {
@@ -17,24 +18,24 @@ int main(int argc, char** argv)
     Client client(&host);
 
     // create profile shell (houses screen component [list?])
-    Shell shell(&client);
+    Shell shell;
+    shell.add(&client);
+    shell.add(&log);
 
     // init lua environment
     LuaEnv lenv;
     client.load(&lenv);
 
     // run lua machine
-    lenv.load(host.machinePath());
+    if (!lenv.load(host.machinePath()))
+    {
+        return 1;
+    }
 
     while (lenv.run())
     {
         shell.update();
     }
-
-    lenv.close();
-    shell.close();
-    client.close();
-    host.close();
 
     return 0;
 }

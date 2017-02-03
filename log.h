@@ -1,8 +1,9 @@
 #pragma once
+#include "iframe.h"
 #include <string>
 #include <iostream>
 
-class Logger
+class Logger : public IFrame
 {
 };
 

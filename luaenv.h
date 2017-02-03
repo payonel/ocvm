@@ -7,6 +7,7 @@ class LuaEnv
 {
 public:
     LuaEnv();
+    ~LuaEnv();
     bool run();
     bool load(const std::string& machinePath);
     void close();

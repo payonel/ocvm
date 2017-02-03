@@ -1,7 +1,18 @@
 #include "shell.h"
+#include "iframe.h"
 
-Shell::Shell(Client*)
+Shell::Shell()
 {
+}
+
+Shell::~Shell()
+{
+    close();
+}
+
+bool Shell::add(IFrame* pframe)
+{
+    return false;
 }
 
 bool Shell::update()

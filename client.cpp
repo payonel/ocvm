@@ -9,6 +9,11 @@ Client::Client(Host* host) : _host(host)
     _config = new Config(host->envPath(), "client");
 }
 
+Client::~Client()
+{
+    close();
+}
+
 bool Client::load(LuaEnv* lua)
 {
     // load components from config
@@ -37,11 +42,16 @@ bool Client::load(LuaEnv* lua)
 
 void Client::close()
 {
-    _config->save();
-    delete _config;
+    if (_config)
+    {
+        _config->save();
+        delete _config;
+        _config = nullptr;
+    }
 
     for (auto pc : _components)
         delete pc;
 
     _components.clear();
 }
+

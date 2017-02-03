@@ -1,11 +1,13 @@
 #pragma once
 
-class Client;
+class IFrame;
 
 class Shell
 {
 public:
-    Shell(Client*);
+    Shell();
+    ~Shell();
+    bool add(IFrame* pframe);
     bool update();
     void close();
 };

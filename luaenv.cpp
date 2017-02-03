@@ -9,8 +9,14 @@ LuaEnv::LuaEnv()
     luaL_openlibs(_state);
 }
 
+LuaEnv::~LuaEnv()
+{
+    close();
+}
+
 bool LuaEnv::run()
 {
+    log << "lua env resume\n";
     return false;
 }
 
@@ -24,6 +30,8 @@ bool LuaEnv::load(const std::string& machinePath)
         return false;
     }
 
+    log << "machine loaded\n";
+
     if (lua_pcall(_state, 0, LUA_MULTRET, 0))
     {
         log << "pcall failure\n";
@@ -32,10 +40,17 @@ bool LuaEnv::load(const std::string& machinePath)
         return false;
     }
 
-    return false;
+    log << "machine state returned\n";
+
+    return true;
 }
 
 void LuaEnv::close()
 {
-    lua_close(_state);
+    if (_state)
+    {
+        lua_close(_state);
+        _state = nullptr;
+        log << "lua env closed\n";
+    }
 }
