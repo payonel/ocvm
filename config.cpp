@@ -95,7 +95,7 @@ string Config::savePath() const
 string Config::get(const string& key, const string& def) const
 {
     if (_data.find(key) != _data.end())
-        return _data.at(key);
+        return _data.at(key)._string;
     else
         return def;
 }
@@ -104,7 +104,10 @@ void Config::set(const string& key, const string& value, bool bCreateOnly)
 {
     if (!bCreateOnly || _data.find(key) == _data.end())
     {
-        _data[key] = value;
+        Value v;
+        v.type = "string";
+        v._string = value;
+        _data[key] = v;
     }
 }
 
@@ -125,9 +128,9 @@ bool Config::save()
     {
         ss << "[\"";
         ss << pair.first;
-        ss << "\"] = \"";
-        ss << pair.second;
-        ss << "\",\n";
+        ss << "\"] = ";
+        ss << pair.second.serialize();
+        ss << ",\n";
     }
     ss << "}\n";
 
@@ -144,3 +147,7 @@ bool Config::save()
     return true;
 }
 
+string Value::serialize()
+{
+    return "";
+}

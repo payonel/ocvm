@@ -4,6 +4,13 @@
 #include <map>
 #include <vector>
 
+struct Value
+{
+    std::string type;
+    std::string _string;
+    std::string serialize();
+};
+
 class Config
 {
 public:
@@ -17,7 +24,7 @@ public:
     std::vector<std::string> keys() const;
 private:
     std::string savePath() const;
-    std::map<std::string, std::string> _data;
+    std::map<std::string, Value> _data;
     std::string _path;
     std::string _name;
 };
