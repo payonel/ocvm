@@ -1,8 +1,6 @@
 #include "host.h"
-#include "component.h"
-
-#include "screen.h"
-#include "config.h"
+#include "components/component.h"
+#include "components/screen.h"
 #include <sys/stat.h>
 
 using std::string;

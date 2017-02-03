@@ -1,6 +1,6 @@
 #include "client.h"
 #include "host.h"
-#include "component.h"
+#include "components/component.h"
 #include "config.h"
 #include "log.h"
 
