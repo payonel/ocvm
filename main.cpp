@@ -8,34 +8,45 @@
 int main(int argc, char** argv)
 {
     std::string client_env_path = argc > 1 ? argv[1] : "tmp";
-
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
     Host host(client_env_path);
-    
+
+    // create profile shell (houses screen component [list?])
+    Framer* framer = host.getFramer();
+    if (!framer)
+    {
+        std::cerr << "no framer available\n";
+        return 1;
+    }
+
+    if (!framer->open())  // open the ui
+    {
+        std::cerr << "framer open failed\n";
+        return 1;
+    }
+
+    framer->add(&log);
+
     // init client config
     // // creates instances of host components
     Client client(&host);
 
-    // create profile shell (houses screen component [list?])
-    Shell shell;
-    shell.add(&client);
-    shell.add(&log);
-
     // init lua environment
     LuaEnv lenv;
     client.load(&lenv);
-
     // run lua machine
     if (!lenv.load(host.machinePath()))
     {
         return 1;
     }
 
-    while (lenv.run())
+    while (framer->update())
     {
-        shell.update();
+        lenv.run();
     }
+
+    framer->close();
 
     return 0;
 }

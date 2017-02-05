@@ -1,11 +1,8 @@
 #pragma once
-#include "iframe.h"
-#include <string>
-#include <iostream>
+#include "frame.h"
 
-class Logger : public IFrame
+class Logger : public Frame
 {
 };
 
 extern Logger log;
-Logger& operator<< (Logger&, const std::string& text);

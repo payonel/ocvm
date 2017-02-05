@@ -22,7 +22,7 @@ extern "C"
         {
             const char* ckey = luaL_checkstring(lua, 1);
             const char* cvalue = luaL_checkstring(lua, 2);
-            temp_config->set(ckey, cvalue);
+            temp_config->set(Value(ckey), Value(cvalue));
 
             log << temp_config->name() << " config loading [" << ckey << "]: " << cvalue << "\n";
         }
@@ -59,6 +59,9 @@ Config::Config(const string& path, const string& name) : _path(path), _name(name
     }
     input.close();
 
+    log << "config [" << _name << "]: table: " << table;
+    log << std::endl;
+
     if (table.empty())
     {
         return;
@@ -92,28 +95,27 @@ string Config::savePath() const
     return _path + "/" + _name + ".cfg";
 }
 
-string Config::get(const string& key, const string& def) const
+Value Config::get(const Value& key) const
 {
     if (_data.find(key) != _data.end())
-        return _data.at(key)._string;
+        return _data.at(key);
     else
-        return def;
+        return Value();
 }
 
-void Config::set(const string& key, const string& value, bool bCreateOnly)
+bool Config::set(const Value& key, const Value& value, bool bCreateOnly)
 {
     if (!bCreateOnly || _data.find(key) == _data.end())
     {
-        Value v;
-        v.type = "string";
-        v._string = value;
-        _data[key] = v;
+        _data[key] = value;
+        return true;
     }
+    return false;
 }
 
-vector<string> Config::keys() const
+vector<Value> Config::keys() const
 {
-    vector<string> k;
+    vector<Value> k;
     for (auto pair : _data)
         k.push_back(pair.first);
 
@@ -126,9 +128,9 @@ bool Config::save()
     ss << "{\n";
     for (auto pair : _data)
     {
-        ss << "[\"";
-        ss << pair.first;
-        ss << "\"] = ";
+        ss << "[";
+        ss << pair.first.serialize();
+        ss << "] = ";
         ss << pair.second.serialize();
         ss << ",\n";
     }
@@ -145,9 +147,4 @@ bool Config::save()
     output.close();
     log << " saved\n";
     return true;
-}
-
-string Value::serialize()
-{
-    return "";
 }

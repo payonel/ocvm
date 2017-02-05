@@ -26,5 +26,16 @@
         "*hexception": "cpp",
         "*h*hcstdarg": "cpp",
         "cwctype": "cpp"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "ocpc": true,
+        "bin": true,
+        "tmp": true,
+        ".gitignore": true,
+        ".vscode": true
     }
 }

@@ -1,30 +1,24 @@
 #pragma once
 
+#include "value.h"
 #include <string>
 #include <map>
 #include <vector>
-
-struct Value
-{
-    std::string type;
-    std::string _string;
-    std::string serialize();
-};
 
 class Config
 {
 public:
     Config(const std::string& path, const std::string& name);
     
-    std::string get(const std::string& key, const std::string& def) const;
-    void set(const std::string& key, const std::string& value, bool bCreateOnly = false);
+    Value get(const Value& key) const;
+    bool set(const Value& key, const Value& value, bool bCreateOnly = false);
 
     bool save();
     std::string name() const;
-    std::vector<std::string> keys() const;
+    std::vector<Value> keys() const;
 private:
     std::string savePath() const;
-    std::map<std::string, Value> _data;
+    std::map<Value, Value> _data;
     std::string _path;
     std::string _name;
 };

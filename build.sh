@@ -11,7 +11,7 @@ for d in ./ components/; do
         cpp=${f}.cpp
         if [ -e $cpp ]; then
             echo CPP $cpp
-            g++ -g -I/usr/include/lua5.2/ --std=c++11 -lstdc++ -Wl,--no-as-needed -c $cpp -o bin/${f}.o || exit
+            g++ -g -I. -I/usr/include/lua5.2/ --std=c++11 -lstdc++ -Wl,--no-as-needed -c $cpp -o bin/${f}.o || exit
         fi
     done
 done &&
