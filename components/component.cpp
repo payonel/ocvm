@@ -3,28 +3,34 @@
 
 #include <iostream>
 #include <string>
+using std::string;
+using std::endl;
 
-Component::Component(const std::string& type, const Value& init) :
+Component::Component(const string& type, const Value& init) :
     _type(type)
 {
-    _address = init.get(1);
+    Value v;
+    v = init.get(1);
+    if (!v)
+        v = Value(make_address());
+    _address = v.toString();
 }
 
-std::string Component::type() const
+string Component::type() const
 {
     return _type;
 }
 
-void Component::add(const std::string& methodName, ComponentMethod method)
+void Component::add(const string& methodName, ComponentMethod method)
 {
     _methods[methodName] = method;
 }
 
-ValuePack Component::invoke(const std::string& methodName, const ValuePack& args)
+ValuePack Component::invoke(const string& methodName, const ValuePack& args)
 {
     if (_methods.find(methodName) == _methods.end())
     {
-        log << "component does not have any such method: " << methodName << std::endl;
+        log << "component does not have any such method: " << methodName << endl;
         return ValuePack();
     }
 
@@ -32,3 +38,7 @@ ValuePack Component::invoke(const std::string& methodName, const ValuePack& args
     return ((*this).*pmethod)(args);
 }
 
+string Component::make_address()
+{
+    return "";
+}

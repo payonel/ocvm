@@ -15,6 +15,8 @@ public:
     std::string type() const;
     ValuePack invoke(const std::string& methodName, const ValuePack& args);
 
+    static std::string make_address();
+
     template<typename... Ts>
     void invoke(const std::string& methodName, Ts... args)
     {
