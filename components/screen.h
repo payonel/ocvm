@@ -6,8 +6,4 @@ class Screen : public Component
 {
 public:
     Screen(const ValuePack& args);
-
-
-
-    // 
 };

@@ -22,19 +22,18 @@ Client::~Client()
 bool Client::load(LuaEnv* lua)
 {
     // load components from config
-    for (auto key : _config->keys())
+    for (auto pair : _config->pairs())
     {
-        if (key.type() != "string")
+        if (pair.first.type() != "string")
         {
-            log << "bad config key, not string: " << key.type() << std::endl;
+            log << "bad config key, not string: " << pair.first.type() << std::endl;
             return false;
         }
         else
         {
-            string skey = key.toString();
-            log << skey << ": ";
-            Value value = _config->get(key);
-            Component* pc = _host->create(skey, value.unpack());
+            string key = pair.first.toString();
+            log << key << ": ";
+            Component* pc = _host->create(key, pair.second.unpack());
             if (pc)
             {
                 log << "created\n";

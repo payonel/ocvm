@@ -11,6 +11,8 @@ using std::ifstream;
 using std::ofstream;
 using std::stringstream;
 using std::vector;
+using std::map;
+using std::endl;
 
 extern "C"
 {
@@ -27,7 +29,10 @@ extern "C"
     }
 }
 
-Config::Config(const string& path, const string& name) : _path(path), _name(name)
+Config::Config(const string& path, const string& name) :
+    _data(Value::table()),
+    _path(path),
+    _name(name)
 {
     // first check _path, else local for name
     ifstream input;
@@ -56,7 +61,7 @@ Config::Config(const string& path, const string& name) : _path(path), _name(name
     input.close();
 
     log << "config [" << _name << "]: table: " << table;
-    log << std::endl;
+    log << endl;
 
     if (table.empty())
     {
@@ -93,36 +98,29 @@ string Config::savePath() const
 
 Value Config::get(const Value& key) const
 {
-    if (_data.find(key) != _data.end())
-        return _data.at(key);
-    else
-        return Value();
+    return _data.get(key);
 }
 
 bool Config::set(const Value& key, const Value& value, bool bCreateOnly)
 {
-    if (!bCreateOnly || _data.find(key) == _data.end())
+    if (!bCreateOnly || _data.get(key) == Value::nil)
     {
-        _data[key] = value;
+        _data.set(key, value);
         return true;
     }
     return false;
 }
 
-vector<Value> Config::keys() const
+vector<ValuePair> Config::pairs() const
 {
-    vector<Value> k;
-    for (auto pair : _data)
-        k.push_back(pair.first);
-
-    return k;
+    return _data.pairs();
 }
 
 bool Config::save()
 {
     stringstream ss;
     ss << "{\n";
-    for (auto pair : _data)
+    for (auto pair : _data.pairs())
     {
         ss << "[";
         ss << pair.first.serialize();

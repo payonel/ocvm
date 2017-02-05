@@ -154,6 +154,11 @@ bool Shell::update()
     unsigned char buff [6];
     unsigned int x, y, btn;
 
+    for (const auto& pf : _frames)
+    {
+        cout << pf->read();
+    }
+
     cout << flush;
 
     ::read(STDIN_FILENO, &buff, 1);

@@ -15,10 +15,10 @@ public:
 
     bool save();
     std::string name() const;
-    std::vector<Value> keys() const;
+    std::vector<ValuePair> pairs() const;
 private:
     std::string savePath() const;
-    std::map<Value, Value> _data;
+    Value _data;
     std::string _path;
     std::string _name;
 };

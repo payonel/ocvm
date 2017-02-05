@@ -2,9 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 class Value;
 typedef std::vector<Value> ValuePack;
+typedef std::map<Value, Value>::value_type ValuePair;
 
 class lua_State;
 
@@ -19,6 +21,8 @@ public:
     Value();
 
     static Value make(lua_State* lua, int index);
+    static Value table();
+    static Value nil;
 
     static ValuePack pack()
     {
@@ -40,13 +44,20 @@ public:
     double toNumber() const;
     bool toBool() const;
 
+    // table functions
+    const Value& get(const Value& key) const;
+    Value& get(const Value& key);
+    void set(const Value& key, const Value& value);
+    std::vector<ValuePair> pairs() const;
+
     std::string serialize() const;
+    operator bool() const;
 private:
     std::string _type;
     std::string _string;
     bool _bool;
     double _number;
-    operator bool() const;
+    std::map<Value, Value> _table;
 };
 
 bool operator< (const Value& a, const Value& b);

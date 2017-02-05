@@ -1,4 +1,5 @@
 #!/bin/bash
+rm -f tmp/* &&
 mkdir -p bin &&
 rm -rf bin/* &&
 mkdir -p bin/components/ &&
