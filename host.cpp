@@ -10,7 +10,7 @@ using std::string;
 class ScreenFrame : public Frame, public Screen
 {
 public:
-    ScreenFrame(const ValuePack& args) : Screen(args)
+    ScreenFrame(const std::string& type, const Value& init) : Screen(type, init)
     {
     }
 
@@ -58,18 +58,18 @@ string Host::envPath() const
     return _env_path;
 }
 
-Component* Host::create(const string& type, const ValuePack& args)
+Component* Host::create(const string& type, const Value& init)
 {
     Component* p = nullptr;
     if (type == "screen")
     {
-        auto* sf = new ScreenFrame(args);
+        auto* sf = new ScreenFrame(type, init);
         getFramer()->add(sf);
         p = sf;
     }
     else if (type == "gpu")
     {
-        p = new Gpu(args);
+        p = new Gpu(type, init);
     }
 
     return p;

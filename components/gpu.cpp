@@ -2,8 +2,8 @@
 #include "log.h"
 #include <iostream>
 
-Gpu::Gpu(const ValuePack& args) :
-    Component("gpu")
+Gpu::Gpu(const std::string& type, const Value& init) :
+    Component(type, init)
 {
     add("setResolution", &Gpu::setResolution);
     add("bind", &Gpu::bind);

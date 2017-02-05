@@ -10,7 +10,7 @@ typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);
 class Component
 {
 public:
-    Component(const std::string& type);
+    Component(const std::string& type, const Value& init);
     virtual ~Component() {}
     std::string type() const;
     ValuePack invoke(const std::string& methodName, const ValuePack& args);
@@ -32,4 +32,5 @@ protected:
 private:
     std::map<std::string, ComponentMethod> _methods;
     std::string _type;
+    std::string _address;
 };

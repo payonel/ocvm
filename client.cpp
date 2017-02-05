@@ -33,7 +33,7 @@ bool Client::load(LuaEnv* lua)
         {
             string key = pair.first.toString();
             log << key << ": ";
-            Component* pc = _host->create(key, pair.second.unpack());
+            Component* pc = _host->create(key, pair.second);
             if (pc)
             {
                 log << "created\n";

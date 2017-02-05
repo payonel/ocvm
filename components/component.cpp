@@ -4,9 +4,10 @@
 #include <iostream>
 #include <string>
 
-Component::Component(const std::string& type) :
+Component::Component(const std::string& type, const Value& init) :
     _type(type)
 {
+    _address = init.get(1);
 }
 
 std::string Component::type() const
