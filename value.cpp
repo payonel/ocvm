@@ -1,6 +1,8 @@
 #include "value.h"
 #include "log.h"
 
+#include <lua.hpp>
+
 #include <sstream>
 using std::string;
 
@@ -85,4 +87,27 @@ Value::operator bool() const
 ValuePack Value::unpack() const
 {
     return ValuePack();
+}
+
+Value Value::make(lua_State* lua, int index)
+{
+    int top = lua_gettop(lua);
+    if (index <= top)
+    {
+        int type = lua_type(lua, index);
+        string name = lua_typename(lua, type);
+        switch (type)
+        {
+            case LUA_TSTRING:
+                return Value(lua_tostring(lua, index));
+            break;
+            case LUA_TBOOLEAN:
+                return Value(lua_toboolean(lua, index));
+            break;
+            case LUA_TNUMBER:
+                return Value(lua_tonumber(lua, index));
+            break;
+        }
+    }
+    return Value();
 }

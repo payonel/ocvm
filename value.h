@@ -6,6 +6,8 @@
 class Value;
 typedef std::vector<Value> ValuePack;
 
+class lua_State;
+
 class Value
 {
 public:
@@ -15,6 +17,8 @@ public:
     Value(double d);
     Value(int n) : Value(double(n)) {}
     Value();
+
+    static Value make(lua_State* lua, int index);
 
     static ValuePack pack()
     {

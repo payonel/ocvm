@@ -12,21 +12,17 @@ using std::ofstream;
 using std::stringstream;
 using std::vector;
 
-static Config* temp_config = nullptr;
-
 extern "C"
 {
     static int l_cpp_store(lua_State* lua)
     {
-        if (temp_config)
-        {
-            const char* ckey = luaL_checkstring(lua, 1);
-            const char* cvalue = luaL_checkstring(lua, 2);
-            temp_config->set(Value(ckey), Value(cvalue));
+        const void* raw = lua_topointer(lua, 1);
+        Config* self = const_cast<Config*>(static_cast<const Config*>(raw));
+        Value key = Value::make(lua, 2);
+        Value value = Value::make(lua, 3);
+        self->set(key, value);
 
-            log << temp_config->name() << " config loading [" << ckey << "]: " << cvalue << "\n";
-        }
-
+        log << self->name() << " config loading [" << key.serialize() << "]: " << value.serialize() << "\n";
         return 0;
     }
 }
@@ -69,7 +65,7 @@ Config::Config(const string& path, const string& name) : _path(path), _name(name
 
     string loader =
     "for k,v in pairs(" + table + ") do\n"
-    "   cpp_store(k, v)\n"
+    "   cpp_store(_this, k, v)\n"
     "end";
 
     lua_State* lua = luaL_newstate();
@@ -78,9 +74,9 @@ Config::Config(const string& path, const string& name) : _path(path), _name(name
         luaL_openlibs(lua);
         lua_pushcfunction(lua, l_cpp_store);
         lua_setglobal(lua, "cpp_store");
-        temp_config = this;
+        lua_pushlightuserdata(lua, this);
+        lua_setglobal(lua, "_this");
         lua_pcall(lua, 0, LUA_MULTRET, 0);
-        temp_config = nullptr;
     }
     lua_close(lua);
 }
