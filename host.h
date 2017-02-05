@@ -12,7 +12,7 @@ public:
     std::string machinePath() const;
     std::string envPath() const;
     Framer* getFramer() const;
-    Component* create(const std::string& type, const Value& value);
+    Component* create(const std::string& type, const ValuePack& args);
     void close();
 
     ~Host();

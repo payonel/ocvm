@@ -9,7 +9,7 @@ using std::string;
 class ScreenFrame : public Frame, public Screen
 {
 public:
-    ScreenFrame(const Value& init) : Screen(init)
+    ScreenFrame(const ValuePack& args) : Screen(args)
     {
     }
 
@@ -57,11 +57,11 @@ string Host::envPath() const
     return _env_path;
 }
 
-Component* Host::create(const string& type, const Value& value)
+Component* Host::create(const string& type, const ValuePack& args)
 {
     if (type == "screen")
     {
-        auto* p = new ScreenFrame(value);
+        auto* p = new ScreenFrame(args);
         getFramer()->add(p);
         return p;
     }

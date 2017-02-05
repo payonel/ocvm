@@ -34,7 +34,7 @@ bool Client::load(LuaEnv* lua)
             string skey = key.toString();
             log << skey << ": ";
             Value value = _config->get(key);
-            Component* pc = _host->create(key.toString(), value);
+            Component* pc = _host->create(skey, value.unpack());
             if (pc)
             {
                 log << "created\n";
@@ -50,7 +50,7 @@ bool Client::load(LuaEnv* lua)
     log << "components loaded: " << _components.size() << "\n";
     if (!_components.empty())
     {
-        _components.at(0)->invoke("setResolution");
+        _components.at(0)->invoke("setResolution", 50, 16);
     }
 
     return true;

@@ -1,5 +1,7 @@
 #include "value.h"
 #include "log.h"
+
+#include <sstream>
 using std::string;
 
 Value::Value(const std::string& v)
@@ -19,6 +21,12 @@ Value::Value(bool b)
     _bool = b;
 }
 
+Value::Value(double d)
+{
+    _type = "number";
+    _number = d;
+}
+
 string Value::toString() const
 {
     return _string;
@@ -27,6 +35,11 @@ string Value::toString() const
 bool Value::toBool() const
 {
     return _bool;
+}
+
+double Value::toNumber() const
+{
+    return _number;
 }
 
 string Value::type() const
@@ -43,6 +56,12 @@ string Value::serialize() const
     else if (_type == "boolean")
     {
         return _bool ? "true" : "false";
+    }
+    else if (_type == "number")
+    {
+        std::stringstream ss;
+        ss << _number;
+        return ss.str();
     }
     else if (_type == "nil")
     {
@@ -61,4 +80,9 @@ bool operator< (const Value& a, const Value& b)
 Value::operator bool() const
 {
     return _type != "nil" && (_type != "boolean" || _bool);
+}
+
+ValuePack Value::unpack() const
+{
+    return ValuePack();
 }

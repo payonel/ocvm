@@ -25,7 +25,8 @@
         "new": "cpp",
         "*hexception": "cpp",
         "*h*hcstdarg": "cpp",
-        "cwctype": "cpp"
+        "cwctype": "cpp",
+        "ctime": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

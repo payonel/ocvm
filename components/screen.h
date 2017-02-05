@@ -5,9 +5,9 @@
 class Screen : public Component
 {
 public:
-    Screen(const Value& value);
-    void invoke(const std::string& methodName) override;
-    void test();
+    Screen(const ValuePack& args);
+
+
 
     // 
 };
