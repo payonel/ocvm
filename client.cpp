@@ -47,9 +47,13 @@ bool Client::load(LuaEnv* lua)
         }
     }
     log << "components loaded: " << _components.size() << "\n";
-    if (!_components.empty())
+
+    for (auto pc : _components)
     {
-        _components.at(0)->invoke("setResolution", 50, 16);
+        if (pc->type() == "gpu")
+        {
+            pc->invoke("setResolution", 50, 16);
+        }
     }
 
     return true;

@@ -34,7 +34,11 @@ int main(int argc, char** argv)
 
     // init lua environment
     LuaEnv lenv;
-    client.load(&lenv);
+    if (!client.load(&lenv))
+    {
+        return 1;
+    }
+
     // run lua machine
     if (!lenv.load(host.machinePath()))
     {

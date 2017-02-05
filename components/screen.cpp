@@ -7,7 +7,8 @@ using std::endl;
 using std::flush;
 using std::vector;
 
-Screen::Screen(const ValuePack& args)
+Screen::Screen(const ValuePack& args) : 
+    Component("screen")
 {
 }
 

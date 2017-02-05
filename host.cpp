@@ -2,6 +2,7 @@
 #include "shell.h"
 #include "components/component.h"
 #include "components/screen.h"
+#include "components/gpu.h"
 #include <sys/stat.h>
 
 using std::string;
@@ -59,14 +60,19 @@ string Host::envPath() const
 
 Component* Host::create(const string& type, const ValuePack& args)
 {
+    Component* p = nullptr;
     if (type == "screen")
     {
-        auto* p = new ScreenFrame(args);
-        getFramer()->add(p);
-        return p;
+        auto* sf = new ScreenFrame(args);
+        getFramer()->add(sf);
+        p = sf;
+    }
+    else if (type == "gpu")
+    {
+        p = new Gpu(args);
     }
 
-    return nullptr;
+    return p;
 }
 
 Framer* Host::getFramer() const

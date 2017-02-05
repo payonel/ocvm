@@ -4,6 +4,16 @@
 #include <iostream>
 #include <string>
 
+Component::Component(const std::string& type) :
+    _type(type)
+{
+}
+
+std::string Component::type() const
+{
+    return _type;
+}
+
 void Component::add(const std::string& methodName, ComponentMethod method)
 {
     _methods[methodName] = method;

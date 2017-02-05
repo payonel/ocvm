@@ -10,7 +10,9 @@ typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);
 class Component
 {
 public:
+    Component(const std::string& type);
     virtual ~Component() {}
+    std::string type() const;
     ValuePack invoke(const std::string& methodName, const ValuePack& args);
 
     template<typename... Ts>
@@ -29,4 +31,5 @@ protected:
     }
 private:
     std::map<std::string, ComponentMethod> _methods;
+    std::string _type;
 };
