@@ -129,7 +129,7 @@ string Value::serialize() const
         return ss.str();
     }
 
-    log << "failed to serialize Value[" << _type << "]\n";
+    lout << "failed to serialize Value[" << _type << "]\n";
     return "";
 }
 

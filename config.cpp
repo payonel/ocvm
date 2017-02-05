@@ -24,7 +24,7 @@ extern "C"
         Value value = Value::make(lua, 3);
         self->set(key, value);
 
-        log << self->name() << " config loading [" << key.serialize() << "]: " << value.serialize() << "\n";
+        lout << self->name() << " config loading [" << key.serialize() << "]: " << value.serialize() << "\n";
         return 0;
     }
 }
@@ -37,19 +37,19 @@ Config::Config(const string& path, const string& name) :
     // first check _path, else local for name
     ifstream input;
 
-    log << _name << ": ";
+    lout << _name << ": ";
     input.open(savePath());
     if (input)
     {
-        log << "config loaded from " << savePath() << "\n";
+        lout << "config loaded from " << savePath() << "\n";
     }
     else
     {
         input.open(name + ".cfg");
         if (input)
-            log << "default config loaded\n";
+            lout << "default config loaded\n";
         else
-            log << "failed to load\n";
+            lout << "failed to load\n";
     }
 
     string table;
@@ -60,8 +60,8 @@ Config::Config(const string& path, const string& name) :
     }
     input.close();
 
-    log << "config [" << _name << "]: table: " << table;
-    log << endl;
+    lout << "config [" << _name << "]: table: " << table;
+    lout << endl;
 
     if (table.empty())
     {
@@ -130,15 +130,15 @@ bool Config::save()
     }
     ss << "}\n";
 
-    log << _name << ": config ";
+    lout << _name << ": config ";
     ofstream output(savePath());
     if (!output)
     {
-        log << "could not save\n";
+        lout << "could not save\n";
         return false;
     }
     output << ss.str();
     output.close();
-    log << " saved\n";
+    lout << " saved\n";
     return true;
 }

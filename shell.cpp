@@ -3,9 +3,13 @@
 #include "log.h"
 
 #include <iostream>
+#include <string>
+#include <sstream>
 using std::cout;
 using std::endl;
 using std::flush;
+using std::string;
+using std::stringstream;
 
 #include <chrono>
 #include <thread>
@@ -27,51 +31,83 @@ Shell::~Shell()
     close();
 }
 
-void showCursor(bool enable)
+string showCursor(bool enable)
 {
-    cout << esc << "?25" << (enable ? "h" : "l");
+    stringstream ss;
+    ss << esc << "?25" << (enable ? "h" : "l");
+    return ss.str();
 }
 
-void trackMouse(bool enable)
+string trackMouse(bool enable)
 {
-    cout << esc << "?1002" << (enable ? "h" : "l");
+    stringstream ss;
+    ss << esc << "?1002" << (enable ? "h" : "l");
+    return ss.str();
 }
 
-void setPos(int x, int y)
+string scrollOn(int top, int lines)
 {
-    cout << esc << y << ";" << x << "f";
+    stringstream ss;
+    ss << esc << top << ";" << lines << "r";
+    return ss.str();
 }
 
-void moveVertically(int num)
+string scrollOff()
 {
-    if (num == 0) return;
-    cout << esc << ::abs(num) << (num < 0 ? "B" : "A");
+    stringstream ss;
+    ss << esc << "r";
+    return ss.str();
 }
 
-void moveHorizontally(int num)
+string setPos(int x, int y)
 {
-    if (num == 0) return;
-    cout << esc << ::abs(num) << (num < 0 ? "D" : "C");
+    stringstream ss;
+    ss << esc << y << ";" << x << "f";
+    return ss.str();
 }
 
-void clear()
+string moveVertically(int num)
 {
-    cout << esc << "2J";
+    stringstream ss;
+    if (num == 0) return "";
+    ss << esc << ::abs(num) << (num < 0 ? "B" : "A");
+    return ss.str();
 }
 
-void clearLine()
+string moveHorizontally(int num)
 {
-    cout << esc << "K";
+    stringstream ss;
+    if (num == 0) return "";
+    ss << esc << ::abs(num) << (num < 0 ? "D" : "C");
+    return ss.str();
 }
 
-void savePos()
+string clear()
 {
-    cout << esc << "s";
+    stringstream ss;
+    ss << esc << "2J";
+    return ss.str();
 }
 
-void restorePos()
+string clearLine()
 {
-    cout << esc << "u";
+    stringstream ss;
+    ss << esc << "K";
+    return ss.str();
+}
+
+string savePos()
+{
+    stringstream ss;
+    ss << esc << "s";
+    return ss.str();
+}
+
+string restorePos()
+{
+    stringstream ss;
+    ss << esc << "u";
+    return ss.str();
 }
 
 void Shell::onWrite(Frame* pWhichFrame)
@@ -93,18 +129,13 @@ void Shell::onResolution(Frame* pWhichFrame, int oldw, int oldh)
     for (auto pf : _frames)
     {
         if (pf == pWhichFrame)
-        {
-            FrameState& state = _states.at(pWhichFrame);
-            state.width = w;
-            state.height = h;
             break;
-        }
         frame_index++;
     }
 
     if (frame_index >= _frames.size())
     {
-        log << "bad frame not found\n";
+        lout << "bad frame not found\n";
         return;
     }
 
@@ -136,12 +167,12 @@ Frame* Shell::getFrame(int x, int y)
     return nullptr;
 }
 
-bool Shell::add(Frame* pf)
+bool Shell::add(Frame* pf, size_t index)
 {
-    bool result = Framer::add(pf);
+    bool result = Framer::add(pf, index);
     if (result)
     {
-        _states[pf] = {1, 1, 0, 0, 1, 1};
+        _states[pf] = {1, 1, 1, 1};
     }
 
     return result;
@@ -149,14 +180,40 @@ bool Shell::add(Frame* pf)
 
 bool Shell::update()
 {
-    log << "shell update\n";
+    lout << "shell update\n";
+    lout << "shell update\n";
+    lout << "shell update\n";
+    lout << "shell update\n";
 
     unsigned char buff [6];
     unsigned int x, y, btn;
 
     for (const auto& pf : _frames)
     {
-        cout << pf->read();
+        string buffer = pf->read();
+        if (buffer.empty())
+            continue;
+
+        // first align this frame back to its correct location
+        auto& state = _states[pf];
+        int width, height;
+        pf->getResolution(&width, &height);
+
+        // if the region is scrolling, write to bottom of the region
+        if (pf->scrolling())
+        {
+            buffer =
+                setPos(state.left + state.x - 1, state.y + state.top + height - 1) +
+                scrollOn(state.top, height) +
+                buffer +
+                scrollOff();
+        }
+        else
+        {
+            buffer = setPos(state.left + state.x - 1, state.y + state.top - 1) + buffer;
+        }
+
+        cout << buffer;
     }
 
     cout << flush;
@@ -165,7 +222,7 @@ bool Shell::update()
     if (buff[0] == 3)
     {
         // ^c
-        log << "shell abort\n";
+        lout << "shell abort\n";
         return false; // kill main loop
     }
     else if (buff[0] == '\x1B')
@@ -191,7 +248,7 @@ bool Shell::open()
 {
     if (_original)
     {
-        log << "shell is already open\n";
+        lout << "shell is already open\n";
         return false;
     }
 
@@ -210,8 +267,8 @@ bool Shell::open()
     // //enable mouse tracking
     ::write(STDOUT_FILENO, "\e[?9h", 5);
 
-    clear();
-    setPos(1, 1);
+    cout << clear();
+    cout << setPos(1, 1);
     cout << flush;
 
     return true;

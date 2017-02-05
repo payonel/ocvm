@@ -12,18 +12,26 @@ Framer::~Framer()
 {
 }
 
-bool Framer::add(Frame* pframe)
+bool Framer::add(Frame* pframe, size_t index)
 {
     for (auto pf : _frames)
     {
         if (pf == pframe)
         {
-            log << "attempt to add the same frame twice\n";
+            lout << "attempt to add the same frame twice\n";
             return false;
         }
     }
 
-    _frames.push_back(pframe);
+    if (index >= 0 && index < _frames.size()) // reorder
+    {
+        _frames.insert(_frames.begin() + index, pframe);
+    }
+    else
+    {
+        _frames.push_back(pframe);
+    }
+
     pframe->setFramer(this);
 
     return true;
@@ -41,7 +49,7 @@ Frame::~Frame(){}
 
 bool Frame::setResolution(int width, int height)
 {
-    if (width < 1 || width > 255 || height < 1 || height > 255)
+    if (width > 255 || height > 255)
         return false;
 
     int oldw = _width;
@@ -85,14 +93,12 @@ string Frame::read()
     return std::move(_buffer);
 }
 
-Frame& operator<< (Frame& frame, const string& text)
+void Frame::scrolling(bool enable)
 {
-    frame.write(text);
-    return frame;
+    _scrolling = enable;
 }
 
-Frame& operator<< (Frame& frame, std::ostream& (*pf)(std::ostream&))
+bool Frame::scrolling() const
 {
-    frame << "\n";
-    return frame;
+    return _scrolling;
 }

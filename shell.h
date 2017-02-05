@@ -10,8 +10,6 @@ struct FrameState
 {
     int left;
     int top;
-    int width;
-    int height;
     int x;
     int y;
 };
@@ -24,7 +22,7 @@ public:
     bool update() override;
     bool open() override;
     void close() override;
-    bool add(Frame* pf) override;
+    bool add(Frame* pf, size_t index) override;
 
     Frame* getFrame(int x, int y);
 protected:

@@ -26,7 +26,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    framer->add(&log);
+    framer->add(&lout);
+    framer->add(&lerr);
 
     // init client config
     // // creates instances of host components

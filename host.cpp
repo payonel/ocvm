@@ -64,7 +64,8 @@ Component* Host::create(const string& type, const Value& init)
     if (type == "screen")
     {
         auto* sf = new ScreenFrame(type, init);
-        getFramer()->add(sf);
+        getFramer()->add(sf, 0); // insert at top
+        sf->setResolution(50, 10);
         p = sf;
     }
     else if (type == "gpu")

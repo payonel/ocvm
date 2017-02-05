@@ -26,27 +26,27 @@ bool Client::load(LuaEnv* lua)
     {
         if (pair.first.type() != "string")
         {
-            log << "bad config key, not string: " << pair.first.type() << std::endl;
+            lout << "bad config key, not string: " << pair.first.type() << std::endl;
             return false;
         }
         else
         {
             string key = pair.first.toString();
-            log << key << ": ";
+            lout << key << ": ";
             Component* pc = _host->create(key, pair.second);
             if (pc)
             {
-                log << "created\n";
+                lout << "created\n";
                 _components.push_back(pc);
             }
             else
             {
-                log << "failed\n";
+                lout << "failed\n";
                 return false;
             }
         }
     }
-    log << "components loaded: " << _components.size() << "\n";
+    lout << "components loaded: " << _components.size() << "\n";
 
     for (auto pc : _components)
     {

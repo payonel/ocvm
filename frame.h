@@ -13,7 +13,7 @@ class Framer
 public:
     Framer();
     virtual ~Framer();
-    virtual bool add(Frame* pf);
+    virtual bool add(Frame* pf, size_t index = static_cast<size_t>(-1));
 
     virtual bool open() = 0;
     virtual void close() = 0;
@@ -39,23 +39,15 @@ public:
 
     virtual bool setResolution(int width, int height);
     void getResolution(int* pWidth ,int* pHeight);
+    bool scrolling() const;
+    void scrolling(bool enable);
 private:
     Framer* _framer;
     std::string _buffer;
 
     int _width;
     int _height;
+
+    bool _scrolling;
 };
-
-Frame& operator<< (Frame&, const std::string& text);
-Frame& operator<< (Frame&, std::ostream& (*)(std::ostream&));
-
-template <typename T>
-Frame& operator<< (Frame& frame, const T& t)
-{
-    std::stringstream ss;
-    ss << t;
-    frame << ss.str();
-    return frame;
-}
 

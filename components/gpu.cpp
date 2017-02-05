@@ -16,6 +16,6 @@ ValuePack Gpu::bind(const ValuePack& args)
 
 ValuePack Gpu::setResolution(const ValuePack& args)
 {
-    log << "set resolution: " << args.at(0).serialize() << ", " << args.at(1).serialize() << std::endl;
+    lout << "set resolution: " << args.at(0).serialize() << ", " << args.at(1).serialize() << std::endl;
     return ValuePack();
 }

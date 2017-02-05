@@ -30,7 +30,7 @@ ValuePack Component::invoke(const string& methodName, const ValuePack& args)
 {
     if (_methods.find(methodName) == _methods.end())
     {
-        log << "component does not have any such method: " << methodName << endl;
+        lout << "component does not have any such method: " << methodName << endl;
         return ValuePack();
     }
 
