@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <tuple>
 
 class Frame;
 
@@ -19,7 +20,7 @@ public:
     virtual void close() = 0;
     virtual bool update() = 0;
     virtual void onWrite(Frame*) = 0;
-    virtual void onResolution(Frame*, int oldw, int oldh) = 0;
+    virtual void onResolution(Frame*) = 0;
 protected:
     std::vector<Frame*> _frames;
 };
@@ -34,19 +35,26 @@ public:
     virtual void mouse(int x, int y) {}
     virtual void keyboard(char c) {}
 
-    void write(const std::string& text);
+    virtual void write(const std::string& text);
+    virtual void move(int x, int y) {}
     std::string read();
 
     virtual bool setResolution(int width, int height);
-    void getResolution(int* pWidth ,int* pHeight);
+    std::tuple<int, int> getResolution() const;
     bool scrolling() const;
     void scrolling(bool enable);
+
+    int x() const;
+    int y() const;
 private:
     Framer* _framer;
     std::string _buffer;
 
     int _width;
     int _height;
+
+    int _x;
+    int _y; // not used if scrolling
 
     bool _scrolling;
 };

@@ -9,4 +9,5 @@ public:
 
     ValuePack setResolution(const ValuePack& args);
     ValuePack bind(const ValuePack& args);
+    ValuePack set(const ValuePack& args);
 };

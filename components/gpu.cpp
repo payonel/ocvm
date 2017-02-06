@@ -1,12 +1,16 @@
 #include "gpu.h"
 #include "log.h"
+#include "frame.h"
 #include <iostream>
+#include <string>
+using std::string;
 
 Gpu::Gpu(const std::string& type, const Value& init) :
     Component(type, init)
 {
     add("setResolution", &Gpu::setResolution);
     add("bind", &Gpu::bind);
+    add("set", &Gpu::set);
 }
 
 ValuePack Gpu::bind(const ValuePack& args)
@@ -17,5 +21,17 @@ ValuePack Gpu::bind(const ValuePack& args)
 ValuePack Gpu::setResolution(const ValuePack& args)
 {
     lout << "set resolution: " << args.at(0).serialize() << ", " << args.at(1).serialize() << std::endl;
+    return ValuePack();
+}
+
+ValuePack Gpu::set(const ValuePack& args)
+{
+    int x = args.at(0).toNumber();
+    int y = args.at(1).toNumber();
+    string text = args.at(2).toString();
+
+    // get the bound ScreenFrame and write to it
+    // how??
+
     return ValuePack();
 }

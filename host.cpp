@@ -14,20 +14,21 @@ public:
     {
     }
 
+    void move(int x, int y) override
+    {
+    }
+
     bool setResolution(int width, int height) override
     {
         // resolution is +2 greater in each dim
-        // draw blanks if shrinking
-        int w, h;
-        getResolution(&w, &h);
-
         return Frame::setResolution(width + 2, height + 2);
     }
 
     void mouse(int x, int y) override
     {
-        int w, h;
-        getResolution(&w, &h);
+        auto dim = getResolution();
+        int w = std::get<0>(dim);
+        int h = std::get<1>(dim);
         if (x <= 1 || x >= w || y <= 1 || y >= h)
             return; // do nothing
         Frame::mouse(x - 1, y - 1);
@@ -65,7 +66,7 @@ Component* Host::create(const string& type, const Value& init)
     {
         auto* sf = new ScreenFrame(type, init);
         getFramer()->add(sf, 0); // insert at top
-        sf->setResolution(50, 10);
+        //sf->setResolution(50, 10);
         p = sf;
     }
     else if (type == "gpu")

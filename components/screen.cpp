@@ -11,4 +11,3 @@ Screen::Screen(const std::string& type, const Value& init) :
     Component(type, init)
 {
 }
-

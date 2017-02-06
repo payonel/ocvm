@@ -1,16 +1,51 @@
 #include "log.h"
+#include "frame.h"
 using std::string;
 
 #include <iostream>
 using std::cout;
 
-Logger lout;
-Logger lerr;
+Logger lout(1);
+Logger lerr(0);
 
-Logger::Logger()
+static const int LOG_DUMP_SIZE = 10000;
+
+class LogFrame : public Frame
 {
-    scrolling(true);
-    setResolution(0, 5);
+public:
+    LogFrame()
+    {
+        scrolling(true);
+    }
+    ~LogFrame()
+    {
+        for (auto part : _rolling_buffer)
+        {
+            cout << part;
+        }
+        _rolling_buffer.clear();
+    }
+    void write(const std::string& text) override
+    {
+        _rolling_buffer.push_back(text);
+        if (_rolling_buffer.size() > LOG_DUMP_SIZE)
+        {
+            _rolling_buffer.remove(_rolling_buffer.front());
+        }
+        Frame::write(text);
+    }
+private:
+    std::list<std::string> _rolling_buffer;
+} single_log_frame;
+
+Frame* Logger::getFrame()
+{
+    return &single_log_frame;
+}
+
+Logger::Logger(int priority) :
+    _priority(priority)
+{
 }
 
 Logger& operator<< (Logger& logger, const string& text)
@@ -31,7 +66,7 @@ Logger& operator<< (Logger& logger, const string& text)
         start = next_newline + 1;
     }
 
-    logger.write(aligned);
+    Logger::getFrame()->write(aligned);
     return logger;
 }
 

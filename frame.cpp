@@ -3,6 +3,7 @@
 #include <iostream>
 
 using std::string;
+using std::tuple;
 
 Framer::Framer()
 {
@@ -60,14 +61,13 @@ bool Frame::setResolution(int width, int height)
 
     if (_framer)
     {
-        _framer->onResolution(this, oldw, oldh);
+        _framer->onResolution(this);
     }
 }
 
-void Frame::getResolution(int* pWidth ,int* pHeight)
+tuple<int, int> Frame::getResolution() const
 {
-    *pWidth = _width;
-    *pHeight = _height;
+    return std::make_tuple(_width, _height);
 }
 
 void Frame::setFramer(Framer* pfr)
@@ -101,4 +101,14 @@ void Frame::scrolling(bool enable)
 bool Frame::scrolling() const
 {
     return _scrolling;
+}
+
+int Frame::x() const
+{
+    return _x;
+}
+
+int Frame::y() const
+{
+    return _y;
 }

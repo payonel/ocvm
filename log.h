@@ -1,10 +1,18 @@
 #pragma once
-#include "frame.h"
+#include <list>
+#include <string>
+#include <sstream>
 
-class Logger : public Frame
+class Frame;
+
+class Logger
 {
 public:
+    Logger(int priority);
+    static Frame* getFrame();
+private:
     Logger();
+    int _priority;
 };
 
 Logger& operator<< (Logger&, const std::string& text);
