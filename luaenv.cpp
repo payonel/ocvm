@@ -55,19 +55,27 @@ void LuaEnv::close()
     }
 }
 
-bool LuaEnv::newlib(const std::string& libname, std::vector<LuaMethod> callbacks)
+// set meta table
+    // lua_newtable(_state);
+    // lua_pushnumber(_state, 7);
+    // lua_setfield(_state, -2, "datum");
+    // lua_setmetatable(_state, -2); // setmetatable(new_table_on_top_of_stack,{datum=7})
+
+bool LuaEnv::newlib(const std::string& libname, std::vector<LuaMethod> callbacks, std::vector<LightField> lfields)
 {
-    luaL_Reg* component_lib = new luaL_Reg[callbacks.size() + 1];
+    lua_newtable(_state);
     for (size_t i = 0; i < callbacks.size(); i++)
     {
         const auto& tup = callbacks.at(i);
-        luaL_Reg reg {std::get<0>(tup).c_str(), std::get<1>(tup)};
-        component_lib[i] = reg;
+        lua_pushcfunction(_state, std::get<1>(tup));
+        lua_setfield(_state, -2, std::get<0>(tup).c_str());
     }
-
-    component_lib[callbacks.size()] = {0, 0};
-
-    luaL_newlib(_state, component_lib);
+    for (size_t i = 0; i < lfields.size(); i++)
+    {
+        const auto& tup = lfields.at(i);
+        lua_pushlightuserdata(_state, std::get<1>(tup));
+        lua_setfield(_state, -2, std::get<0>(tup).c_str());
+    }
     lua_setglobal(_state, libname.c_str());
 
     return true;

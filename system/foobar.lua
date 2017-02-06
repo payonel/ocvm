@@ -6,3 +6,4 @@ print("component.invoke", component and component.invoke)
 component.list()
 component.invoke()
 
+print("client field", type(component.client))

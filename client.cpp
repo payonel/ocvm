@@ -4,8 +4,10 @@
 #include "config.h"
 #include "log.h"
 #include "luaenv.h"
+#include <lua.hpp>
 
 #include <string>
+#include <functional>
 
 using std::endl;
 using std::string;
@@ -62,8 +64,10 @@ bool Client::load(LuaEnv* lua)
     return loadLuaComponentApi(lua);
 }
 
-int _a(lua_State*)
+int _a(lua_State* lua)
 {
+    Value method_name = Value::make(lua, 0);
+    Value method = Value::make(lua, -1);
     lout << "from _a\n";
     return 0;
 }
@@ -77,14 +81,16 @@ int _b(lua_State*)
 bool Client::loadLuaComponentApi(LuaEnv* lua)
 {
     vector<LuaMethod> methods;
-    methods.push_back(tuple<string, LuaCallback>("list", &_a));
-    methods.push_back(tuple<string, LuaCallback>("invoke", &_b));
+    methods.push_back(make_tuple("list", &_a));
+    methods.push_back(make_tuple("invoke", &_b));
 
-    lua->newlib("component", methods);
+    vector<LightField> lfields;
+    lfields.push_back(make_tuple("client", this));
+
+    lua->newlib("component", methods, lfields);
 
     return true;
 }
-
 
 void Client::close()
 {
