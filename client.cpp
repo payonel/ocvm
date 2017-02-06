@@ -3,12 +3,15 @@
 #include "components/component.h"
 #include "config.h"
 #include "log.h"
+#include "luaenv.h"
 
 #include <string>
 
 using std::endl;
 using std::string;
 using std::vector;
+using std::tuple;
+using std::make_tuple;
 
 Client::Client(Host* host) : _host(host)
 {
@@ -56,8 +59,32 @@ bool Client::load(LuaEnv* lua)
         component_invoke(pc->address(), "setResolution", Value::pack(50, 16));
     }
 
+    return loadLuaComponentApi(lua);
+}
+
+int _a(lua_State*)
+{
+    lout << "from _a\n";
+    return 0;
+}
+
+int _b(lua_State*)
+{
+    lout << "from _b\n";
+    return 1;
+}
+
+bool Client::loadLuaComponentApi(LuaEnv* lua)
+{
+    vector<LuaMethod> methods;
+    methods.push_back(tuple<string, LuaCallback>("list", &_a));
+    methods.push_back(tuple<string, LuaCallback>("invoke", &_b));
+
+    lua->newlib("component", methods);
+
     return true;
 }
+
 
 void Client::close()
 {

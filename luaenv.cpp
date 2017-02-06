@@ -54,3 +54,22 @@ void LuaEnv::close()
         lout << "lua env closed\n";
     }
 }
+
+bool LuaEnv::newlib(const std::string& libname, std::vector<LuaMethod> callbacks)
+{
+    luaL_Reg* component_lib = new luaL_Reg[callbacks.size() + 1];
+    for (size_t i = 0; i < callbacks.size(); i++)
+    {
+        const auto& tup = callbacks.at(i);
+        luaL_Reg reg {std::get<0>(tup).c_str(), std::get<1>(tup)};
+        component_lib[i] = reg;
+    }
+
+    component_lib[callbacks.size()] = {0, 0};
+
+    luaL_newlib(_state, component_lib);
+    lua_setglobal(_state, libname.c_str());
+
+    return true;
+}
+

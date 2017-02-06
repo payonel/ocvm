@@ -21,6 +21,8 @@ public:
     // invoke by address
     std::vector<Component*> component_list(const std::string& filter = "", bool exact = false);
     ValuePack component_invoke(const std::string& address, const std::string& methodName, const ValuePack& args);
+protected:
+    bool loadLuaComponentApi(LuaEnv*);
 private:
     std::vector<Component*> _components;
     Config* _config;
