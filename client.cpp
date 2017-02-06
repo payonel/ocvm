@@ -8,6 +8,7 @@
 
 using std::endl;
 using std::string;
+using std::vector;
 
 Client::Client(Host* host) : _host(host)
 {
@@ -48,12 +49,11 @@ bool Client::load(LuaEnv* lua)
     }
     lout << "components loaded: " << _components.size() << "\n";
 
-    for (auto pc : _components)
+    auto pc_vec = component_list("gpu");
+    if (!pc_vec.empty())
     {
-        if (pc->type() == "gpu")
-        {
-            pc->invoke("setResolution", 50, 16);
-        }
+        auto* pc = pc_vec.at(0);
+        component_invoke(pc->address(), "setResolution", Value::pack(50, 16));
     }
 
     return true;
@@ -72,4 +72,36 @@ void Client::close()
         delete pc;
 
     _components.clear();
+}
+
+vector<Component*> Client::component_list(const string& filter, bool exact)
+{
+    vector<Component*> result;
+
+    for (auto* pc : _components)
+    {
+        string type = pc->type();
+        if (type.find(filter) == 0)
+        {
+            if (!exact || type == filter)
+            {
+                result.push_back(pc);
+            }
+        }
+    }
+
+    return result;
+}
+
+ValuePack Client::component_invoke(const std::string& address, const string& methodName, const ValuePack& args)
+{
+    for (auto* pc : _components)
+    {
+        if (pc->address() == address)
+        {
+            return pc->invoke(methodName, args);
+        }
+    }
+
+    return ValuePack();
 }

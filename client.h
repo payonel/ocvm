@@ -1,5 +1,5 @@
 #pragma once
-#include "frame.h"
+#include "value.h"
 
 #include <string>
 #include <vector>
@@ -19,6 +19,8 @@ public:
 
     // global api that is actually computer specific
     // invoke by address
+    std::vector<Component*> component_list(const std::string& filter = "", bool exact = false);
+    ValuePack component_invoke(const std::string& address, const std::string& methodName, const ValuePack& args);
 private:
     std::vector<Component*> _components;
     Config* _config;

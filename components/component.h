@@ -13,6 +13,7 @@ public:
     Component(const std::string& type, const Value& init);
     virtual ~Component() {}
     std::string type() const;
+    std::string address() const;
     ValuePack invoke(const std::string& methodName, const ValuePack& args);
 
     static std::string make_address();

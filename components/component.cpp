@@ -27,6 +27,11 @@ string Component::type() const
     return _type;
 }
 
+string Component::address() const
+{
+    return _address;
+}
+
 void Component::add(const string& methodName, ComponentMethod method)
 {
     _methods[methodName] = method;
