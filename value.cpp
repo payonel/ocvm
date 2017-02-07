@@ -72,6 +72,16 @@ const Value& Value::metatable() const
     return _pmetatable ? *_pmetatable : Value::nil;
 }
 
+const Value& Value::select(const ValuePack& pack, size_t index)
+{
+    if (index >= pack.size())
+    {
+        return Value::nil;
+    }
+
+    return pack.at(index);
+}
+
 const Value& Value::get(const Value& key) const
 {
     if (_table.find(key) == _table.end())
@@ -212,7 +222,7 @@ Value Value::make(lua_State* lua, int index)
             break;
             case LUA_TTABLE:
                 def = Value::table();
-                index = index > 0 ? index : (top + index + 1);
+                index = index >= 0 ? index : (top + index + 1);
                 lua_pushnil(lua); // push nil as first key for next()
                 while (lua_next(lua, index))
                 {

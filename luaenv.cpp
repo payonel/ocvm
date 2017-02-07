@@ -75,6 +75,8 @@ bool LuaEnv::newlib(LuaProxy* proxy)
         lua_CFunction pf = std::get<1>(tup);
 
         lua_newtable(_state); // the method!
+        lua_pushstring(_state, name.c_str());
+        lua_setfield(_state, -2, "name");
 
         lua_newtable(_state); // mt
         lua_pushcfunction(_state, pf);

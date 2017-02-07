@@ -15,39 +15,12 @@ using std::vector;
 using std::tuple;
 using std::make_tuple;
 
-int _a(lua_State* lua)
-{
-    Value udata_call = Value::make(lua, 1);
-    string filter = Value::make(lua, 2).toString();
-    bool exact = Value::make(lua, 3).toBool();
-
-    const Value& mt = udata_call.metatable();
-    if (mt)
-    {
-        const Value& inst = mt.get("instance");
-        if (inst.type() == "userdata")
-        {
-            void* p = inst.toPointer();
-            Client* pc = static_cast<Client*>(p);
-            vector<Component*> comps = pc->component_list(filter, exact);
-        }
-    }
-
-    return 0;
-}
-
-int _b(lua_State*)
-{
-    lout << "from _b\n";
-    return 1;
-}
-
 Client::Client(Host* host) : LuaProxy("component"), _host(host)
 {
     _config = new Config();
 
-    add("list", &_a);
-    add("invoke", &_b);
+    add("list", &Client::component_list);
+    add("invoke", &Client::component_invoke);
 }
 
 Client::~Client()
@@ -90,13 +63,6 @@ bool Client::load(LuaEnv* lua)
     }
     lout << "components loaded: " << _components.size() << "\n";
 
-    auto pc_vec = component_list("gpu");
-    if (!pc_vec.empty())
-    {
-        auto* pc = pc_vec.at(0);
-        component_invoke(pc->address(), "setResolution", Value::pack(50, 16));
-    }
-
     return loadLuaComponentApi(lua);
 }
 
@@ -121,8 +87,11 @@ void Client::close()
     _components.clear();
 }
 
-vector<Component*> Client::component_list(const string& filter, bool exact)
+ValuePack Client::component_list(const ValuePack& args)
 {
+    string filter = Value::select(args, 0).toString();
+    bool exact = Value::select(args, 1).toBool();
+    
     vector<Component*> result;
 
     for (auto* pc : _components)
@@ -137,16 +106,21 @@ vector<Component*> Client::component_list(const string& filter, bool exact)
         }
     }
 
-    return result;
+    return ValuePack();
 }
 
-ValuePack Client::component_invoke(const std::string& address, const string& methodName, const ValuePack& args)
+ValuePack Client::component_invoke(const ValuePack& args)
 {
+    // ValuePack component_invoke(const std::string& address, const std::string& methodName, const ValuePack& args);
+    string address = Value::select(args, 0).toString();
+    string methodName = Value::select(args, 1).toString();
+    ValuePack pack;
+
     for (auto* pc : _components)
     {
         if (pc->address() == address)
         {
-            return pc->invoke(methodName, args);
+            return pc->invoke(methodName, pack);
         }
     }
 

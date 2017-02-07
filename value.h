@@ -48,6 +48,8 @@ public:
     void* toPointer() const;
     const Value& metatable() const;
 
+    static const Value& select(const ValuePack& pack, size_t index);
+
     // table functions
     const Value& get(const Value& key) const;
     Value& get(const Value& key);

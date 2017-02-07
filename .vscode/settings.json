@@ -32,7 +32,8 @@
         "*hcctype": "cpp",
         "*hcstdarg": "cpp",
         "*h*h*hsystem_error": "cpp",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "functional": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

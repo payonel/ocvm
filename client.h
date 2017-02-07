@@ -20,8 +20,8 @@ public:
 
     // global api that is actually computer specific
     // invoke by address
-    std::vector<Component*> component_list(const std::string& filter = "", bool exact = false);
-    ValuePack component_invoke(const std::string& address, const std::string& methodName, const ValuePack& args);
+    ValuePack component_invoke(const ValuePack& args);
+    ValuePack component_list(const ValuePack& args);
 protected:
     bool loadLuaComponentApi(LuaEnv*);
 private:

@@ -3,10 +3,10 @@
 #include <vector>
 #include <map>
 #include <lua.hpp>
+#include "value.h"
 
-// class Component;
-// typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);
-
+class LuaProxy;
+typedef ValuePack (LuaProxy::*ProxyMethod)(const ValuePack& args);
 typedef std::tuple<std::string, lua_CFunction> LuaMethod;
 
 class LuaProxy
@@ -17,9 +17,15 @@ public:
 
     const std::string& name() const;
     std::vector<LuaMethod> methods() const;
+    ValuePack invoke(const std::string& methodName, const ValuePack& args);
 protected:
-    void add(const std::string& methodName, lua_CFunction method);
+    void add(const std::string& methodName, ProxyMethod method);
+    template <typename Derived>
+    void add(const std::string& methodName, ValuePack (Derived::*derivedMethod)(const ValuePack&))
+    {
+        add(methodName, static_cast<ProxyMethod>(derivedMethod));
+    }
 private:
-    std::map<std::string, lua_CFunction> _methods;
+    std::map<std::string, ProxyMethod> _methods;
     std::string _name;
 };
