@@ -17,7 +17,7 @@ public:
     Value(const std::string& v);
     Value(bool b);
     Value(double d);
-    Value(void* p);
+    Value(const void* p);
     Value(int n) : Value(double(n)) {}
     Value(const char* cstr) : Value(std::string(cstr)) {}
     Value();

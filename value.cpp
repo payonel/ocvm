@@ -22,10 +22,10 @@ Value::Value()
     _type = "nil";
 }
 
-Value::Value(void* p)
+Value::Value(const void* p)
 {
     _type = "userdata";
-    _pointer = p;
+    _pointer = const_cast<void*>(p);
 }
 
 Value::Value(bool b)
