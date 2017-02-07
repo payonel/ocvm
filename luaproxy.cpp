@@ -18,34 +18,8 @@ const std::string& LuaProxy::name() const
     return _name;
 }
 
-// int _a(lua_State* lua)
-// {
-//     Value udata_call = Value::make(lua, 1);
-
-//     ValuePack pack;
-//     pack.push_back(Value::make(lua, 2));
-//     pack.push_back(Value::make(lua, 3));
-
-//     const Value& mt = udata_call.metatable();
-//     if (mt)
-//     {
-//         const Value& inst = mt.get("instance");
-//         if (inst.type() == "userdata")
-//         {
-//             void* p = inst.toPointer();
-//             Client* pc = static_cast<Client*>(p);
-//             //vector<Component*> comps = 
-//             pc->component_list(pack);
-//         }
-//     }
-
-//     return 0;
-// }
-
 int lua_proxy_static_caller(lua_State* lua)
 {
-    lout << "from _b\n";
-
     auto caller = Value::make(lua, 1);
     auto _this = caller.metatable().get("instance").toPointer();
     auto methodName = caller.get("name").toString();
