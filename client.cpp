@@ -15,9 +15,39 @@ using std::vector;
 using std::tuple;
 using std::make_tuple;
 
-Client::Client(Host* host) : _host(host)
+int _a(lua_State* lua)
+{
+    Value udata_call = Value::make(lua, 1);
+    string filter = Value::make(lua, 2).toString();
+    bool exact = Value::make(lua, 3).toBool();
+
+    const Value& mt = udata_call.metatable();
+    if (mt)
+    {
+        const Value& inst = mt.get("instance");
+        if (inst.type() == "userdata")
+        {
+            void* p = inst.toPointer();
+            Client* pc = static_cast<Client*>(p);
+            vector<Component*> comps = pc->component_list(filter, exact);
+        }
+    }
+
+    return 0;
+}
+
+int _b(lua_State*)
+{
+    lout << "from _b\n";
+    return 1;
+}
+
+Client::Client(Host* host) : LuaProxy("component"), _host(host)
 {
     _config = new Config();
+
+    add("list", &_a);
+    add("invoke", &_b);
 }
 
 Client::~Client()
@@ -70,44 +100,9 @@ bool Client::load(LuaEnv* lua)
     return loadLuaComponentApi(lua);
 }
 
-int _a(lua_State* lua)
-{
-    Value udata_call = Value::make(lua, 1);
-    string filter = Value::make(lua, 2).toString();
-    bool exact = Value::make(lua, 3).toBool();
-
-    const Value& mt = udata_call.metatable();
-    if (mt)
-    {
-        const Value& inst = mt.get("instance");
-        if (inst.type() == "userdata")
-        {
-            void* p = inst.toPointer();
-            Client* pc = static_cast<Client*>(p);
-            vector<Component*> comps = pc->component_list(filter, exact);
-        }
-    }
-
-    return 0;
-}
-
-int _b(lua_State*)
-{
-    lout << "from _b\n";
-    return 1;
-}
-
 bool Client::loadLuaComponentApi(LuaEnv* lua)
 {
-    vector<LuaMethod> methods;
-    methods.push_back(make_tuple("list", &_a));
-    methods.push_back(make_tuple("invoke", &_b));
-
-    vector<LightField> lfields;
-    lfields.push_back(make_tuple("client", this));
-
-    lua->newlib("component", methods, this);
-
+    lua->newlib(this);
     return true;
 }
 

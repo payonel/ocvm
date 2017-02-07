@@ -2,18 +2,18 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <lua.hpp>
 
 struct lua_State;
 typedef int (*LuaCallback)(lua_State*);
-
-typedef std::tuple<std::string, LuaCallback> LuaMethod;
-typedef std::tuple<std::string, void*> LightField;
 
 struct LuaInstanceMethod
 {
     void* instance;
     LuaCallback method;
 };
+
+class LuaProxy;
 
 class LuaEnv
 {
@@ -22,9 +22,7 @@ public:
     ~LuaEnv();
     bool run();
     bool load(const std::string& machinePath);
-    bool newlib(const std::string& libname, 
-        std::vector<LuaMethod> callbacks, 
-        void* pinstance);
+    bool newlib(LuaProxy* proxy);
     void close();
 private:
     lua_State* _state;

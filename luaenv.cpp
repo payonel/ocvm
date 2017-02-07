@@ -1,5 +1,6 @@
 #include "luaenv.h"
 #include "log.h"
+#include "luaproxy.h"
 #include <iostream>
 #include <string>
 #include <tuple>
@@ -61,27 +62,25 @@ void LuaEnv::close()
     }
 }
 
-// set meta table
-    // lua_newtable(_state);
-    // lua_pushnumber(_state, 7);
-    // lua_setfield(_state, -2, "datum");
-    // lua_setmetatable(_state, -2); // setmetatable(new_table_on_top_of_stack,{datum=7})
-
-bool LuaEnv::newlib(const string& libname, vector<LuaMethod> callbacks, void* pinstance)
+bool LuaEnv::newlib(LuaProxy* proxy)
 {
-    lua_newtable(_state); // create tbl
-    for (const auto& tup : callbacks)
+    string libname = proxy->name();
+    vector<LuaMethod> methods = proxy->methods();
+
+    lua_newtable(_state); // create lib tbl
+
+    for (const auto& tup : methods)
     {
         const string& name = std::get<0>(tup);
-        LuaCallback pf = std::get<1>(tup);
+        lua_CFunction pf = std::get<1>(tup);
 
-        lua_newuserdata(_state, sizeof(LuaInstanceMethod));
+        lua_newtable(_state); // the method!
 
         lua_newtable(_state); // mt
         lua_pushcfunction(_state, pf);
         lua_setfield(_state, -2, "__call"); // pops the function
 
-        lua_pushlightuserdata(_state, pinstance);
+        lua_pushlightuserdata(_state, proxy);
         lua_setfield(_state, -2, "instance"); // pops pinstance
 
         lua_setmetatable(_state, -2); // pops mt, to udata
@@ -93,4 +92,3 @@ bool LuaEnv::newlib(const string& libname, vector<LuaMethod> callbacks, void* pi
 
     return true;
 }
-

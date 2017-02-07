@@ -1,5 +1,6 @@
 #pragma once
 #include "value.h"
+#include "luaproxy.h"
 
 #include <string>
 #include <vector>
@@ -9,7 +10,7 @@ class LuaEnv;
 class Component;
 class Config;
 
-class Client
+class Client : public LuaProxy
 {
 public:
     Client(Host*);
