@@ -14,28 +14,33 @@ Value Value::nil; // the nil
 Value::Value(const string& v)
 {
     _type = "string";
+    _id = LUA_TSTRING;
     _string = v;
 }
 
 Value::Value()
 {
+    _id = LUA_TNIL;
     _type = "nil";
 }
 
-Value::Value(const void* p)
+Value::Value(const void* p, bool bLight)
 {
+    _id = bLight ? LUA_TLIGHTUSERDATA : LUA_TUSERDATA;
     _type = "userdata";
     _pointer = const_cast<void*>(p);
 }
 
 Value::Value(bool b)
 {
+    _id = LUA_TBOOLEAN;
     _type = "boolean";
     _bool = b;
 }
 
 Value::Value(double d)
 {
+    _id = LUA_TNUMBER;
     _type = "number";
     _number = d;
 }
@@ -43,6 +48,7 @@ Value::Value(double d)
 Value Value::table()
 {
     Value t;
+    t._id = LUA_TTABLE;
     t._type = "table";
     return t;
 }
@@ -215,10 +221,10 @@ Value Value::make(lua_State* lua, int index)
                 def = Value::nil;
             break;
             case LUA_TUSERDATA:
-                def = Value(lua_touserdata(lua, index));
+                def = Value(lua_touserdata(lua, index), false);
             break;
             case LUA_TLIGHTUSERDATA:
-                def = Value((void*)lua_topointer(lua, index));
+                def = Value((void*)lua_topointer(lua, index), true);
             break;
             case LUA_TTABLE:
                 def = Value::table();
@@ -237,4 +243,37 @@ Value Value::make(lua_State* lua, int index)
         Value::getmetatable(def, lua, index);
     }
     return def;
+}
+
+void Value::push(lua_State* lua) const
+{
+    switch (_id)
+    {
+        case LUA_TSTRING:
+            lua_pushstring(lua, _string.c_str());
+        break;
+        case LUA_TBOOLEAN:
+            lua_pushboolean(lua, _bool);
+        break;
+        case LUA_TNUMBER:
+            lua_pushnumber(lua, _number);
+        break;
+        case LUA_TLIGHTUSERDATA:
+            lua_pushlightuserdata(lua, _pointer);
+        break;
+        case LUA_TTABLE:
+            lua_newtable(lua);
+            for (const auto& pair : _table)
+            {
+                pair.first.push(lua);
+                pair.second.push(lua);
+                lua_settable(lua, -3); // pop, pop
+            }
+        break;
+        case LUA_TUSERDATA:
+        case LUA_TNIL:
+        default:
+            lua_pushnil(lua);
+        break;
+    }
 }

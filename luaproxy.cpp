@@ -38,9 +38,13 @@ int lua_proxy_static_caller(lua_State* lua)
         pack = p->invoke(methodName, pack);
 
         // push pack result on stack
+        for (size_t index = 0; index < pack.size(); index++)
+        {
+            pack.at(index).push(lua);
+        }
     }
 
-    return 0;
+    return pack.size();
 }
 
 vector<LuaMethod> LuaProxy::methods() const

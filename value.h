@@ -17,7 +17,7 @@ public:
     Value(const std::string& v);
     Value(bool b);
     Value(double d);
-    Value(const void* p);
+    Value(const void* p, bool bLight);
     Value(int n) : Value(double(n)) {}
     Value(const char* cstr) : Value(std::string(cstr)) {}
     Value();
@@ -40,6 +40,7 @@ public:
     }
 
     ValuePack unpack() const; // for table arrays
+    void push(lua_State* lua) const;
 
     std::string type() const;
     std::string toString() const;
@@ -62,6 +63,7 @@ protected:
     static void getmetatable(Value& v, lua_State* lua, int index);
 private:
     std::string _type;
+    int _id;
     std::string _string;
     bool _bool = false;
     double _number = 0;

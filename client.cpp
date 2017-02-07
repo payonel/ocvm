@@ -92,7 +92,8 @@ ValuePack Client::component_list(const ValuePack& args)
     string filter = Value::select(args, 0).toString();
     bool exact = Value::select(args, 1).toBool();
     
-    vector<Component*> result;
+    ValuePack pack;
+    Value result = Value::table();
 
     for (auto* pc : _components)
     {
@@ -101,12 +102,13 @@ ValuePack Client::component_list(const ValuePack& args)
         {
             if (!exact || type == filter)
             {
-                result.push_back(pc);
+                result.set(pc->address(), pc->type());
             }
         }
     }
 
-    return ValuePack();
+    pack.push_back(result);
+    return pack;
 }
 
 ValuePack Client::component_invoke(const ValuePack& args)
