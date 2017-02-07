@@ -6,6 +6,10 @@
 #include "luaenv.h"
 #include <lua.hpp>
 
+#include "apis/os.h"
+#include "apis/computer.h"
+#include "apis/global_methods.h"
+
 #include <string>
 #include <functional>
 
@@ -69,6 +73,9 @@ bool Client::load(LuaEnv* lua)
 bool Client::loadLuaComponentApi(LuaEnv* lua)
 {
     lua->newlib(this);
+    lua->newlib(OSApi::get());
+    lua->newlib(ComputerApi::get());
+    lua->newlib(GlobalMethods::get());
     return true;
 }
 

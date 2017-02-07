@@ -67,7 +67,12 @@ bool LuaEnv::newlib(LuaProxy* proxy)
     string libname = proxy->name();
     vector<LuaMethod> methods = proxy->methods();
 
-    lua_newtable(_state); // create lib tbl
+    bool bGlobalMethods = libname.empty();
+
+    if (!bGlobalMethods)
+    {
+        lua_newtable(_state); // create lib tbl
+    }
 
     for (const auto& tup : methods)
     {
@@ -87,10 +92,20 @@ bool LuaEnv::newlib(LuaProxy* proxy)
 
         lua_setmetatable(_state, -2); // pops mt, to udata
 
-        lua_setfield(_state, -2, name.c_str()); // tbl[name] = udata, pops udata
+        if (bGlobalMethods)
+        {
+            lua_setglobal(_state, name.c_str());
+        }
+        else
+        {
+            lua_setfield(_state, -2, name.c_str()); // tbl[name] = udata, pops udata
+        }
     }
 
-    lua_setglobal(_state, libname.c_str()); // _G[libname] = tbl, pops tbl
+    if (!bGlobalMethods)
+    {
+        lua_setglobal(_state, libname.c_str()); // _G[libname] = tbl, pops tbl
+    }
 
     return true;
 }

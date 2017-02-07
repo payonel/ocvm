@@ -13,6 +13,7 @@ using std::vector;
 using std::stringstream;
 
 Component::Component(const string& type, const Value& init) :
+    LuaProxy(type),
     _type(type)
 {
     Value v;
@@ -32,29 +33,14 @@ string Component::address() const
     return _address;
 }
 
-void Component::add(const string& methodName, ComponentMethod method)
-{
-    _methods[methodName] = method;
-}
-
-ValuePack Component::invoke(const string& methodName, const ValuePack& args)
-{
-    if (_methods.find(methodName) == _methods.end())
-    {
-        lout << "component[" << type() << "] does not have any such method: " << methodName << endl;
-        return ValuePack();
-    }
-
-    ComponentMethod pmethod = _methods.at(methodName);
-    return ((*this).*pmethod)(args);
-}
-
 string Component::make_address()
 {
     // -- e.g. 3c44c8a9-0613-46a2-ad33-97b6ba2e9d9a
     // -- 8-4-4-4-12 (halved sizes because bytes make hex pairs)
     vector<int> sets {4, 2, 2, 2, 6};
     string result = "";
+
+    srand(time(nullptr));
 
     for (auto len : sets)
     {

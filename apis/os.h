@@ -1,6 +1,10 @@
 #pragma once
-#include "lua_global.h"
+#include "luaproxy.h"
 
-class OS : public LuaGlobal
+class OSApi : public LuaProxy
 {
+public:
+    static OSApi* get();
+private:
+    OSApi();
 };

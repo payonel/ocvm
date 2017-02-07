@@ -15,6 +15,10 @@ public:
     LuaProxy(const std::string& name);
     virtual ~LuaProxy();
 
+    void operator=(LuaProxy) = delete;
+    LuaProxy(const LuaProxy&) = delete;
+    LuaProxy(LuaProxy&&) = delete;
+
     const std::string& name() const;
     std::vector<LuaMethod> methods() const;
     ValuePack invoke(const std::string& methodName, const ValuePack& args);
