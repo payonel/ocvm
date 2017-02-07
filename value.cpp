@@ -55,7 +55,10 @@ Value Value::table()
 
 string Value::toString() const
 {
-    return _string;
+    if (type() == "string")
+        return _string;
+    else
+        return serialize();
 }
 
 bool Value::toBool() const
