@@ -5,8 +5,8 @@ files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp)
 objs = $(files:%.cpp=bin/%.o)
 deps = $(objs:%.o=%.d)
 
-ocpc: $(objs)
-	g++ $(flags) $(libs) $(objs) -o ocpc
+ocvm: $(objs)
+	g++ $(flags) $(libs) $(objs) -o ocvm
 
 $(objs): | bin bin/components bin/apis
 
@@ -22,5 +22,5 @@ bin/%.o : %.cpp
 
 .PHONY : clean
 clean :
-	rm -fr bin ocpc
+	rm -fr bin ocvm
 
