@@ -8,11 +8,12 @@
 class Config
 {
 public:
-    Config(const std::string& path, const std::string& name);
+    Config();
     
     Value get(const Value& key) const;
     bool set(const Value& key, const Value& value, bool bCreateOnly = false);
 
+    bool load(const std::string& path, const std::string& name);
     bool save();
     std::string name() const;
     std::vector<ValuePair> pairs() const;

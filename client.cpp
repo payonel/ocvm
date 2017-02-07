@@ -17,7 +17,7 @@ using std::make_tuple;
 
 Client::Client(Host* host) : _host(host)
 {
-    _config = new Config(host->envPath(), "client");
+    _config = new Config();
 }
 
 Client::~Client()
@@ -27,6 +27,12 @@ Client::~Client()
 
 bool Client::load(LuaEnv* lua)
 {
+    if (!_config->load(_host->envPath(), "client"))
+    {
+        lout << "failed to load client config\n";
+        return false;
+    }
+
     // load components from config
     for (auto pair : _config->pairs())
     {
@@ -66,9 +72,22 @@ bool Client::load(LuaEnv* lua)
 
 int _a(lua_State* lua)
 {
-    Value method_name = Value::make(lua, 0);
-    Value method = Value::make(lua, -1);
-    lout << "from _a\n";
+    Value udata_call = Value::make(lua, 1);
+    string filter = Value::make(lua, 2).toString();
+    bool exact = Value::make(lua, 3).toBool();
+
+    const Value& mt = udata_call.metatable();
+    if (mt)
+    {
+        const Value& inst = mt.get("instance");
+        if (inst.type() == "userdata")
+        {
+            void* p = inst.toPointer();
+            Client* pc = static_cast<Client*>(p);
+            vector<Component*> comps = pc->component_list(filter, exact);
+        }
+    }
+
     return 0;
 }
 
@@ -87,7 +106,7 @@ bool Client::loadLuaComponentApi(LuaEnv* lua)
     vector<LightField> lfields;
     lfields.push_back(make_tuple("client", this));
 
-    lua->newlib("component", methods, lfields);
+    lua->newlib("component", methods, this);
 
     return true;
 }

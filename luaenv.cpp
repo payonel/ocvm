@@ -1,7 +1,13 @@
 #include "luaenv.h"
 #include "log.h"
 #include <iostream>
+#include <string>
+#include <tuple>
+#include <vector>
 #include <lua.hpp>
+
+using std::string;
+using std::vector;
 
 LuaEnv::LuaEnv()
 {
@@ -20,7 +26,7 @@ bool LuaEnv::run()
     return false;
 }
 
-bool LuaEnv::load(const std::string& machinePath)
+bool LuaEnv::load(const string& machinePath)
 {
     if (luaL_loadfile(_state, machinePath.c_str()))
     {
@@ -61,22 +67,29 @@ void LuaEnv::close()
     // lua_setfield(_state, -2, "datum");
     // lua_setmetatable(_state, -2); // setmetatable(new_table_on_top_of_stack,{datum=7})
 
-bool LuaEnv::newlib(const std::string& libname, std::vector<LuaMethod> callbacks, std::vector<LightField> lfields)
+bool LuaEnv::newlib(const string& libname, vector<LuaMethod> callbacks, void* pinstance)
 {
-    lua_newtable(_state);
-    for (size_t i = 0; i < callbacks.size(); i++)
+    lua_newtable(_state); // create tbl
+    for (const auto& tup : callbacks)
     {
-        const auto& tup = callbacks.at(i);
-        lua_pushcfunction(_state, std::get<1>(tup));
-        lua_setfield(_state, -2, std::get<0>(tup).c_str());
+        const string& name = std::get<0>(tup);
+        LuaCallback pf = std::get<1>(tup);
+
+        lua_newuserdata(_state, sizeof(LuaInstanceMethod));
+
+        lua_newtable(_state); // mt
+        lua_pushcfunction(_state, pf);
+        lua_setfield(_state, -2, "__call"); // pops the function
+
+        lua_pushlightuserdata(_state, pinstance);
+        lua_setfield(_state, -2, "instance"); // pops pinstance
+
+        lua_setmetatable(_state, -2); // pops mt, to udata
+
+        lua_setfield(_state, -2, name.c_str()); // tbl[name] = udata, pops udata
     }
-    for (size_t i = 0; i < lfields.size(); i++)
-    {
-        const auto& tup = lfields.at(i);
-        lua_pushlightuserdata(_state, std::get<1>(tup));
-        lua_setfield(_state, -2, std::get<0>(tup).c_str());
-    }
-    lua_setglobal(_state, libname.c_str());
+
+    lua_setglobal(_state, libname.c_str()); // _G[libname] = tbl, pops tbl
 
     return true;
 }

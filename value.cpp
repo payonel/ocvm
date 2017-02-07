@@ -22,6 +22,12 @@ Value::Value()
     _type = "nil";
 }
 
+Value::Value(void* p)
+{
+    _type = "userdata";
+    _pointer = p;
+}
+
 Value::Value(bool b)
 {
     _type = "boolean";
@@ -41,7 +47,6 @@ Value Value::table()
     return t;
 }
 
-
 string Value::toString() const
 {
     return _string;
@@ -55,6 +60,16 @@ bool Value::toBool() const
 double Value::toNumber() const
 {
     return _number;
+}
+
+void* Value::toPointer() const
+{
+    return _pointer;
+}
+
+const Value& Value::metatable() const
+{
+    return _pmetatable ? *_pmetatable : Value::nil;
 }
 
 const Value& Value::get(const Value& key) const
@@ -148,42 +163,68 @@ ValuePack Value::unpack() const
     return ValuePack();
 }
 
+void Value::getmetatable(Value& v, lua_State* lua, int index)
+{
+    if (v.type() == "table" || v.type() == "userdata")
+    {
+        if (lua_getmetatable(lua, index))
+        {
+            std::shared_ptr<Value> pmt(new Value);
+            *pmt = Value::make(lua, -1);
+            if (pmt->type() == "table")
+            {
+                v._pmetatable = pmt;
+            }
+
+            lua_pop(lua, 1);
+        }
+    }
+}
+
 Value Value::make(lua_State* lua, int index)
 {
     int top = lua_gettop(lua);
+    Value def;
     if (index <= top)
     {
         int type = lua_type(lua, index);
         string name = lua_typename(lua, type);
+        def._type = name;
         switch (type)
         {
             case LUA_TSTRING:
-                return Value(lua_tostring(lua, index));
+                def = Value(lua_tostring(lua, index));
             break;
             case LUA_TBOOLEAN:
-                return Value(lua_toboolean(lua, index));
+                def = Value((bool)lua_toboolean(lua, index));
             break;
             case LUA_TNUMBER:
-                return Value(lua_tonumber(lua, index));
+                def = Value(lua_tonumber(lua, index));
             break;
             case LUA_TNIL:
-                return Value::nil;
+                def = Value::nil;
+            break;
+            case LUA_TUSERDATA:
+                def = Value(lua_touserdata(lua, index));
+            break;
+            case LUA_TLIGHTUSERDATA:
+                def = Value((void*)lua_topointer(lua, index));
             break;
             case LUA_TTABLE:
-                Value table = Value::table();
+                def = Value::table();
+                index = index > 0 ? index : (top + index + 1);
                 lua_pushnil(lua); // push nil as first key for next()
                 while (lua_next(lua, index))
                 {
-                    // key: -1
-                    // value: -2
-                    Value key = Value::make(lua, -2);
+                    // return key, value
                     Value value = Value::make(lua, -1);
-                    table.set(key, value);
-                    lua_pop(lua, 1);
+                    Value key = Value::make(lua, -2);
+                    def.set(key, value);
+                    lua_pop(lua, 1); // only pop value, next retakes the key
                 }
-                return table;
             break;
         }
+        Value::getmetatable(def, lua, index);
     }
-    return Value::nil;
+    return def;
 }

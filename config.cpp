@@ -29,11 +29,16 @@ extern "C"
     }
 }
 
-Config::Config(const string& path, const string& name) :
-    _data(Value::table()),
-    _path(path),
-    _name(name)
+Config::Config() : _data(Value::table())
+{}
+
+bool Config::load(const string& path, const string& name)
 {
+    // clear out previous values (if any)
+    _data = Value::table();
+    _path = path;
+    _name = name;
+
     // first check _path, else local for name
     ifstream input;
 
@@ -65,7 +70,7 @@ Config::Config(const string& path, const string& name) :
 
     if (table.empty())
     {
-        return;
+        return true; // ok, just nothing to load
     }
 
     string loader =
@@ -84,6 +89,7 @@ Config::Config(const string& path, const string& name) :
         lua_pcall(lua, 0, LUA_MULTRET, 0);
     }
     lua_close(lua);
+    return true;
 }
 
 string Config::name() const

@@ -27,7 +27,12 @@
         "*h*hcstdarg": "cpp",
         "cwctype": "cpp",
         "ctime": "cpp",
-        "*h*h*h*h*h*h*h*harray": "cpp"
+        "*h*h*h*h*h*h*h*harray": "cpp",
+        "*h*h*h*h*h*htype_traits": "cpp",
+        "*hcctype": "cpp",
+        "*hcstdarg": "cpp",
+        "*h*h*hsystem_error": "cpp",
+        "system_error": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

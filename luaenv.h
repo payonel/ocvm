@@ -9,6 +9,12 @@ typedef int (*LuaCallback)(lua_State*);
 typedef std::tuple<std::string, LuaCallback> LuaMethod;
 typedef std::tuple<std::string, void*> LightField;
 
+struct LuaInstanceMethod
+{
+    void* instance;
+    LuaCallback method;
+};
+
 class LuaEnv
 {
 public:
@@ -18,7 +24,7 @@ public:
     bool load(const std::string& machinePath);
     bool newlib(const std::string& libname, 
         std::vector<LuaMethod> callbacks, 
-        std::vector<LightField> lfields = {});
+        void* pinstance);
     void close();
 private:
     lua_State* _state;
