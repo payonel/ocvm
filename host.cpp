@@ -3,6 +3,7 @@
 #include "components/component.h"
 #include "components/screen.h"
 #include "components/gpu.h"
+#include "components/eeprom.h"
 #include <sys/stat.h>
 
 using std::string;
@@ -72,6 +73,10 @@ Component* Host::create(const string& type, const Value& init)
     else if (type == "gpu")
     {
         p = new Gpu(type, init);
+    }
+    else if (type == "eeprom")
+    {
+        p = new Eeprom(type, init);
     }
 
     return p;

@@ -123,7 +123,6 @@ ValuePack Client::component_list(const ValuePack& args)
 
 ValuePack Client::component_invoke(const ValuePack& args)
 {
-    // ValuePack component_invoke(const std::string& address, const std::string& methodName, const ValuePack& args);
     Value vaddress = Value::check(args, 0, "string");
     Value vmethodName = Value::check(args, 1, "string");
 
@@ -140,5 +139,10 @@ ValuePack Client::component_invoke(const ValuePack& args)
         }
     }
 
+    return ValuePack();
+}
+
+ValuePack Client::component_methods(const ValuePack& args)
+{
     return ValuePack();
 }

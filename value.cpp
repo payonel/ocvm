@@ -210,27 +210,25 @@ string Value::type() const
 
 string Value::serialize() const
 {
+    stringstream ss;
     if (_type == "string")
     {
-        return "\"" + _string + "\"";
+        ss << "\"" + _string + "\"";
     }
     else if (_type == "boolean")
     {
-        return _bool ? "true" : "false";
+        ss << (_bool ? "true" : "false");
     }
     else if (_type == "number")
     {
-        stringstream ss;
         ss << _number;
-        return ss.str();
     }
     else if (_type == "nil")
     {
-        return "nil";
+        ss << "nil";
     }
     else if (_type == "table")
     {
-        stringstream ss;
         ss << "{";
         for (const auto& pair : pairs())
         {
@@ -241,11 +239,12 @@ string Value::serialize() const
             ss << ",";
         }
         ss << "}";
-        return ss.str();
     }
-
-    lout << "failed to serialize Value[" << _type << "]\n";
-    return "";
+    else
+    {
+        ss << "[" << _type << "]";
+    }
+    return ss.str();
 }
 
 bool operator< (const Value& a, const Value& b)

@@ -628,6 +628,7 @@ end
 -------------------------------------------------------------------------------
 
 local function spcall(...)
+  print("spcall", pcall, ...)
   local result = table.pack(pcall(...))
   if not result[1] then
     error(tostring(result[2]), 0)
@@ -994,6 +995,7 @@ end
 
 local function invoke(target, direct, ...)
   local result
+  print("invoking", target, direct, ...)
   if direct then
     local args = table.pack(...) -- for unwrapping
     args = unwrapUserdata(args)
@@ -1006,7 +1008,9 @@ local function invoke(target, direct, ...)
   end
   if not result then
     local args = table.pack(...) -- for access in closure
+    print("pre coroutined invoke", unwrapUserdata, select, coroutine.yield)
     result = select(1, coroutine.yield(function()
+      print("coroutined invoke", unwrapUserdata)
       args = unwrapUserdata(args)
       local result = table.pack(target.invoke(table.unpack(args, 1, args.n)))
       args = nil -- clear upvalue, avoids trying to persist it
@@ -1118,6 +1122,7 @@ function wrapUserdata(values)
 end
 
 function unwrapUserdata(values)
+  print("unwrapUserdata", values)
   local processed = {}
   local function unwrapRecursively(value)
     if wrappedUserdata[value] then
