@@ -8,4 +8,10 @@ using std::endl;
 Eeprom::Eeprom(const string& type, const Value& init) :
     Component(type, init)
 {
+    add("get", &Eeprom::get);
+}
+
+ValuePack Eeprom::get(const ValuePack& args)
+{
+    return ValuePack();
 }

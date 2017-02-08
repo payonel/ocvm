@@ -1166,6 +1166,7 @@ local function isDirect(address, method)
       return info.direct
     end
   end
+  print("no such method", method)
   error("no such method", 1)
 end
 

@@ -6,4 +6,6 @@ class Eeprom : public Component
 {
 public:
     Eeprom(const std::string& type, const Value& init);
+
+    ValuePack get(const ValuePack& args);
 };

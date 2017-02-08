@@ -25,6 +25,7 @@ Client::Client(Host* host) : LuaProxy("component"), _host(host)
 
     add("list", &Client::component_list);
     add("invoke", &Client::component_invoke);
+    add("methods", &Client::component_methods);
 }
 
 Client::~Client()
@@ -96,11 +97,10 @@ void Client::close()
 
 ValuePack Client::component_list(const ValuePack& args)
 {
-    Value vfilter = Value::check(args, 0, "string", "nil");
-    Value vexact = Value::check(args, 1, "boolean", "nil");
-    
+    const Value& vfilter = Value::check(args, 0, "string", "nil");
     string filter = vfilter ? vfilter.toString() : "";
-    bool exact = vexact.toBool(); // nil(false)
+
+    bool exact = Value::check(args, 1, "boolean", "nil").toBool();
 
     ValuePack pack;
     Value result = Value::table();
@@ -123,11 +123,8 @@ ValuePack Client::component_list(const ValuePack& args)
 
 ValuePack Client::component_invoke(const ValuePack& args)
 {
-    Value vaddress = Value::check(args, 0, "string");
-    Value vmethodName = Value::check(args, 1, "string");
-
-    string address = vaddress.toString();
-    string methodName = vmethodName.toString();
+    string address = Value::check(args, 0, "string").toString();
+    string methodName = Value::check(args, 1, "string").toString();
 
     ValuePack pack;
 
@@ -144,5 +141,28 @@ ValuePack Client::component_invoke(const ValuePack& args)
 
 ValuePack Client::component_methods(const ValuePack& args)
 {
-    return ValuePack();
+    std::string address = Value::check(args, 0, "string").toString();
+
+    ValuePack result;
+    for (auto* pc : _components)
+    {
+        if (pc->address() == address)
+        {
+            Value mpack = Value::table();
+            for (const auto& luaMethod : pc->methods())
+            {
+                mpack.set(std::get<0>(luaMethod), true);
+            }
+            result.push_back(mpack);
+            break;
+        }
+    }
+
+    if (result.empty()) // addr not found
+    {
+        result.push_back(Value::nil);
+        result.push_back("no such component");
+    }
+
+    return result;
 }
