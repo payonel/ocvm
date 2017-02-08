@@ -3,12 +3,6 @@
 
 #include <lua.hpp>
 
-#include <sstream>
-using std::string;
-using std::map;
-using std::vector;
-using std::stringstream;
-
 Value Value::nil; // the nil
 
 Value::Value(const string& v)
@@ -306,7 +300,7 @@ void Value::push(lua_State* lua) const
     }
 }
 
-const Value& Value::check(const ValuePack& pack, size_t index, const std::string& required, const std::string& optional)
+const Value& Value::check(const ValuePack& pack, size_t index, const string& required, const string& optional)
 {
     const Value* pv = &Value::select(pack, index);
     if (pv->type() != required)

@@ -4,6 +4,8 @@
 #include <map>
 #include "frame.h"
 
+using std::map;
+
 struct _win_st;
 typedef _win_st WINDOW;
 
@@ -28,5 +30,5 @@ protected:
     void onResolution(Frame* pWhichFrame) override;
 private:
     // termios* _original;
-    std::map<Frame*, FrameState> _states;
+    map<Frame*, FrameState> _states;
 };

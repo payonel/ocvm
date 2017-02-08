@@ -7,10 +7,6 @@
 #include <string>
 #include <vector>
 #include <sstream>
-using std::string;
-using std::endl;
-using std::vector;
-using std::stringstream;
 
 Component::Component(const string& type, const Value& init) :
     LuaProxy(type),

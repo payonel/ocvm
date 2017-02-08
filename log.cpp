@@ -1,9 +1,10 @@
 #include "log.h"
 #include "frame.h"
-using std::string;
 
 #include <iostream>
+#include <list>
 using std::cout;
+using std::list;
 
 Logger lout(1);
 Logger lerr(0);
@@ -25,7 +26,7 @@ public:
         }
         _rolling_buffer.clear();
     }
-    void write(const std::string& text) override
+    void write(const string& text) override
     {
         _rolling_buffer.push_back(text);
         if (_rolling_buffer.size() > LOG_DUMP_SIZE)
@@ -35,7 +36,7 @@ public:
         Frame::write(text);
     }
 private:
-    std::list<std::string> _rolling_buffer;
+    list<string> _rolling_buffer;
 } single_log_frame;
 
 Frame* Logger::getFrame()

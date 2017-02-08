@@ -14,9 +14,6 @@
 #include <functional>
 
 using std::endl;
-using std::string;
-using std::vector;
-using std::tuple;
 using std::make_tuple;
 
 Client::Client(Host* host) : LuaProxy("component"), _host(host)
@@ -46,7 +43,7 @@ bool Client::load(LuaEnv* lua)
     {
         if (pair.first.type() != "string")
         {
-            lout << "bad config key, not string: " << pair.first.type() << std::endl;
+            lout << "bad config key, not string: " << pair.first.type() << endl;
             return false;
         }
         else
@@ -141,7 +138,7 @@ ValuePack Client::component_invoke(const ValuePack& args)
 
 ValuePack Client::component_methods(const ValuePack& args)
 {
-    std::string address = Value::check(args, 0, "string").toString();
+    string address = Value::check(args, 0, "string").toString();
 
     ValuePack result;
     for (auto* pc : _components)

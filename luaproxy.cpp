@@ -1,10 +1,7 @@
 #include "luaproxy.h"
 #include "log.h"
 
-using std::vector;
-using std::string;
-
-LuaProxy::LuaProxy(const std::string& name) :
+LuaProxy::LuaProxy(const string& name) :
     _name(name)
 {
 }
@@ -13,7 +10,7 @@ LuaProxy::~LuaProxy()
 {
 }
 
-const std::string& LuaProxy::name() const
+const string& LuaProxy::name() const
 {
     return _name;
 }
@@ -66,7 +63,7 @@ void LuaProxy::add(const string& methodName, ProxyMethod method)
     _methods[methodName] = method;
 }
 
-ValuePack LuaProxy::invoke(const std::string& methodName, const ValuePack& args)
+ValuePack LuaProxy::invoke(const string& methodName, const ValuePack& args)
 {
     const auto& mit = _methods.find(methodName);
     if (mit != _methods.end())

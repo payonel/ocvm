@@ -4,6 +4,8 @@
 #include <tuple>
 #include <lua.hpp>
 
+using std::string;
+
 struct lua_State;
 typedef int (*LuaCallback)(lua_State*);
 
@@ -21,7 +23,7 @@ public:
     LuaEnv();
     ~LuaEnv();
     bool run();
-    bool load(const std::string& machinePath);
+    bool load(const string& machinePath);
     bool newlib(LuaProxy* proxy);
     void close();
 private:

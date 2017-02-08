@@ -26,7 +26,7 @@ public:
 protected:
     bool loadLuaComponentApi(LuaEnv*);
 private:
-    std::vector<Component*> _components;
+    vector<Component*> _components;
     Config* _config;
     Host* _host;
 };

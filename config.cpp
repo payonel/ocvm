@@ -6,12 +6,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-using std::string;
 using std::ifstream;
 using std::ofstream;
-using std::stringstream;
-using std::vector;
-using std::map;
 using std::endl;
 
 extern "C"

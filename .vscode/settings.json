@@ -26,7 +26,8 @@
         "*hcstdint": "cpp",
         "*hcctype": "cpp",
         "*h*h*hclocale": "cpp",
-        "*cpp*cppfstream": "cpp"
+        "*cpp*cppfstream": "cpp",
+        "string": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

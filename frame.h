@@ -1,11 +1,13 @@
 #pragma once
 
-#include <functional>
 #include <string>
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include <tuple>
+
+using std::tuple;
+using std::vector;
+using std::string;
 
 class Frame;
 
@@ -22,7 +24,7 @@ public:
     virtual void onWrite(Frame*) = 0;
     virtual void onResolution(Frame*) = 0;
 protected:
-    std::vector<Frame*> _frames;
+    vector<Frame*> _frames;
 };
 
 class Frame
@@ -35,12 +37,12 @@ public:
     virtual void mouse(int x, int y) {}
     virtual void keyboard(char c) {}
 
-    virtual void write(const std::string& text);
+    virtual void write(const string& text);
     virtual void move(int x, int y) {}
-    std::string read();
+    string read();
 
     virtual bool setResolution(int width, int height);
-    std::tuple<int, int> getResolution() const;
+    tuple<int, int> getResolution() const;
     bool scrolling() const;
     void scrolling(bool enable);
 
@@ -48,7 +50,7 @@ public:
     int y() const;
 private:
     Framer* _framer;
-    std::string _buffer;
+    string _buffer;
 
     int _width;
     int _height;

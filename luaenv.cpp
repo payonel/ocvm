@@ -7,8 +7,6 @@
 #include <vector>
 #include <lua.hpp>
 
-using std::string;
-using std::vector;
 using std::endl;
 
 LuaEnv::LuaEnv()

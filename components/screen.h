@@ -5,5 +5,5 @@
 class Screen : public Component
 {
 public:
-    Screen(const std::string& type, const Value& init);
+    Screen(const string& type, const Value& init);
 };

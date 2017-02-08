@@ -9,8 +9,6 @@
 using std::cout;
 using std::endl;
 using std::flush;
-using std::string;
-using std::stringstream;
 
 #include <chrono>
 #include <thread>
@@ -36,7 +34,7 @@ void Shell::onResolution(Frame* pWhichFrame)
 {
     int col, row;
     getmaxyx(stdscr, row, col);
-    lout << "main window max calculated in onResolution: " << col << "," << row << std::endl;
+    lout << "main window max calculated in onResolution: " << col << "," << row << endl;
 
     auto dim = pWhichFrame->getResolution();
     int availableLines = row;

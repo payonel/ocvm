@@ -6,12 +6,10 @@
 #include "components/eeprom.h"
 #include <sys/stat.h>
 
-using std::string;
-
 class ScreenFrame : public Frame, public Screen
 {
 public:
-    ScreenFrame(const std::string& type, const Value& init) : Screen(type, init)
+    ScreenFrame(const string& type, const Value& init) : Screen(type, init)
     {
     }
 

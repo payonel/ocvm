@@ -2,9 +2,6 @@
 #include "log.h"
 #include <iostream>
 
-using std::string;
-using std::tuple;
-
 Framer::Framer()
 {
 }

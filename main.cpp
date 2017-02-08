@@ -5,9 +5,11 @@
 #include "luaenv.h"
 #include "log.h"
 
+using std::cerr;
+
 int main(int argc, char** argv)
 {
-    std::string client_env_path = argc > 1 ? argv[1] : "tmp";
+    string client_env_path = argc > 1 ? argv[1] : "tmp";
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
     Host host(client_env_path);
@@ -16,13 +18,13 @@ int main(int argc, char** argv)
     Framer* framer = host.getFramer();
     if (!framer)
     {
-        std::cerr << "no framer available\n";
+        cerr << "no framer available\n";
         return 1;
     }
 
     if (!framer->open())  // open the ui
     {
-        std::cerr << "framer open failed\n";
+        cerr << "framer open failed\n";
         return 1;
     }
 
