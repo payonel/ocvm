@@ -5,7 +5,7 @@
             "name": "C++ Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/ocpc",
+            "program": "${workspaceRoot}/ocvm",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
