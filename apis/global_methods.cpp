@@ -31,7 +31,7 @@ ValuePack GlobalMethods::print(const ValuePack& args)
 
 ValuePack GlobalMethods::error(const ValuePack& args)
 {
-    lout << "[--vm--] [ERROR]" << Value::select(args, 0).toString() << endl;
+    lout << "[--vm--] [ERROR] " << Value::select(args, 0).toString() << endl;
     return ValuePack();
 }
 

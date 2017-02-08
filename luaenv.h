@@ -25,5 +25,6 @@ public:
     bool newlib(LuaProxy* proxy);
     void close();
 private:
-    lua_State* _state;
+    lua_State* _state = nullptr;
+    lua_State* _machine = nullptr;
 };

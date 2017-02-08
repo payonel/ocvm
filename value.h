@@ -20,7 +20,11 @@ public:
     Value(const void* p, bool bLight);
     Value(int n) : Value(double(n)) {}
     Value(const char* cstr) : Value(std::string(cstr)) {}
+    Value(lua_State*);
     Value();
+
+    bool checkArg(int index, const std::string& paramName, const std::string& expectedType);
+    bool checkArg(int index, const std::string& paramName, const std::string& expectedType, const std::string& optionalType);
 
     static Value make(lua_State* lua, int index = -1);
     static Value table();

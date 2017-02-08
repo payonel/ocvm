@@ -45,6 +45,48 @@ Value::Value(double d)
     _number = d;
 }
 
+Value::Value(lua_State* s)
+{
+    _type = "thread[";
+    int before = lua_gettop(s); // in case checking status adds to the stack
+    int status_id = lua_status(s);
+    if (status_id == LUA_OK)
+    {
+        _type += "ok";
+    }
+    else if (status_id == LUA_YIELD)
+    {
+        _type += "yield";
+    }
+    else if (status_id == LUA_ERRRUN)
+    {
+        _type += "errrun";
+    }
+    else if (status_id == LUA_ERRSYNTAX)
+    {
+        _type += "syntax";
+    }
+    else if (status_id == LUA_ERRMEM)
+    {
+        _type += "memory";
+    }
+    else if (status_id == LUA_ERRGCMM)
+    {
+        _type += "gcmm";
+    }
+    else if (status_id == LUA_ERRERR)
+    {
+        _type += "errerr";
+    }
+    else
+    {
+        _type += "unknown";
+    }
+    _type += "]";
+    _id = LUA_TTHREAD;
+    lua_settop(s, before);
+}
+
 Value Value::table()
 {
     Value t;
@@ -279,4 +321,16 @@ void Value::push(lua_State* lua) const
             lua_pushnil(lua);
         break;
     }
+}
+
+bool Value::checkArg(int index, const std::string& paramName, const std::string& expectedType)
+{
+    bool ok = type() == expectedType;
+    return ok;
+}
+
+bool Value::checkArg(int index, const std::string& paramName, const std::string& expectedType, const std::string& optionalType)
+{
+    bool ok = type() == expectedType || type() == optionalType;
+    return ok;
 }

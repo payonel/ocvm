@@ -9,6 +9,7 @@
 
 using std::string;
 using std::vector;
+using std::endl;
 
 LuaEnv::LuaEnv()
 {
@@ -21,35 +22,53 @@ LuaEnv::~LuaEnv()
     close();
 }
 
+int run_caller(lua_State* lua)
+{
+    lout << "in lua callback\n";
+    return 0;
+}
+
 bool LuaEnv::run()
 {
-    lout << "lua env resume\n";
-    return false;
+    lout << "lua env resume: " << lua_gettop(_state) - 2 << endl;
+    int status_id = lua_resume(_state, _machine, 0);
+    if (status_id == LUA_OK)
+    {
+        lout << "lua env SHUTDOWN\n";
+        return false;
+    }
+    else if (status_id == LUA_YIELD)
+    {
+        lout << "lua env yielded\n";
+        return true;
+    }
+    else
+    {
+        lout << "machine crash: ";
+        lout << lua_tostring(_state, -1) << "\n";
+        lout << "machine thread" << Value(_state).toString() << endl;
+        lout << "main thread" << Value(_machine).toString() << endl;
+        return false;
+    }
+
+    return true;
 }
 
 bool LuaEnv::load(const string& machinePath)
 {
+    _machine = lua_newthread(_state);
+    lout << "machine thread created\n";
+
     if (luaL_loadfile(_state, machinePath.c_str()))
     {
-        lout << "failed to load string\n";
+        lout << "failed to load machine\n";
         lout << lua_tostring(_state, -1) << "\n";
         lua_pop(_state, 1);
         return false;
     }
+    lout << "machine function loaded\n";
 
-    lout << "machine loaded\n";
-
-    if (lua_pcall(_state, 0, LUA_MULTRET, 0))
-    {
-        lout << "pcall failure\n";
-        lout << lua_tostring(_state, -1) << "\n";
-        lua_pop(_state, 1);
-        return false;
-    }
-
-    lout << "machine state returned\n";
-
-    return true;
+    return _machine;
 }
 
 void LuaEnv::close()

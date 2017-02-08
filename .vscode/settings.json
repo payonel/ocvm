@@ -20,7 +20,8 @@
         "ostream": "cpp",
         "ctime": "cpp",
         "system_error": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "thread": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

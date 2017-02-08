@@ -47,7 +47,10 @@ int main(int argc, char** argv)
 
     while (framer->update())
     {
-        lenv.run();
+        if (!lenv.run())
+        {
+            break;
+        }
     }
 
     framer->close();
