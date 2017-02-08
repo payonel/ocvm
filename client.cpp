@@ -13,7 +13,6 @@
 #include <string>
 #include <functional>
 
-using std::endl;
 using std::make_tuple;
 
 Client::Client(Host* host) : LuaProxy("component"), _host(host)

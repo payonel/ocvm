@@ -1,6 +1,5 @@
 #include "global_methods.h"
 #include "log.h"
-using std::endl;
 
 GlobalMethods::GlobalMethods() : LuaProxy("")
 {

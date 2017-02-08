@@ -5,6 +5,7 @@
 
 using std::stringstream;
 using std::string;
+using std::endl;
 
 class Frame;
 

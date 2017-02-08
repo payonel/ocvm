@@ -8,7 +8,6 @@
 #include <sstream>
 using std::ifstream;
 using std::ofstream;
-using std::endl;
 
 extern "C"
 {

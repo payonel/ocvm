@@ -7,8 +7,6 @@
 #include <vector>
 #include <lua.hpp>
 
-using std::endl;
-
 LuaEnv::LuaEnv()
 {
     _state = luaL_newstate();

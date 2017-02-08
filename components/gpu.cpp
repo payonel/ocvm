@@ -2,7 +2,6 @@
 #include "log.h"
 #include "frame.h"
 #include <iostream>
-using std::endl;
 
 Gpu::Gpu(const string& type, const Value& init) :
     Component(type, init)
