@@ -98,18 +98,13 @@ bool LuaEnv::newlib(LuaProxy* proxy)
         const string& name = std::get<0>(tup);
         lua_CFunction pf = std::get<1>(tup);
 
-        lua_newtable(_state); // the method!
+        lua_newtable(_state);
         lua_pushstring(_state, name.c_str());
         lua_setfield(_state, -2, "name");
-
-        lua_newtable(_state); // mt
-        lua_pushcfunction(_state, pf);
-        lua_setfield(_state, -2, "__call"); // pops the function
-
         lua_pushlightuserdata(_state, proxy);
-        lua_setfield(_state, -2, "instance"); // pops pinstance
+        lua_setfield(_state, -2, "instance");
 
-        lua_setmetatable(_state, -2); // pops mt, to udata
+        lua_pushcclosure(_state, pf, 1);
 
         if (bGlobalMethods)
         {

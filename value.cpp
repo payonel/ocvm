@@ -244,49 +244,46 @@ void Value::getmetatable(Value& v, lua_State* lua, int index)
 
 Value Value::make(lua_State* lua, int index)
 {
-    int top = lua_gettop(lua);
     Value def;
-    if (index <= top)
+    int type = lua_type(lua, index);
+    string name = lua_typename(lua, type);
+    def._type = name;
+
+    switch (type)
     {
-        int type = lua_type(lua, index);
-        string name = lua_typename(lua, type);
-        def._type = name;
-        switch (type)
-        {
-            case LUA_TSTRING:
-                def = Value(lua_tostring(lua, index));
-            break;
-            case LUA_TBOOLEAN:
-                def = Value((bool)lua_toboolean(lua, index));
-            break;
-            case LUA_TNUMBER:
-                def = Value(lua_tonumber(lua, index));
-            break;
-            case LUA_TNIL:
-                def = Value::nil;
-            break;
-            case LUA_TUSERDATA:
-                def = Value(lua_touserdata(lua, index), false);
-            break;
-            case LUA_TLIGHTUSERDATA:
-                def = Value((void*)lua_topointer(lua, index), true);
-            break;
-            case LUA_TTABLE:
-                def = Value::table();
-                index = index >= 0 ? index : (top + index + 1);
-                lua_pushnil(lua); // push nil as first key for next()
-                while (lua_next(lua, index))
-                {
-                    // return key, value
-                    Value value = Value::make(lua, -1);
-                    Value key = Value::make(lua, -2);
-                    def.set(key, value);
-                    lua_pop(lua, 1); // only pop value, next retakes the key
-                }
-            break;
-        }
-        Value::getmetatable(def, lua, index);
+        case LUA_TSTRING:
+            def = Value(lua_tostring(lua, index));
+        break;
+        case LUA_TBOOLEAN:
+            def = Value((bool)lua_toboolean(lua, index));
+        break;
+        case LUA_TNUMBER:
+            def = Value(lua_tonumber(lua, index));
+        break;
+        case LUA_TNIL:
+            def = Value::nil;
+        break;
+        case LUA_TUSERDATA:
+            def = Value(lua_touserdata(lua, index), false);
+        break;
+        case LUA_TLIGHTUSERDATA:
+            def = Value((void*)lua_topointer(lua, index), true);
+        break;
+        case LUA_TTABLE:
+            def = Value::table();
+            lua_pushnil(lua); // push nil as first key for next()
+            while (lua_next(lua, index))
+            {
+                // return key, value
+                Value value = Value::make(lua, -1);
+                Value key = Value::make(lua, -2);
+                def.set(key, value);
+                lua_pop(lua, 1); // only pop value, next retakes the key
+            }
+        break;
     }
+    Value::getmetatable(def, lua, index);
+
     return def;
 }
 
@@ -323,14 +320,24 @@ void Value::push(lua_State* lua) const
     }
 }
 
-bool Value::checkArg(int index, const std::string& paramName, const std::string& expectedType)
+const Value& Value::check(const ValuePack& pack, size_t index, const std::string& required, const std::string& optional)
 {
-    bool ok = type() == expectedType;
-    return ok;
-}
+    const Value* pv = &Value::nil;
+    if (index < pack.size())
+    {
+        pv = &pack.at(index);
+    }
+    
+    if (pv->type() != required)
+    {
+        if (optional.empty() || pv->type() != optional)
+        {
+            luaL_error(pack.state, "bad arguments #%d (%s expected, got %s) ",
+                index+1,
+                required.c_str(),
+                pv->type().c_str());
+        }
+    }
 
-bool Value::checkArg(int index, const std::string& paramName, const std::string& expectedType, const std::string& optionalType)
-{
-    bool ok = type() == expectedType || type() == optionalType;
-    return ok;
+    return *pv;
 }

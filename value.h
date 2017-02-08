@@ -5,11 +5,14 @@
 #include <map>
 #include <memory>
 
-class Value;
-typedef std::vector<Value> ValuePack;
-typedef std::map<Value, Value>::value_type ValuePair;
-
 class lua_State;
+class Value;
+struct ValuePack : public std::vector<Value>
+{
+    lua_State* state;
+};
+
+typedef std::map<Value, Value>::value_type ValuePair;
 
 class Value
 {
@@ -22,9 +25,6 @@ public:
     Value(const char* cstr) : Value(std::string(cstr)) {}
     Value(lua_State*);
     Value();
-
-    bool checkArg(int index, const std::string& paramName, const std::string& expectedType);
-    bool checkArg(int index, const std::string& paramName, const std::string& expectedType, const std::string& optionalType);
 
     static Value make(lua_State* lua, int index = -1);
     static Value table();
@@ -54,6 +54,7 @@ public:
     const Value& metatable() const;
 
     static const Value& select(const ValuePack& pack, size_t index);
+    static const Value& check(const ValuePack& pack, size_t index, const std::string& required, const std::string& optional = "");
 
     // table functions
     const Value& get(const Value& key) const;

@@ -20,22 +20,26 @@ const std::string& LuaProxy::name() const
 
 int lua_proxy_static_caller(lua_State* lua)
 {
-    auto caller = Value::make(lua, 1);
-    auto _this = caller.metatable().get("instance").toPointer();
+    auto caller = Value::make(lua, lua_upvalueindex(1));
+    auto _this = caller.get("instance").toPointer();
     auto methodName = caller.get("name").toString();
 
     ValuePack pack;
+    pack.state = lua;
 
     if (_this)
     {
         size_t top = lua_gettop(lua);
-        for (size_t index = 2; index <= top; index++)
+        for (size_t index = 1; index <= top; index++)
         {
             pack.push_back(Value::make(lua, index));
         }
 
         LuaProxy* p = reinterpret_cast<LuaProxy*>(_this);
         pack = p->invoke(methodName, pack);
+
+        // settop(0) here to save memory but it is NOT necessary
+        lua_settop(lua, 0);
 
         // push pack result on stack
         for (size_t index = 0; index < pack.size(); index++)

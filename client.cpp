@@ -96,14 +96,11 @@ void Client::close()
 
 ValuePack Client::component_list(const ValuePack& args)
 {
-    Value vfilter = Value::select(args, 0);
-    Value vexact = Value::select(args, 1);
-
-    vfilter.checkArg(1, "filter", "string", "nil");
-    vexact.checkArg(2, "exact", "boolean", "nil");
+    Value vfilter = Value::check(args, 0, "string", "nil");
+    Value vexact = Value::check(args, 1, "boolean", "nil");
     
-    string filter = vfilter.toString();
-    bool exact = vexact.toBool();
+    string filter = vfilter ? vfilter.toString() : "";
+    bool exact = vexact.toBool(); // nil(false)
 
     ValuePack pack;
     Value result = Value::table();
@@ -127,11 +124,8 @@ ValuePack Client::component_list(const ValuePack& args)
 ValuePack Client::component_invoke(const ValuePack& args)
 {
     // ValuePack component_invoke(const std::string& address, const std::string& methodName, const ValuePack& args);
-    Value vaddress = Value::select(args, 0);
-    Value vmethodName = Value::select(args, 1);
-    
-    vaddress.checkArg(1, "address", "string");
-    vmethodName.checkArg(1, "address", "string");
+    Value vaddress = Value::check(args, 0, "string");
+    Value vmethodName = Value::check(args, 1, "string");
 
     string address = vaddress.toString();
     string methodName = vmethodName.toString();
