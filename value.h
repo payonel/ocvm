@@ -24,9 +24,9 @@ public:
     Value(int n) : Value(double(n)) {}
     Value(const char* cstr) : Value(std::string(cstr)) {}
     Value(lua_State*);
+    Value(lua_State*, int);
     Value();
 
-    static Value make(lua_State* lua, int index = -1);
     static Value table();
     static Value nil;
 
@@ -43,7 +43,6 @@ public:
         return vec;
     }
 
-    ValuePack unpack() const; // for table arrays
     void push(lua_State* lua) const;
 
     std::string type() const;
@@ -65,7 +64,7 @@ public:
     std::string serialize() const;
     operator bool() const;
 protected:
-    static void getmetatable(Value& v, lua_State* lua, int index);
+    void getmetatable(lua_State* lua, int index);
 private:
     std::string _type;
     int _id;

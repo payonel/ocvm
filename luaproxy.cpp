@@ -20,7 +20,7 @@ const std::string& LuaProxy::name() const
 
 int lua_proxy_static_caller(lua_State* lua)
 {
-    auto caller = Value::make(lua, lua_upvalueindex(1));
+    Value caller(lua, lua_upvalueindex(1));
     auto _this = caller.get("instance").toPointer();
     auto methodName = caller.get("name").toString();
 
@@ -32,7 +32,7 @@ int lua_proxy_static_caller(lua_State* lua)
         size_t top = lua_gettop(lua);
         for (size_t index = 1; index <= top; index++)
         {
-            pack.push_back(Value::make(lua, index));
+            pack.push_back(Value(lua, index));
         }
 
         LuaProxy* p = reinterpret_cast<LuaProxy*>(_this);

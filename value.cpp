@@ -87,6 +87,45 @@ Value::Value(lua_State* s)
     lua_settop(s, before);
 }
 
+Value::Value(lua_State* lua, int index)
+{
+    _id = lua_type(lua, index);
+    _type = lua_typename(lua, _id);
+
+    switch (_id)
+    {
+        case LUA_TSTRING:
+            _string = lua_tostring(lua, index);
+        break;
+        case LUA_TBOOLEAN:
+            _bool = lua_toboolean(lua, index);
+        break;
+        case LUA_TNUMBER:
+            _number = lua_tonumber(lua, index);
+        break;
+        case LUA_TNIL:
+        break;
+        case LUA_TLIGHTUSERDATA:
+            _pointer = lua_touserdata(lua, index);
+        break;
+        case LUA_TUSERDATA:
+            _pointer = (void*)lua_topointer(lua, index);
+        break;
+        case LUA_TTABLE:
+            lua_pushnil(lua); // push nil as first key for next()
+            while (lua_next(lua, index))
+            {
+                // return key, value
+                Value value(lua, -1);
+                Value key(lua, -2);
+                set(key, value);
+                lua_pop(lua, 1); // only pop value, next retakes the key
+            }
+        break;
+    }
+    getmetatable(lua, index);
+}
+
 Value Value::table()
 {
     Value t;
@@ -219,72 +258,20 @@ Value::operator bool() const
     return _type != "nil" && (_type != "boolean" || _bool);
 }
 
-ValuePack Value::unpack() const
+void Value::getmetatable(lua_State* lua, int index)
 {
-    return ValuePack();
-}
-
-void Value::getmetatable(Value& v, lua_State* lua, int index)
-{
-    if (v.type() == "table" || v.type() == "userdata")
+    if (type() == "table" || type() == "userdata")
     {
         if (lua_getmetatable(lua, index))
         {
-            std::shared_ptr<Value> pmt(new Value);
-            *pmt = Value::make(lua, -1);
+            std::shared_ptr<Value> pmt(new Value(lua, -1));
             if (pmt->type() == "table")
             {
-                v._pmetatable = pmt;
+                _pmetatable = pmt;
             }
-
-            lua_pop(lua, 1);
+            lua_pop(lua, 1); // pushes NOTHING if not metatable, not nil
         }
     }
-}
-
-Value Value::make(lua_State* lua, int index)
-{
-    Value def;
-    int type = lua_type(lua, index);
-    string name = lua_typename(lua, type);
-    def._type = name;
-
-    switch (type)
-    {
-        case LUA_TSTRING:
-            def = Value(lua_tostring(lua, index));
-        break;
-        case LUA_TBOOLEAN:
-            def = Value((bool)lua_toboolean(lua, index));
-        break;
-        case LUA_TNUMBER:
-            def = Value(lua_tonumber(lua, index));
-        break;
-        case LUA_TNIL:
-            def = Value::nil;
-        break;
-        case LUA_TUSERDATA:
-            def = Value(lua_touserdata(lua, index), false);
-        break;
-        case LUA_TLIGHTUSERDATA:
-            def = Value((void*)lua_topointer(lua, index), true);
-        break;
-        case LUA_TTABLE:
-            def = Value::table();
-            lua_pushnil(lua); // push nil as first key for next()
-            while (lua_next(lua, index))
-            {
-                // return key, value
-                Value value = Value::make(lua, -1);
-                Value key = Value::make(lua, -2);
-                def.set(key, value);
-                lua_pop(lua, 1); // only pop value, next retakes the key
-            }
-        break;
-    }
-    Value::getmetatable(def, lua, index);
-
-    return def;
 }
 
 void Value::push(lua_State* lua) const
@@ -322,12 +309,7 @@ void Value::push(lua_State* lua) const
 
 const Value& Value::check(const ValuePack& pack, size_t index, const std::string& required, const std::string& optional)
 {
-    const Value* pv = &Value::nil;
-    if (index < pack.size())
-    {
-        pv = &pack.at(index);
-    }
-    
+    const Value* pv = &Value::select(pack, index);
     if (pv->type() != required)
     {
         if (optional.empty() || pv->type() != optional)

@@ -20,8 +20,8 @@ extern "C"
     {
         const void* raw = lua_topointer(lua, 1);
         Config* self = const_cast<Config*>(static_cast<const Config*>(raw));
-        Value key = Value::make(lua, 2);
-        Value value = Value::make(lua, 3);
+        Value key(lua, 2);
+        Value value(lua, 3);
         self->set(key, value);
 
         lout << self->name() << " config loading [" << key.serialize() << "]: " << value.serialize() << "\n";
