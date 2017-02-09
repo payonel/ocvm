@@ -3,10 +3,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "config.h"
-
-using std::ifstream;
-using std::ofstream;
+#include "utils.h"
 
 Eeprom::Eeprom(const string& type, const Value& init) :
     Component(type, init)
@@ -20,42 +17,15 @@ void Eeprom::load(const string& dir, const string& file)
 {
     if (dir.empty())
     {
-        lout << "bug, eeprom env dir path empty\n";
+        lerr << "bug, eeprom env dir path empty\n";
         return;
     }
 
     _path = dir + "/" + file;
 
-    // if _path doesn't exist, copy from system/${file]
-    ifstream f(_path);
-    if (!f)
+    if (!utils::read(_path))
     {
-        f.open("system/" + file);
-        if (!f)
-        {
-            lout << "eeprom could not open system source file\n";
-            return;
-        }
-
-        Config eepromConfig;
-        eepromConfig.load(dir, file);
-
-        string bios;
-        char byte;
-        while (byte = f.get())
-        {
-            if (!f)
-                break;
-            bios += byte;
-        }
-        f.close();
-
-        eepromConfig.set("content", bios);
-        eepromConfig.set("data", "");
-        if (!eepromConfig.save())
-        {
-            lout << "could not create eeprom storage\n";
-        }
+        utils::copy("system/" + file, _path);
     }
 }
 

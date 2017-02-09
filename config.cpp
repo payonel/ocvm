@@ -4,10 +4,8 @@
 #include <lua.hpp>
 
 #include <iostream>
-#include <fstream>
 #include <sstream>
-using std::ifstream;
-using std::ofstream;
+#include "utils.h"
 
 extern "C"
 {
@@ -35,32 +33,12 @@ bool Config::load(const string& path, const string& name)
     _name = name;
 
     // first check _path, else local for name
-    ifstream input;
-
-    lout << _name << ": ";
-    input.open(savePath());
-    if (input)
-    {
-        lout << "config loaded from " << savePath() << "\n";
-    }
-    else
-    {
-        input.open(name + ".cfg");
-        if (input)
-            lout << "default config loaded\n";
-        else
-            lout << "failed to load\n";
-    }
-
     string table;
-    char byte;
-    while (byte = input.get())
+    if (!utils::read(savePath(), &table) && !utils::read(name + ".cfg", &table))
     {
-        if (!input)
-            break;
-        table += byte;
+        lout << "config could not load: " << name << endl;
+        return false;
     }
-    input.close();
 
     lout << "config [" << _name << "]: table: " << table;
     lout << endl;
@@ -133,15 +111,7 @@ bool Config::save()
     }
     ss << "}\n";
 
-    lout << _name << ": config ";
-    ofstream output(savePath());
-    if (!output)
-    {
-        lout << "could not save\n";
-        return false;
-    }
-    output << ss.str();
-    output.close();
-    lout << " saved\n";
+    lout << "saving " << _name << ": config\n";
+    return utils::write(ss.str(), savePath());
     return true;
 }
