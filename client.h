@@ -17,6 +17,7 @@ public:
     ~Client();
     bool load(LuaEnv*);
     void close();
+    vector<Component*> components(string filter, bool exact = false) const;
 
     // global api that is actually computer specific
     // invoke by address

@@ -7,8 +7,8 @@
 #include <lua.hpp>
 
 #include "apis/os.h"
-#include "apis/computer.h"
 #include "apis/global_methods.h"
+#include "apis/system.h"
 
 #include <string>
 #include <functional>
@@ -57,7 +57,7 @@ bool Client::load(LuaEnv* lua)
             }
             else
             {
-                lout << "failed\n";
+                lout << "failed! The host could not create a " << key << endl;
                 return false;
             }
         }
@@ -69,10 +69,21 @@ bool Client::load(LuaEnv* lua)
 
 bool Client::loadLuaComponentApi(LuaEnv* lua)
 {
+    // computer required
+    auto vec = components("computer", true);
+    if (vec.size() != 1)
+    {
+        lout << "emulation requires exactly one computer component\n";
+        return false;
+    }
+    auto* pc = vec.at(0);
+
+    lua->newlib(pc);
     lua->newlib(this);
     lua->newlib(OSApi::get());
-    lua->newlib(ComputerApi::get());
     lua->newlib(GlobalMethods::get());
+    lua->newlib(SystemApi::get());
+    // computer component is also global
     return true;
 }
 
@@ -91,15 +102,9 @@ void Client::close()
     _components.clear();
 }
 
-ValuePack Client::component_list(const ValuePack& args)
+vector<Component*> Client::components(string filter, bool exact) const
 {
-    const Value& vfilter = Value::check(args, 0, "string", "nil");
-    string filter = vfilter ? vfilter.toString() : "";
-
-    bool exact = Value::check(args, 1, "boolean", "nil").toBool();
-
-    ValuePack pack;
-    Value result = Value::table();
+    vector<Component*> result;
 
     for (auto* pc : _components)
     {
@@ -108,11 +113,29 @@ ValuePack Client::component_list(const ValuePack& args)
         {
             if (!exact || type == filter)
             {
-                result.set(pc->address(), pc->type());
+                result.push_back(pc);
             }
         }
     }
 
+    return result;
+}
+
+ValuePack Client::component_list(const ValuePack& args)
+{
+    const Value& vfilter = Value::check(args, 0, "string", "nil");
+    string filter = vfilter ? vfilter.toString() : "";
+
+    bool exact = Value::check(args, 1, "boolean", "nil").toBool();
+
+    Value result = Value::table();
+    auto matches = components(filter, exact);
+    for (auto* pc : matches)
+    {
+        result.set(pc->address(), pc->type());
+    }
+
+    ValuePack pack;
     pack.push_back(result);
     return pack;
 }
@@ -168,3 +191,4 @@ ValuePack Client::component_methods(const ValuePack& args)
 
     return result;
 }
+

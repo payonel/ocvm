@@ -42,16 +42,19 @@ Value::Value(double d)
 Value::Value(lua_State* s)
 {
     _type = "thread";
-    int top = lua_gettop(s); // in case checking status adds to the stack
     _thread_status = lua_status(s);
 
-    for (int i = 1; i <= top; i++)
+    if (_thread_status == LUA_OK || _thread_status == LUA_YIELD)
     {
-        set(i, Value(s, i));
+        int top = lua_gettop(s); // in case checking status adds to the stack
+        for (int i = 1; i <= top; i++)
+        {
+            set(i, Value(s, i));
+        }
+        lua_settop(s, top);
     }
 
     _id = LUA_TTHREAD;
-    lua_settop(s, top);
 }
 
 Value::Value(lua_State* lua, int index)

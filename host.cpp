@@ -4,6 +4,7 @@
 #include "components/screen.h"
 #include "components/gpu.h"
 #include "components/eeprom.h"
+#include "components/computer.h"
 #include <sys/stat.h>
 
 class ScreenFrame : public Frame, public Screen
@@ -78,6 +79,10 @@ Component* Host::create(const string& type, const Value& init)
     else if (type == "eeprom")
     {
         p = new Eeprom(type, initplus);
+    }
+    else if (type == "computer")
+    {
+        p = new Computer(type, initplus);
     }
 
     return p;
