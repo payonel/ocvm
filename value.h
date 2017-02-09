@@ -51,11 +51,13 @@ public:
     void push(lua_State* lua) const;
 
     string type() const;
+    int type_id() const;
     string toString() const;
     double toNumber() const;
     bool toBool() const;
     void* toPointer() const;
     lua_State* toThread() const;
+    int status() const;
     const Value& metatable() const;
 
     static const Value& select(const ValuePack& pack, size_t index);
@@ -79,6 +81,7 @@ private:
     double _number = 0;
     void* _pointer = nullptr;
     lua_State* _thread = nullptr;
+    int _thread_status = 0;
     shared_ptr<Value> _pmetatable;
     map<Value, Value> _table;
 };

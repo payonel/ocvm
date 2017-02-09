@@ -128,11 +128,15 @@ ValuePack Client::component_invoke(const ValuePack& args)
     {
         if (pc->address() == address)
         {
-            return pc->invoke(methodName, pack);
+            auto result = pc->invoke(methodName, pack);
+            result.insert(result.begin(), true);
+            return result;
         }
     }
 
-    return ValuePack();
+    pack.push_back(Value::nil);
+    pack.push_back("no such component");
+    return pack;
 }
 
 ValuePack Client::component_methods(const ValuePack& args)

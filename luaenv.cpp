@@ -26,8 +26,49 @@ int run_caller(lua_State* lua)
 
 bool LuaEnv::run()
 {
-    lout << "lua env resume: " << lua_gettop(_state) - 2 << endl;
-    int status_id = lua_resume(_state, _machine, 0);
+    /*
+        Types of runs
+        1. First time run
+            main state is LUA_OK, else LUA_YIELD
+            after resume, take memory baseline
+        3. machine signals
+            pop a signal off the queue and send it to the machine
+        4. sleep timeout
+            send 0 args to the machine
+    */
+    Value env(_state);
+    bool bFirstTimeRun = env.status() == LUA_OK; // FIRST time run, all other resumes come from yield
+    int nargs = 0;
+    //machine signals
+    // if signal, nargs = 1
+    //sleep
+    // else if timeout, nargs = 0
+    // else don't resume
+    bool result = resume(nargs);
+    if (bFirstTimeRun)
+    {
+        // create memory baseline
+    }
+    return result;
+}
+
+bool LuaEnv::resume(int nargs)
+{
+    lout << "lua env resume: " << nargs << endl;
+    int status_id = lua_resume(_state, _machine, nargs);
+    /*
+        Types of results
+        1. OK
+            The pcall in the host thread returned, meaning the machine shutdown or crashed
+        2. YIELD
+            The machine intentionally yielded and likely passed args back for processing
+            a. function: direct target.invoke failed on a component
+                we resume this function on the main thread, I don't know why
+            b. number: time to sleep (decline to resume)
+            c. bool: true:reboot, else shutdown
+        3. CRASH/DEAD
+            the host executor failed - e.g. machine.lua failed to compile(load)
+    */
     if (status_id == LUA_OK)
     {
         Value thread(_state);
@@ -42,6 +83,20 @@ bool LuaEnv::run()
     else if (status_id == LUA_YIELD)
     {
         lout << "lua env yielded\n";
+        int top = lua_gettop(_state);
+        if (top > 0)
+        {
+            Value result(_state, -1);
+            if (result.type_id() == LUA_TFUNCTION)
+            {
+                lua_settop(_state, 1);
+                lua_pcall(_state, 0, LUA_MULTRET, 0);
+                // the returns, if any, are on the stack
+                // should be given to the machine to resume
+                top = lua_gettop(_state);
+                return resume(top);
+            }
+        }
         return true;
     }
     else

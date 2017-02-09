@@ -28,6 +28,8 @@ public:
     void close();
 
     static string stack(lua_State* state);
+protected:
+    bool resume(int nargs);
 private:
     lua_State* _state = nullptr;
     lua_State* _machine = nullptr;

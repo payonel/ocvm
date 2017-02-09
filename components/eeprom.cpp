@@ -31,5 +31,11 @@ void Eeprom::load(const string& dir, const string& file)
 
 ValuePack Eeprom::get(const ValuePack& args)
 {
-    return ValuePack();
+    string contents;
+    ValuePack result;
+    if (utils::read(_path, &contents))
+    {
+        result.push_back(contents);
+    }
+    return result;
 }

@@ -1414,7 +1414,7 @@ local function bootstrap()
   local eeprom = libcomponent.list("eeprom")()
   if eeprom then
     local code = libcomponent.invoke(eeprom, "get")
-    if code and #code > 0 then
+    if code and #code > 0 then  
       local bios, reason = load(code, "=bios", "t", sandbox)
       if bios then
         return coroutine.create(bios), {n=0}

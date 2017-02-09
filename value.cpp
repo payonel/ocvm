@@ -41,48 +41,15 @@ Value::Value(double d)
 
 Value::Value(lua_State* s)
 {
-    _type = "thread[";
+    _type = "thread";
     int top = lua_gettop(s); // in case checking status adds to the stack
-    int status_id = lua_status(s);
-    if (status_id == LUA_OK)
-    {
-        _type += "ok";
-    }
-    else if (status_id == LUA_YIELD)
-    {
-        _type += "yield";
-    }
-    else if (status_id == LUA_ERRRUN)
-    {
-        _type += "errrun";
-    }
-    else if (status_id == LUA_ERRSYNTAX)
-    {
-        _type += "syntax";
-    }
-    else if (status_id == LUA_ERRMEM)
-    {
-        _type += "memory";
-    }
-    else if (status_id == LUA_ERRGCMM)
-    {
-        _type += "gcmm";
-    }
-    else if (status_id == LUA_ERRERR)
-    {
-        _type += "errerr";
-    }
-    else
-    {
-        _type += "unknown";
-    }
+    _thread_status = lua_status(s);
 
     for (int i = 1; i <= top; i++)
     {
         set(i, Value(s, i));
     }
 
-    _type += "]";
     _id = LUA_TTHREAD;
     lua_settop(s, top);
 }
@@ -170,6 +137,11 @@ const Value& Value::metatable() const
     return _pmetatable ? *_pmetatable : Value::nil;
 }
 
+int Value::status() const
+{
+    return _thread_status;
+}
+
 const Value& Value::select(const ValuePack& pack, size_t index)
 {
     if (index >= pack.size())
@@ -214,6 +186,11 @@ vector<ValuePair> Value::pairs() const
 string Value::type() const
 {
     return _type;
+}
+
+int Value::type_id() const
+{
+    return _id;
 }
 
 string Value::serialize() const
@@ -296,6 +273,9 @@ void Value::push(lua_State* lua) const
         break;
         case LUA_TLIGHTUSERDATA:
             lua_pushlightuserdata(lua, _pointer);
+        break;
+        case LUA_TTHREAD:
+            lua_pushthread(_thread);
         break;
         case LUA_TTABLE:
             lua_newtable(lua);
