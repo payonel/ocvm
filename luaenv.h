@@ -26,6 +26,8 @@ public:
     bool load(const string& machinePath);
     bool newlib(LuaProxy* proxy);
     void close();
+
+    static string stack(lua_State* state);
 private:
     lua_State* _state = nullptr;
     lua_State* _machine = nullptr;

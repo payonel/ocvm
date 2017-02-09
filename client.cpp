@@ -145,9 +145,11 @@ ValuePack Client::component_methods(const ValuePack& args)
         if (pc->address() == address)
         {
             Value mpack = Value::table();
+            Value info = Value::table();
+            info.set("direct", true);
             for (const auto& luaMethod : pc->methods())
             {
-                mpack.set(std::get<0>(luaMethod), true);
+                mpack.set(std::get<0>(luaMethod), info);
             }
             result.push_back(mpack);
             break;

@@ -55,6 +55,7 @@ public:
     double toNumber() const;
     bool toBool() const;
     void* toPointer() const;
+    lua_State* toThread() const;
     const Value& metatable() const;
 
     static const Value& select(const ValuePack& pack, size_t index);
@@ -77,6 +78,7 @@ private:
     bool _bool = false;
     double _number = 0;
     void* _pointer = nullptr;
+    lua_State* _thread = nullptr;
     shared_ptr<Value> _pmetatable;
     map<Value, Value> _table;
 };

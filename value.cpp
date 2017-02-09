@@ -42,7 +42,7 @@ Value::Value(double d)
 Value::Value(lua_State* s)
 {
     _type = "thread[";
-    int before = lua_gettop(s); // in case checking status adds to the stack
+    int top = lua_gettop(s); // in case checking status adds to the stack
     int status_id = lua_status(s);
     if (status_id == LUA_OK)
     {
@@ -76,9 +76,15 @@ Value::Value(lua_State* s)
     {
         _type += "unknown";
     }
+
+    for (int i = 1; i <= top; i++)
+    {
+        set(i, Value(s, i));
+    }
+
     _type += "]";
     _id = LUA_TTHREAD;
-    lua_settop(s, before);
+    lua_settop(s, top);
 }
 
 Value::Value(lua_State* lua, int index)
@@ -104,6 +110,9 @@ Value::Value(lua_State* lua, int index)
         break;
         case LUA_TUSERDATA:
             _pointer = (void*)lua_topointer(lua, index);
+        break;
+        case LUA_TTHREAD:
+            _thread = lua_tothread(lua, index);
         break;
         case LUA_TTABLE:
             lua_pushnil(lua); // push nil as first key for next()
@@ -149,6 +158,11 @@ double Value::toNumber() const
 void* Value::toPointer() const
 {
     return _pointer;
+}
+
+lua_State* Value::toThread() const
+{
+    return _thread;
 }
 
 const Value& Value::metatable() const

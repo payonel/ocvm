@@ -1,5 +1,6 @@
 #include "global_methods.h"
 #include "log.h"
+#include "luaenv.h"
 
 GlobalMethods::GlobalMethods() : LuaProxy("")
 {
@@ -24,15 +25,13 @@ ValuePack GlobalMethods::print(const ValuePack& args)
     }
 
     lout << endl;
-
     return ValuePack();
 }
 
 ValuePack GlobalMethods::error(const ValuePack& args)
 {
     lout << "[--vm--] [ERROR] " << Value::select(args, 0).toString() << endl;
-    luaL_traceback(args.state, args.state, NULL, 1);
-    lout << lua_tostring(args.state, -1) << endl;
+    lout << LuaEnv::stack(args.state) << endl;
     return ValuePack();
 }
 

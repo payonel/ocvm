@@ -30,7 +30,13 @@ bool LuaEnv::run()
     int status_id = lua_resume(_state, _machine, 0);
     if (status_id == LUA_OK)
     {
-        lout << "lua env SHUTDOWN\n";
+        Value thread(_state);
+        if (!thread.get(2)) // [1] should be the thread itself, [2] is the pcall return
+        {
+            lout << "kernel panic: " << thread.get(3).toString() << endl;
+        }
+        else
+            lout << "lua env SHUTDOWN\n";
         return false;
     }
     else if (status_id == LUA_YIELD)
@@ -40,10 +46,9 @@ bool LuaEnv::run()
     }
     else
     {
-        lout << "machine crash: ";
+        lout << "host crash: ";
         lout << lua_tostring(_state, -1) << "\n";
-        lout << "machine thread" << Value(_state).toString() << endl;
-        lout << "main thread" << Value(_machine).toString() << endl;
+        lout << "machine status: " << Value(_state).serialize() << endl;
         return false;
     }
 
@@ -118,4 +123,13 @@ bool LuaEnv::newlib(LuaProxy* proxy)
     }
 
     return true;
+}
+
+string LuaEnv::stack(lua_State* state)
+{
+    luaL_traceback(state, state, NULL, 1);
+    int top = lua_gettop(state);
+    string stacktrace = string(lua_tostring(state, -1));
+    lua_pop(state, 1);
+    return stacktrace;
 }
