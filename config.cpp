@@ -54,8 +54,10 @@ bool Config::load(const string& path, const string& name)
 
     string table;
     char byte;
-    while (input >> byte)
+    while (byte = input.get())
     {
+        if (!input)
+            break;
         table += byte;
     }
     input.close();

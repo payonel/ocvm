@@ -8,6 +8,8 @@ public:
     Eeprom(const string& type, const Value& init);
 
     ValuePack get(const ValuePack& args);
+protected:
+    void load(const string& env, const string& file);
 private:
     string _content;
     string _data;

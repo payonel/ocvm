@@ -37,7 +37,7 @@ public:
 Host::Host(const string& env_path) : _env_path(env_path)
 {
     // make the env path if it doesn't already exist
-    mkdir(env_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    mkdir(_env_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
     _framer = new Shell;
 }
@@ -61,20 +61,23 @@ string Host::envPath() const
 Component* Host::create(const string& type, const Value& init)
 {
     Component* p = nullptr;
+    Value initplus = init; // make copy
+    initplus.set("env", _env_path);
+
     if (type == "screen")
     {
-        auto* sf = new ScreenFrame(type, init);
+        auto* sf = new ScreenFrame(type, initplus);
         getFramer()->add(sf, 0); // insert at top
         //sf->setResolution(50, 10);
         p = sf;
     }
     else if (type == "gpu")
     {
-        p = new Gpu(type, init);
+        p = new Gpu(type, initplus);
     }
     else if (type == "eeprom")
     {
-        p = new Eeprom(type, init);
+        p = new Eeprom(type, initplus);
     }
 
     return p;
