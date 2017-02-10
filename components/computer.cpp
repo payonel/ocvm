@@ -48,11 +48,6 @@ ValuePack Computer::getArchitectures(const ValuePack& args)
     return ValuePack();
 }
 
-ValuePack Computer::address(const ValuePack& args)
-{
-    return ValuePack();
-}
-
 ValuePack Computer::beep(const ValuePack& args)
 {
     return ValuePack();
@@ -68,6 +63,7 @@ ValuePack Computer::getProgramLocations(const ValuePack& args)
     return ValuePack();
 }
 
+// in seconds
 ValuePack Computer::uptime(const ValuePack& args)
 {
     return ValuePack();

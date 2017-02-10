@@ -2,6 +2,11 @@
 #include "component.h"
 #include "value.h"
 
+#include <map>
+#include <fstream>
+using std::map;
+using std::fstream;
+
 class Filesystem : public Component
 {
 public:
@@ -10,4 +15,10 @@ public:
     string path() const;
 
     ValuePack open(const ValuePack& args);
+    ValuePack read(const ValuePack& args);
+    ValuePack close(const ValuePack& args);
+protected:
+    void init(const string& loot);
+private:
+    map<int, fstream*> _handles;
 };

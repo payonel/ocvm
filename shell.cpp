@@ -174,9 +174,8 @@ bool Shell::update()
     }
 
     refresh();
-    int ch = getch();
-
-    lout << "getch: " << ch << "\n";
+    int ch = 0;//getch();
+    // lout << "getch: " << ch << "\n";
 
     if (ch == 3) // ^c
     {

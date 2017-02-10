@@ -1,12 +1,12 @@
 flags=-g --std=c++11 -Wl,--no-as-needed
 includes=-I. -I/usr/include/lua5.2/
-libs=-llua5.2-c++ -lstdc++ -lncurses
+libs=-llua5.2-c++ -lstdc++ -lncurses -lstdc++fs
 files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp)
 objs = $(files:%.cpp=bin/%.o)
 deps = $(objs:%.o=%.d)
 
 ocvm: $(objs)
-	g++ $(flags) $(libs) $(objs) -o ocvm
+	g++ $(flags) $(objs) $(libs) -o ocvm
 
 $(objs): | bin bin/components bin/apis
 

@@ -1,8 +1,14 @@
 #include "utils.h"
 
+#include "log.h"
+#include <iostream>
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
+
+#include <sys/stat.h>
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 
 bool utils::read(const string& path, string* pOutData)
 {
@@ -32,11 +38,29 @@ bool utils::read(const string& path, string* pOutData)
 
 bool utils::copy(const string& src, const string& dst)
 {
-    string buffer;
-    if (!read(src, &buffer))
+    if (!utils::exists(src))
+    {
         return false;
+    }
 
-    return utils::write(buffer, dst);
+    try
+    {
+        fs::copy(src, dst, fs::copy_options::recursive);
+    }
+    catch (std::exception& se)
+    {
+        lout << se.what() << std::endl;
+        std::cerr << se.what() << std::endl;
+        return false;
+    }
+    catch (...)
+    {
+        std::exception_ptr p = std::current_exception();
+        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 bool utils::write(const string& data, const string& dst)
@@ -49,4 +73,14 @@ bool utils::write(const string& data, const string& dst)
     file << data;
     file.close();
     return true;
+}
+
+void utils::mkdir(const string& path)
+{
+    fs::create_directories(path);
+}
+
+bool utils::exists(const string& path)
+{
+    return fs::exists(path);
 }

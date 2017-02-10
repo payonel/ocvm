@@ -1,12 +1,12 @@
 #include "host.h"
 #include "shell.h"
+#include "utils.h"
 #include "components/component.h"
 #include "components/screen.h"
 #include "components/gpu.h"
 #include "components/eeprom.h"
 #include "components/computer.h"
 #include "components/filesystem.h"
-#include <sys/stat.h>
 
 class ScreenFrame : public Frame, public Screen
 {
@@ -52,8 +52,7 @@ Host::~Host()
 
 void Host::mkdir(const string& path)
 {
-    string fullpath = _env_path + "/" + path;
-    ::mkdir(fullpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    utils::mkdir(_env_path + "/" + path);
 }
 
 string Host::machinePath() const
