@@ -17,6 +17,7 @@ public:
     ValuePack open(const ValuePack& args);
     ValuePack read(const ValuePack& args);
     ValuePack close(const ValuePack& args);
+    ValuePack getLabel(const ValuePack& args);
 protected:
     void init(const string& loot);
 private:

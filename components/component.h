@@ -27,4 +27,5 @@ private:
     Host* _host;
     
     ValuePack get_address(const ValuePack&);
+    ValuePack get_type(const ValuePack&);
 };

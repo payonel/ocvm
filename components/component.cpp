@@ -20,6 +20,7 @@ Component::Component(const string& type, const Value& init, Host* host) :
     _address = v.toString();
 
     add("address", &Component::get_address);
+    add("type", &Component::get_type);
 }
 
 string Component::type() const
@@ -65,4 +66,9 @@ Host* Component::host() const
 ValuePack Component::get_address(const ValuePack&)
 {
     return ValuePack({address()});
+}
+
+ValuePack Component::get_type(const ValuePack&)
+{
+    return ValuePack({type()});
 }

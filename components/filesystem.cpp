@@ -13,6 +13,7 @@ Filesystem::Filesystem(const string& type, const Value& init, Host* host) :
     add("open", &Filesystem::open);
     add("read", &Filesystem::read);
     add("close", &Filesystem::close);
+    add("getLabel", &Filesystem::getLabel);
 }
 
 void Filesystem::init(const string& loot)
@@ -139,4 +140,9 @@ ValuePack Filesystem::close(const ValuePack& args)
     _handles.erase(it);
 
     return ValuePack();
+}
+
+ValuePack Filesystem::getLabel(const ValuePack& args)
+{
+    return ValuePack {"label stub"};
 }

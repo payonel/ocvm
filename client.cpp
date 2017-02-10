@@ -22,6 +22,7 @@ Client::Client(Host* host) : LuaProxy("component"), _host(host)
     add("list", &Client::component_list);
     add("invoke", &Client::component_invoke);
     add("methods", &Client::component_methods);
+    add("type", &Client::component_type);
 }
 
 Client::~Client()
@@ -206,3 +207,20 @@ ValuePack Client::component_methods(const ValuePack& args)
     return result;
 }
 
+ValuePack Client::component_type(const ValuePack& args)
+{
+    string address = Value::check(args, 0, "string").toString();
+    ValuePack result(args.state);
+    Component* pc = component(address);
+    if (pc)
+    {
+        result.push_back(pc->type());
+    }
+    else
+    {
+        result.push_back(Value::nil);
+        result.push_back("no such component");
+    }
+
+    return result;
+}
