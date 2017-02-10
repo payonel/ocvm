@@ -40,14 +40,20 @@ public:
 Host::Host(const string& env_path) : _env_path(env_path)
 {
     // make the env path if it doesn't already exist
-    mkdir(_env_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
+    this->mkdir("");
+    
     _framer = new Shell;
 }
 
 Host::~Host()
 {
     close();
+}
+
+void Host::mkdir(const string& path)
+{
+    string fullpath = _env_path + "/" + path;
+    ::mkdir(fullpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 string Host::machinePath() const

@@ -160,7 +160,9 @@ ValuePack Client::component_invoke(const ValuePack& args)
     string address = Value::check(args, 0, "string").toString();
     string methodName = Value::check(args, 1, "string").toString();
 
-    ValuePack pack(args.state);
+    ValuePack pack = args;
+    pack.erase(pack.begin(), pack.begin() + 2);
+    
     ValuePack result;
     Component* pc = component(address);
     if (pc)

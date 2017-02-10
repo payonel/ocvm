@@ -16,6 +16,7 @@ public:
     Framer* getFramer() const;
     Component* create(const string& type, const Value& init);
     void close();
+    void mkdir(const string& path);
 private:
     string _env_path;
     Framer* _framer;
