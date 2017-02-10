@@ -4,25 +4,25 @@
 #include <string>
 #include <fstream>
 #include "utils.h"
+#include "host.h"
 
-Eeprom::Eeprom(const string& type, const Value& args) :
-    Component(type, args)
+Eeprom::Eeprom(const string& type, const Value& args, Host* host) :
+    Component(type, args, host)
 {
     add("get", &Eeprom::get);
     add("getData", &Eeprom::getData);
 
-    init(args.get("env").toString(), args.get(2).toString());
+    init(args.get(2).toString());
 }
 
-void Eeprom::init(const string& dir, const string& originalBiosPath)
+void Eeprom::init(const string& originalBiosPath)
 {
-    if (dir.empty())
+    if (host()->envPath().empty())
     {
         lerr << "bug, eeprom env dir path empty\n";
         return;
     }
 
-    _dir = dir; // now paths work
     if (!utils::read(biosPath()))
     {
         utils::copy(originalBiosPath, biosPath());
@@ -41,12 +41,12 @@ ValuePack Eeprom::getData(const ValuePack& args)
 
 string Eeprom::biosPath() const
 {
-    return _dir + "/" + "bios.lua";
+    return host()->envPath() + "/bios.lua";
 }
 
 string Eeprom::dataPath() const
 {
-    return _dir + "/" + "data";
+    return host()->envPath() + "/data";
 }
 
 string Eeprom::load(const string& path) const

@@ -5,7 +5,7 @@
 class Gpu : public Component
 {
 public:
-    Gpu(const string& type, const Value& init);
+    Gpu(const string& type, const Value& init, Host* host);
 
     ValuePack setResolution(const ValuePack& args);
     ValuePack bind(const ValuePack& args);

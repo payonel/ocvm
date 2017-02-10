@@ -5,12 +5,14 @@
 #include "components/gpu.h"
 #include "components/eeprom.h"
 #include "components/computer.h"
+#include "components/filesystem.h"
 #include <sys/stat.h>
 
 class ScreenFrame : public Frame, public Screen
 {
 public:
-    ScreenFrame(const string& type, const Value& init) : Screen(type, init)
+    ScreenFrame(const string& type, const Value& init, Host* host) :
+        Screen(type, init, host)
     {
     }
 
@@ -61,27 +63,29 @@ string Host::envPath() const
 Component* Host::create(const string& type, const Value& init)
 {
     Component* p = nullptr;
-    Value initplus = init; // make copy
-    initplus.set("env", _env_path);
 
     if (type == "screen")
     {
-        auto* sf = new ScreenFrame(type, initplus);
+        auto* sf = new ScreenFrame(type, init, this);
         getFramer()->add(sf, 0); // insert at top
         //sf->setResolution(50, 10);
         p = sf;
     }
     else if (type == "gpu")
     {
-        p = new Gpu(type, initplus);
+        p = new Gpu(type, init, this);
     }
     else if (type == "eeprom")
     {
-        p = new Eeprom(type, initplus);
+        p = new Eeprom(type, init, this);
     }
     else if (type == "computer")
     {
-        p = new Computer(type, initplus);
+        p = new Computer(type, init, this);
+    }
+    else if (type == "filesystem")
+    {
+        p = new Filesystem(type, init, this);
     }
 
     return p;

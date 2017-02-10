@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-Screen::Screen(const string& type, const Value& init) : 
-    Component(type, init)
+Screen::Screen(const string& type, const Value& init, Host* host) : 
+    Component(type, init, host)
 {
 }

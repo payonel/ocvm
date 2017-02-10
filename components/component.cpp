@@ -8,9 +8,10 @@
 #include <vector>
 #include <sstream>
 
-Component::Component(const string& type, const Value& init) :
+Component::Component(const string& type, const Value& init, Host* host) :
     LuaProxy(type),
-    _type(type)
+    _type(type),
+    _host(host)
 {
     Value v;
     v = init.get(1);
@@ -52,4 +53,9 @@ string Component::make_address()
     }
 
     return result;
+}
+
+Host* Component::host() const
+{
+    return _host;
 }

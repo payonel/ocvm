@@ -3,8 +3,8 @@
 #include <chrono>
 using namespace std::chrono;
 
-Computer::Computer(const string& type, const Value& init) :
-    Component(type, init)
+Computer::Computer(const string& type, const Value& init, Host* host) :
+    Component(type, init, host)
 {
     add("realTime", &Computer::realTime);
     // add("setArchitecture", &Computer::setArchitecture);
