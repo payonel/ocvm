@@ -1,19 +1,22 @@
 #include "computer.h"
 
+#include <iostream>
 #include <chrono>
 using namespace std::chrono;
 
 Computer::Computer(const string& type, const Value& init, Host* host) :
     Component(type, init, host)
 {
+    _start_time = now();
+
     add("realTime", &Computer::realTime);
     // add("setArchitecture", &Computer::setArchitecture);
     // add("getArchitecture", &Computer::getArchitecture);
     // add("getArchitectures", &Computer::getArchitectures);
-    // add("beep", &Computer::beep);
+    add("beep", &Computer::beep);
     // add("getDeviceInfo", &Computer::getDeviceInfo);
     // add("getProgramLocations", &Computer::getProgramLocations);
-    // add("uptime", &Computer::uptime);
+    add("uptime", &Computer::uptime);
     // add("pushSignal", &Computer::pushSignal);
     // add("removeUser", &Computer::removeUser);
     // add("addUser", &Computer::addUser);
@@ -27,10 +30,14 @@ Computer::Computer(const string& type, const Value& init, Host* host) :
     // add("maxEnergy", &Computer::maxEnergy);
 }
 
+int64_t Computer::now() const
+{
+    return duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+}
+
 ValuePack Computer::realTime(const ValuePack& args)
 {
-    auto sec = duration_cast<seconds>(system_clock::now().time_since_epoch());
-    return ValuePack{sec.count()};
+    return ValuePack{now()};
 }
 
 ValuePack Computer::setArchitecture(const ValuePack& args)
@@ -50,6 +57,7 @@ ValuePack Computer::getArchitectures(const ValuePack& args)
 
 ValuePack Computer::beep(const ValuePack& args)
 {
+    std::cout << "\a";
     return ValuePack();
 }
 
@@ -66,7 +74,7 @@ ValuePack Computer::getProgramLocations(const ValuePack& args)
 // in seconds
 ValuePack Computer::uptime(const ValuePack& args)
 {
-    return ValuePack();
+    return ValuePack({now() - _start_time});
 }
 
 ValuePack Computer::pushSignal(const ValuePack& args)

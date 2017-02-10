@@ -28,4 +28,6 @@ public:
     ValuePack energy(const ValuePack& args);
     ValuePack maxEnergy(const ValuePack& args);
 private:
+    int64_t now() const;
+    int64_t _start_time;
 };

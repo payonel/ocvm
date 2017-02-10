@@ -18,6 +18,8 @@ Component::Component(const string& type, const Value& init, Host* host) :
     if (!v || v.type() != "string" || v.toString().empty())
         v = Value(make_address());
     _address = v.toString();
+
+    add("address", &Component::get_address);
 }
 
 string Component::type() const
@@ -58,4 +60,9 @@ string Component::make_address()
 Host* Component::host() const
 {
     return _host;
+}
+
+ValuePack Component::get_address(const ValuePack&)
+{
+    return ValuePack({address()});
 }

@@ -7,6 +7,7 @@
 #include "components/eeprom.h"
 #include "components/computer.h"
 #include "components/filesystem.h"
+#include "components/keyboard.h"
 
 class ScreenFrame : public Frame, public Screen
 {
@@ -91,6 +92,10 @@ Component* Host::create(const string& type, const Value& init)
     else if (type == "filesystem")
     {
         p = new Filesystem(type, init, this);
+    }
+    else if (type == "keyboard")
+    {
+        p = new Keyboard(type, init, this);
     }
 
     return p;
