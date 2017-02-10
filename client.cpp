@@ -120,6 +120,18 @@ vector<Component*> Client::components(string filter, bool exact) const
     return result;
 }
 
+Component* Client::component(const string& address) const
+{
+    for (auto* pc : _components)
+    {
+        if (pc->address() == address)
+        {
+            return pc;
+        }
+    }
+    return nullptr;
+}
+
 ValuePack Client::component_list(const ValuePack& args)
 {
     const Value& vfilter = Value::check(args, 0, "string", "nil");
@@ -141,24 +153,29 @@ ValuePack Client::component_list(const ValuePack& args)
 
 ValuePack Client::component_invoke(const ValuePack& args)
 {
+    // for logging, this is called via LuaProxy because all method calls are dispatched there first
+    // LuaProxy::invoke has already logged much about this call, but is waiting to log the result
+    // but, logging from here on out will look like a return value, so we add some indentation here
+    lout << "\n_\n";
     string address = Value::check(args, 0, "string").toString();
     string methodName = Value::check(args, 1, "string").toString();
 
     ValuePack pack(args.state);
-
-    for (auto* pc : _components)
+    ValuePack result;
+    Component* pc = component(address);
+    if (pc)
     {
-        if (pc->address() == address)
-        {
-            auto result = pc->invoke(methodName, pack);
-            result.insert(result.begin(), true);
-            return result;
-        }
+        result = pc->invoke(methodName, pack);
+        result.insert(result.begin(), true);
+    }
+    else
+    {
+        result.push_back(Value::nil);
+        result.push_back("no such component");
     }
 
-    pack.push_back(Value::nil);
-    pack.push_back("no such component");
-    return pack;
+    lout << "_:";
+    return result;
 }
 
 ValuePack Client::component_methods(const ValuePack& args)
@@ -166,23 +183,19 @@ ValuePack Client::component_methods(const ValuePack& args)
     string address = Value::check(args, 0, "string").toString();
 
     ValuePack result(args.state);
-    for (auto* pc : _components)
+    Component* pc = component(address);
+    if (pc)
     {
-        if (pc->address() == address)
+        Value mpack = Value::table();
+        Value info = Value::table();
+        info.set("direct", true);
+        for (const auto& luaMethod : pc->methods())
         {
-            Value mpack = Value::table();
-            Value info = Value::table();
-            info.set("direct", true);
-            for (const auto& luaMethod : pc->methods())
-            {
-                mpack.set(std::get<0>(luaMethod), info);
-            }
-            result.push_back(mpack);
-            break;
+            mpack.set(std::get<0>(luaMethod), info);
         }
+        result.push_back(mpack);
     }
-
-    if (result.empty()) // addr not found
+    else
     {
         result.push_back(Value::nil);
         result.push_back("no such component");

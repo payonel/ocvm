@@ -13,7 +13,6 @@ Gpu::Gpu(const string& type, const Value& init, Host* host) :
 
 ValuePack Gpu::bind(const ValuePack& args)
 {
-    lout << "BIND!" << endl;
     return ValuePack();
 }
 

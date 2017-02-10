@@ -327,7 +327,7 @@ ValuePack::ValuePack(lua_State* state) :
 
 ostream& operator << (ostream& os, const ValuePack& pack)
 {
-    static const int length_limit = 120;
+    static const size_t length_limit = 120;
     stringstream ss;
     ss << "{";
     for (const auto& arg : pack)
@@ -337,6 +337,7 @@ ostream& operator << (ostream& os, const ValuePack& pack)
     }
     ss << "}";
     string text = ss.str();
-    os << text.substr(0, length_limit);
+    size_t cut = std::min(length_limit, text.find("\n"));
+    os << text.substr(0, cut);
     return os;
 }
