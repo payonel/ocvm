@@ -7,25 +7,24 @@ Computer::Computer(const string& type, const Value& init) :
     Component(type, init)
 {
     add("realTime", &Computer::realTime);
-    add("setArchitecture", &Computer::setArchitecture);
-    add("getArchitecture", &Computer::getArchitecture);
-    add("getArchitectures", &Computer::getArchitectures);
-    add("address", &Computer::address);
-    add("beep", &Computer::beep);
-    add("getDeviceInfo", &Computer::getDeviceInfo);
-    add("getProgramLocations", &Computer::getProgramLocations);
-    add("uptime", &Computer::uptime);
-    add("pushSignal", &Computer::pushSignal);
-    add("removeUser", &Computer::removeUser);
-    add("addUser", &Computer::addUser);
-    add("setBootAddress", &Computer::setBootAddress);
-    add("getBootAddress", &Computer::getBootAddress);
-    add("isRobot", &Computer::isRobot);
-    add("tmpAddress", &Computer::tmpAddress);
-    add("freeMemory", &Computer::freeMemory);
-    add("totalMemory", &Computer::totalMemory);
-    add("energy", &Computer::energy);
-    add("maxEnergy", &Computer::maxEnergy);
+    // add("setArchitecture", &Computer::setArchitecture);
+    // add("getArchitecture", &Computer::getArchitecture);
+    // add("getArchitectures", &Computer::getArchitectures);
+    // add("beep", &Computer::beep);
+    // add("getDeviceInfo", &Computer::getDeviceInfo);
+    // add("getProgramLocations", &Computer::getProgramLocations);
+    // add("uptime", &Computer::uptime);
+    // add("pushSignal", &Computer::pushSignal);
+    // add("removeUser", &Computer::removeUser);
+    // add("addUser", &Computer::addUser);
+    // add("setBootAddress", &Computer::setBootAddress);
+    // add("getBootAddress", &Computer::getBootAddress);
+    // add("isRobot", &Computer::isRobot);
+    // add("tmpAddress", &Computer::tmpAddress);
+    // add("freeMemory", &Computer::freeMemory);
+    // add("totalMemory", &Computer::totalMemory);
+    // add("energy", &Computer::energy);
+    // add("maxEnergy", &Computer::maxEnergy);
 }
 
 ValuePack Computer::realTime(const ValuePack& args)

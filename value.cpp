@@ -324,3 +324,8 @@ ValuePack::ValuePack(lua_State* state) :
     state(state)
 {
 }
+
+ostream& operator << (ostream& os, const ValuePack& pack)
+{
+    return os;
+}

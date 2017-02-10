@@ -33,7 +33,7 @@ void Shell::onResolution(Frame* pWhichFrame)
 {
     int col, row;
     getmaxyx(stdscr, row, col);
-    lout << "main window max calculated in onResolution: " << col << "," << row << endl;
+    lout << "main window max resolution: " << col << "," << row << endl;
 
     auto dim = pWhichFrame->getResolution();
     int availableLines = row;

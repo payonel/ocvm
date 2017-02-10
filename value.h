@@ -9,6 +9,7 @@ using std::string;
 using std::vector;
 using std::map;
 using std::shared_ptr;
+using std::ostream;
 
 class lua_State;
 class Value;
@@ -19,6 +20,7 @@ struct ValuePack : public vector<Value>
     ValuePack(lua_State* state);
     ValuePack() = default;
 };
+ostream& operator << (ostream& os, const ValuePack& pack);
 
 typedef map<Value, Value>::value_type ValuePair;
 

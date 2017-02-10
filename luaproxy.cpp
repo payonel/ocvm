@@ -64,12 +64,16 @@ void LuaProxy::add(const string& methodName, ProxyMethod method)
 
 ValuePack LuaProxy::invoke(const string& methodName, const ValuePack& args)
 {
+    lout << "LuaProxy." << _name << "." << methodName << "(" << args << ") -> ";
     const auto& mit = _methods.find(methodName);
     if (mit == _methods.end())
     {
+        lout << "no such method\n";
         luaL_error(args.state, "no such method: %s", methodName.c_str());
     }
 
     ProxyMethod pmethod = mit->second;
-    return ((*this).*pmethod)(args);
+    auto result = ((*this).*pmethod)(args);
+    lout << result << endl;
+    return result;
 }

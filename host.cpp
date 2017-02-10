@@ -50,8 +50,7 @@ Host::~Host()
 
 string Host::machinePath() const
 {
-    return "system/foobar.lua";
-    //return "system/machine.lua";
+    return "system/machine.lua";
 }
 
 string Host::envPath() const

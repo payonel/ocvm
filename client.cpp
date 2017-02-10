@@ -78,12 +78,11 @@ bool Client::loadLuaComponentApi(LuaEnv* lua)
     }
     auto* pc = vec.at(0);
 
-    lua->newlib(pc);
+    lua->newlib(pc); // computer component is also a global api
     lua->newlib(this);
     lua->newlib(OSApi::get());
     lua->newlib(GlobalMethods::get());
     lua->newlib(SystemApi::get());
-    // computer component is also global
     return true;
 }
 
