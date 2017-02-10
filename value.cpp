@@ -176,6 +176,28 @@ void Value::set(const Value& key, const Value& value)
     _table[key] = value;
 }
 
+void Value::insert(const Value& value)
+{
+    int length = len();
+    set(length + 1, value);
+}
+
+int Value::len() const
+{
+    if (type() == "string")
+        return (int)_string.size();
+    else if (type() == "table")
+    {
+        for (size_t i = 0; i < _table.size(); i++)
+        {
+            if (_table.find((double)i) == _table.end())
+                return (int)i;
+        }
+    }
+
+    return 0;
+}
+
 vector<ValuePair> Value::pairs() const
 {
     vector<ValuePair> vec;

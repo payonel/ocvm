@@ -9,6 +9,12 @@ Gpu::Gpu(const string& type, const Value& init, Host* host) :
     add("setResolution", &Gpu::setResolution);
     add("bind", &Gpu::bind);
     add("set", &Gpu::set);
+    add("maxResolution", &Gpu::maxResolution);
+    add("getBackground", &Gpu::getBackground);
+    add("setBackground", &Gpu::setBackground);
+    add("getForeground", &Gpu::getForeground);
+    add("setForeground", &Gpu::setForeground);
+    add("fill", &Gpu::fill);
 }
 
 ValuePack Gpu::bind(const ValuePack& args)
@@ -31,5 +37,41 @@ ValuePack Gpu::set(const ValuePack& args)
     // get the bound ScreenFrame and write to it
     // how??
 
+    return ValuePack();
+}
+
+ValuePack Gpu::maxResolution(const ValuePack& args)
+{
+    lout << "TODO, stub gpu max res, i'll have to use a screen frame to know\n";
+    return ValuePack({50, 16});
+}
+
+ValuePack Gpu::setBackground(const ValuePack& args)
+{
+    lout << "TODO, stub gpu method\n";
+    return ValuePack({0, false});
+}
+
+ValuePack Gpu::getBackground(const ValuePack& args)
+{
+    lout << "TODO, stub gpu method\n";
+    return ValuePack({0, false});
+}
+
+ValuePack Gpu::setForeground(const ValuePack& args)
+{
+    lout << "TODO, stub gpu method\n";
+    return ValuePack({0, false});
+}
+
+ValuePack Gpu::getForeground(const ValuePack& args)
+{
+    lout << "TODO, stub gpu method\n";
+    return ValuePack({0, false});
+}
+
+ValuePack Gpu::fill(const ValuePack& args)
+{
+    lout << "TODO, stub gpu method\n";
     return ValuePack();
 }

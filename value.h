@@ -56,6 +56,8 @@ public:
 
     void push(lua_State* lua) const;
 
+    void insert(const Value& value);
+    int len() const;
     string type() const;
     int type_id() const;
     string toString() const;
