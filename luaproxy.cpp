@@ -21,8 +21,7 @@ int lua_proxy_static_caller(lua_State* lua)
     auto _this = caller.get("instance").toPointer();
     auto methodName = caller.get("name").toString();
 
-    ValuePack pack;
-    pack.state = lua;
+    ValuePack pack(lua);
 
     if (_this)
     {

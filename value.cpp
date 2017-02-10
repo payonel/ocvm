@@ -313,3 +313,14 @@ const Value& Value::check(const ValuePack& pack, size_t index, const string& req
 
     return *pv;
 }
+
+ValuePack::ValuePack(std::initializer_list<Value> values)
+{
+    for (const auto& v : values)
+        push_back(v);
+}
+
+ValuePack::ValuePack(lua_State* state) :
+    state(state)
+{
+}

@@ -1,5 +1,8 @@
 #include "computer.h"
 
+#include <chrono>
+using namespace std::chrono;
+
 Computer::Computer(const string& type, const Value& init) :
     Component(type, init)
 {
@@ -27,7 +30,8 @@ Computer::Computer(const string& type, const Value& init) :
 
 ValuePack Computer::realTime(const ValuePack& args)
 {
-    return ValuePack();
+    auto sec = duration_cast<seconds>(system_clock::now().time_since_epoch());
+    return ValuePack{sec.count()};
 }
 
 ValuePack Computer::setArchitecture(const ValuePack& args)

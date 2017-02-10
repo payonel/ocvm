@@ -22,13 +22,8 @@
         "system_error": "cpp",
         "functional": "cpp",
         "thread": "cpp",
-        "*h*h*h*h*h*hexception": "cpp",
-        "*hcstdint": "cpp",
-        "*hcctype": "cpp",
-        "*h*h*hclocale": "cpp",
-        "*cpp*cppfstream": "cpp",
         "string": "cpp",
-        "*hinitializer_list": "cpp"
+        "chrono": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

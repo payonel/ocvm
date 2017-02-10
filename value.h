@@ -15,6 +15,9 @@ class Value;
 struct ValuePack : public vector<Value>
 {
     lua_State* state;
+    ValuePack(std::initializer_list<Value>);
+    ValuePack(lua_State* state);
+    ValuePack() = default;
 };
 
 typedef map<Value, Value>::value_type ValuePair;
@@ -28,6 +31,7 @@ public:
     Value(const void* p, bool bLight);
     Value(int n) : Value(double(n)) {}
     Value(const char* cstr) : Value(string(cstr)) {}
+    Value(int64_t n) : Value(double(n)) {}
     Value(lua_State*);
     Value(lua_State*, int);
     Value();

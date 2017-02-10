@@ -135,7 +135,7 @@ ValuePack Client::component_list(const ValuePack& args)
         result.set(pc->address(), pc->type());
     }
 
-    ValuePack pack;
+    ValuePack pack(args.state);
     pack.push_back(result);
     return pack;
 }
@@ -145,7 +145,7 @@ ValuePack Client::component_invoke(const ValuePack& args)
     string address = Value::check(args, 0, "string").toString();
     string methodName = Value::check(args, 1, "string").toString();
 
-    ValuePack pack;
+    ValuePack pack(args.state);
 
     for (auto* pc : _components)
     {
@@ -166,7 +166,7 @@ ValuePack Client::component_methods(const ValuePack& args)
 {
     string address = Value::check(args, 0, "string").toString();
 
-    ValuePack result;
+    ValuePack result(args.state);
     for (auto* pc : _components)
     {
         if (pc->address() == address)

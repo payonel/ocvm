@@ -30,8 +30,11 @@ ValuePack GlobalMethods::print(const ValuePack& args)
 
 ValuePack GlobalMethods::error(const ValuePack& args)
 {
-    lout << "[--vm--] [ERROR] " << Value::select(args, 0).toString() << endl;
-    lout << LuaEnv::stack(args.state) << endl;
+    string msg = Value::select(args, 0).toString();
+    string stack = LuaEnv::stack(args.state);
+    lout << "[--vm--] [ERROR] " << msg << endl;
+    lout << stack << endl;
+    luaL_error(args.state, stack.c_str());
     return ValuePack();
 }
 
