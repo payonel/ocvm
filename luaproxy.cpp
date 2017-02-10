@@ -64,7 +64,7 @@ void LuaProxy::add(const string& methodName, ProxyMethod method)
 
 ValuePack LuaProxy::invoke(const string& methodName, const ValuePack& args)
 {
-    lout << "LuaProxy." << _name << "." << methodName << "(" << args << ") -> ";
+    lout << "LuaProxy." << _name << "." << methodName << "(" << args << "):";
     const auto& mit = _methods.find(methodName);
     if (mit == _methods.end())
     {

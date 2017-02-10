@@ -327,5 +327,16 @@ ValuePack::ValuePack(lua_State* state) :
 
 ostream& operator << (ostream& os, const ValuePack& pack)
 {
+    static const int length_limit = 120;
+    stringstream ss;
+    ss << "{";
+    for (const auto& arg : pack)
+    {
+        ss << arg.serialize();
+        ss << ",";
+    }
+    ss << "}";
+    string text = ss.str();
+    os << text.substr(0, length_limit);
     return os;
 }
