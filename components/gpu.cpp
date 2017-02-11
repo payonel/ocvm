@@ -15,6 +15,7 @@ Gpu::Gpu(Value& config, Host* host) :
     add("getForeground", &Gpu::getForeground);
     add("setForeground", &Gpu::setForeground);
     add("fill", &Gpu::fill);
+    add("copy", &Gpu::copy);
 }
 
 ValuePack Gpu::bind(const ValuePack& args)
@@ -71,6 +72,12 @@ ValuePack Gpu::getForeground(const ValuePack& args)
 }
 
 ValuePack Gpu::fill(const ValuePack& args)
+{
+    lout << "TODO, stub gpu method\n";
+    return ValuePack();
+}
+
+ValuePack Gpu::copy(const ValuePack& args)
 {
     lout << "TODO, stub gpu method\n";
     return ValuePack();

@@ -3,6 +3,8 @@
 UnicodeApi::UnicodeApi() : LuaProxy("unicode")
 {
     add("sub", &UnicodeApi::sub);
+    add("len", &UnicodeApi::len);
+    add("wlen", &UnicodeApi::wlen);
 }
 
 UnicodeApi* UnicodeApi::get()
@@ -37,3 +39,14 @@ ValuePack UnicodeApi::sub(const ValuePack& args)
 
     return ValuePack { text.substr(from, to - from + 1) };
 }
+
+ValuePack UnicodeApi::len(const ValuePack& args)
+{
+    return ValuePack { Value::check(args, 0, "string").toString().size() };
+}
+
+ValuePack UnicodeApi::wlen(const ValuePack& args)
+{
+    return ValuePack { Value::check(args, 0, "string").toString().size() };
+}
+

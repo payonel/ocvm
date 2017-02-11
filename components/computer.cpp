@@ -1,4 +1,5 @@
 #include "computer.h"
+#include "log.h"
 
 #include <iostream>
 #include <chrono>
@@ -10,24 +11,22 @@ Computer::Computer(Value& config, Host* host) :
     _start_time = now();
 
     add("realTime", &Computer::realTime);
-    // add("setArchitecture", &Computer::setArchitecture);
-    // add("getArchitecture", &Computer::getArchitecture);
-    // add("getArchitectures", &Computer::getArchitectures);
+    add("setArchitecture", &Computer::setArchitecture);
+    add("getArchitecture", &Computer::getArchitecture);
+    add("getArchitectures", &Computer::getArchitectures);
     add("beep", &Computer::beep);
-    // add("getDeviceInfo", &Computer::getDeviceInfo);
-    // add("getProgramLocations", &Computer::getProgramLocations);
+    add("getDeviceInfo", &Computer::getDeviceInfo);
+    add("getProgramLocations", &Computer::getProgramLocations);
     add("uptime", &Computer::uptime);
-    // add("pushSignal", &Computer::pushSignal);
-    // add("removeUser", &Computer::removeUser);
-    // add("addUser", &Computer::addUser);
-    // add("setBootAddress", &Computer::setBootAddress);
-    // add("getBootAddress", &Computer::getBootAddress);
-    // add("isRobot", &Computer::isRobot);
+    add("pushSignal", &Computer::pushSignal);
+    add("removeUser", &Computer::removeUser);
+    add("addUser", &Computer::addUser);
+    add("isRobot", &Computer::isRobot);
     add("tmpAddress", &Computer::tmpAddress);
-    // add("freeMemory", &Computer::freeMemory);
-    // add("totalMemory", &Computer::totalMemory);
-    // add("energy", &Computer::energy);
-    // add("maxEnergy", &Computer::maxEnergy);
+    add("freeMemory", &Computer::freeMemory);
+    add("totalMemory", &Computer::totalMemory);
+    add("energy", &Computer::energy);
+    add("maxEnergy", &Computer::maxEnergy);
 }
 
 int64_t Computer::now() const
@@ -47,32 +46,37 @@ ValuePack Computer::realTime(const ValuePack& args)
 
 ValuePack Computer::setArchitecture(const ValuePack& args)
 {
+    luaL_error(args.state, "setArchitecture not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::getArchitecture(const ValuePack& args)
 {
+    luaL_error(args.state, "getArchitecture not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::getArchitectures(const ValuePack& args)
 {
+    luaL_error(args.state, "getArchitectures not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::beep(const ValuePack& args)
 {
-    std::cout << "\a";
+    lout << "\a" << "BEEP\n";
     return ValuePack();
 }
 
 ValuePack Computer::getDeviceInfo(const ValuePack& args)
 {
+    luaL_error(args.state, "getDeviceInfo not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::getProgramLocations(const ValuePack& args)
 {
+    luaL_error(args.state, "getProgramLocations not implemented");
     return ValuePack();
 }
 
@@ -89,17 +93,19 @@ ValuePack Computer::pushSignal(const ValuePack& args)
 
 ValuePack Computer::removeUser(const ValuePack& args)
 {
+    luaL_error(args.state, "removeUser not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::addUser(const ValuePack& args)
 {
+    luaL_error(args.state, "addUser not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::isRobot(const ValuePack& args)
 {
-    return ValuePack();
+    return ValuePack { false };
 }
 
 ValuePack Computer::tmpAddress(const ValuePack& args)
@@ -109,21 +115,24 @@ ValuePack Computer::tmpAddress(const ValuePack& args)
 
 ValuePack Computer::freeMemory(const ValuePack& args)
 {
-    return ValuePack();
+    return ValuePack { std::numeric_limits<double>::max() };
 }
 
 ValuePack Computer::totalMemory(const ValuePack& args)
 {
+    luaL_error(args.state, "totalMemory not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::energy(const ValuePack& args)
 {
+    luaL_error(args.state, "energy not implemented");
     return ValuePack();
 }
 
 ValuePack Computer::maxEnergy(const ValuePack& args)
 {
+    luaL_error(args.state, "maxEnergy not implemented");
     return ValuePack();
 }
 

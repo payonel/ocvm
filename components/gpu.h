@@ -16,4 +16,5 @@ public:
     ValuePack setForeground(const ValuePack& args);
     ValuePack getForeground(const ValuePack& args);
     ValuePack fill(const ValuePack& args);
+    ValuePack copy(const ValuePack& args);
 };
