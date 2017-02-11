@@ -1,5 +1,5 @@
 #include "host.h"
-#include "frame.h"
+#include "framing/frame.h"
 #include "utils.h"
 #include "components/component.h"
 #include "components/screen.h"

@@ -1,6 +1,6 @@
 #include "gpu.h"
 #include "log.h"
-#include "frame.h"
+#include "framing/frame.h"
 #include <iostream>
 
 Gpu::Gpu(Value& config, Host* host) :
