@@ -3,16 +3,15 @@
 #include "basic_term.h"
 #include "curses_shell.h"
 
-Framer* FrameFactory::create(EFramer eFramerType)
+Framer* FrameFactory::create(const string& framerTypeName)
 {
-    switch (eFramerType)
+    if (framerTypeName == "basic")
     {
-        case EFramer::Basic:
-            return new BasicTerm;
-        break;
-        case EFramer::Curses:
-            return new CursesShell;
-        break;
+        return new BasicTerm;
+    }
+    else if (framerTypeName == "curses")
+    {
+        return new CursesShell;
     }
 
     return nullptr;

@@ -11,12 +11,13 @@ using std::cerr;
 int main(int argc, char** argv)
 {
     string client_env_path = argc > 1 ? argv[1] : "tmp";
-    Framer* framer = FrameFactory::create(FrameFactory::EFramer::Curses);
+    string framer_type = argc > 2 ? argv[2] : "curses";
+    Framer* framer = FrameFactory::create(framer_type);
 
     // create profile shell (houses screen component [list?])
     if (!framer)
     {
-        cerr << "no framer available\n";
+        cerr << "no [" << framer_type << "] framer available\n";
         return 1;
     }
 

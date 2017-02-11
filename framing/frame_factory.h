@@ -1,14 +1,12 @@
 #pragma once
 
+#include <string>
+using std::string;
+
 class Framer;
 
 class FrameFactory
 {
 public:
-    enum EFramer
-    {
-        Basic,
-        Curses
-    };
-    static Framer* create(EFramer eFramerType);
+    static Framer* create(const string& framerTypeName);
 };
