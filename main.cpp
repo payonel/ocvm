@@ -1,7 +1,7 @@
 #include <string>
 #include "host.h"
 #include "client.h"
-#include "shell.h"
+#include "curses_shell.h"
 #include "luaenv.h"
 #include "log.h"
 
