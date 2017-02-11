@@ -19,21 +19,31 @@ SystemApi* SystemApi::get()
 
 ValuePack SystemApi::allowGC(const ValuePack& args)
 {
-    return ValuePack();
+    return ValuePack { _gc };
 }
 
 ValuePack SystemApi::timeout(const ValuePack& args)
 {
-    return ValuePack({_timeout});
+    return ValuePack { _timeout };
 }
 
 ValuePack SystemApi::allowBytecode(const ValuePack& args)
 {
-    return ValuePack();
+    return ValuePack { _bytecode };
 }
 
 ////////
 void SystemApi::setTimeout(double t)
 {
     _timeout = t;
+}
+
+void SystemApi::setAllowBytecode(bool enable)
+{
+    _bytecode = enable;
+}
+
+void SystemApi::setAllowGC(bool enable)
+{
+    _gc = enable;
 }

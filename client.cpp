@@ -68,6 +68,14 @@ bool Client::load(LuaEnv* lua)
         {
             SystemApi::get()->setTimeout(pair.second.toNumber());
         }
+        else if (section == "allowBytecode")
+        {
+            SystemApi::get()->setAllowBytecode(pair.second.toBool());
+        }
+        else if (section == "allowGC")
+        {
+            SystemApi::get()->setAllowGC(pair.second.toBool());
+        }
     }
     lout << "components loaded: " << _components.size() << "\n";
 
@@ -142,9 +150,7 @@ Component* Client::component(const string& address) const
 
 ValuePack Client::component_list(const ValuePack& args)
 {
-    const Value& vfilter = Value::check(args, 0, "string", "nil");
-    string filter = vfilter ? vfilter.toString() : "";
-
+    string filter = Value::check(args, 0, "string", "nil").Or("").toString();
     bool exact = Value::check(args, 1, "boolean", "nil").toBool();
 
     Value result = Value::table();

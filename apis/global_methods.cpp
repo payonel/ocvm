@@ -37,8 +37,3 @@ ValuePack GlobalMethods::error(const ValuePack& args)
     luaL_error(args.state, stack.c_str());
     return ValuePack();
 }
-
-ValuePack GlobalMethods::loadfile(const ValuePack& args)
-{
-    return ValuePack { };
-}

@@ -96,8 +96,7 @@ string Filesystem::path() const
 ValuePack Filesystem::open(const ValuePack& args)
 {
     string filepath = Value::check(args, 0, "string").toString();
-    Value vmode = Value::check(args, 1, "string", "nil");
-    string mode_text = vmode ? vmode.toString() : "r";
+    string mode_text = Value::check(args, 1, "string", "nil").Or("r").toString();
 
     map<char, fstream::openmode> mode_map;
     mode_map['r'] = fstream::in;
