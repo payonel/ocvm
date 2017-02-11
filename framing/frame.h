@@ -16,7 +16,7 @@ class Framer
 public:
     Framer();
     virtual ~Framer();
-    virtual bool add(Frame* pf, size_t index = static_cast<size_t>(-1));
+    bool add(Frame* pf, size_t index = static_cast<size_t>(-1));
 
     virtual bool open() = 0;
     virtual void close() = 0;
@@ -24,6 +24,7 @@ public:
     virtual void onWrite(Frame*) = 0;
     virtual void onResolution(Frame*) = 0;
 protected:
+    virtual bool onAdd(Frame* pf) {}
     vector<Frame*> _frames;
 };
 

@@ -22,10 +22,10 @@ public:
     bool update() override;
     bool open() override;
     void close() override;
-    bool add(Frame* pf, size_t index) override;
 
     Frame* getFrame(int x, int y) const;
 protected:
+    bool onAdd(Frame* pf);
     void onWrite(Frame* pWhichFrame) override;
     void onResolution(Frame* pWhichFrame) override;
 private:

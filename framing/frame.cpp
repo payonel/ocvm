@@ -32,7 +32,7 @@ bool Framer::add(Frame* pframe, size_t index)
 
     pframe->setFramer(this);
 
-    return true;
+    return onAdd(pframe);
 }
 
 Frame::Frame() :

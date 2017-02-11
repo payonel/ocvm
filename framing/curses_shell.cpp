@@ -118,18 +118,14 @@ Frame* CursesShell::getFrame(int x, int y) const
     return nullptr;
 }
 
-bool CursesShell::add(Frame* pf, size_t index)
+bool CursesShell::onAdd(Frame* pf)
 {
-    bool result = Framer::add(pf, index);
-    if (result)
-    {
-        WINDOW* pwin = newwin(0, 0, 0, 0);
-        scrollok(pwin, pf->scrolling());
-        _states[pf] = {pwin}; // full screen window
-        onResolution(pf);
-    }
+    WINDOW* pwin = newwin(0, 0, 0, 0);
+    scrollok(pwin, pf->scrolling());
+    _states[pf] = {pwin}; // full screen window
+    onResolution(pf);
 
-    return result;
+    return true;
 }
 
 bool CursesShell::open()
