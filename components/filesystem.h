@@ -20,8 +20,9 @@ public:
     ValuePack getLabel(const ValuePack& args);
     ValuePack list(const ValuePack& args);
     ValuePack isDirectory(const ValuePack& args);
+    
+    static string clean(string arg, bool bAbs, bool removeEnd);
 protected:
-    static string slash(const string& arg, bool bFront = false);
     static string relative(const string& requested, const string& full);
     void init(const string& loot);
 private:

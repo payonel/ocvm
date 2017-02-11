@@ -30,38 +30,51 @@ void Filesystem::init(const string& loot)
     }
 }
 
-string Filesystem::slash(const string& arg, bool bFront)
+string Filesystem::clean(string arg, bool bAbs, bool removeEnd)
 {
-    string result = arg;
+    size_t last = 0;
+    bool hadEnd = false;
     while (true)
     {
-        size_t len = result.size();
+        size_t len = arg.size();
         if (len == 0)
             break;
 
-        size_t index = bFront ? result.find("/") : result.rfind("/");
-        if (index == string::npos)
+        size_t next = arg.find("/", last);
+
+        if (next == string::npos)
             break;
 
-        if (bFront)
+        if (next == 0)
         {
-            if (index != 0)
-                break;
-            result = result.substr(1);
+            arg = arg.substr(1);
         }
-        else if (len - 1 != index)
+        else if (next == len - 1)
         {
-            break;
-            result = result.substr(0, index);
+            arg = arg.substr(0, next);
+            hadEnd = true;
+        }
+        else
+        {
+            last = next + 1;
         }
     }
-    return bFront ? ("/" + result) : (result + "/");
+    if (bAbs)
+    {
+        arg = "/" + arg;
+    }
+    if (hadEnd and !removeEnd)
+    {
+        arg = arg + "/";
+    }
+
+    return arg;
 }
 
 string Filesystem::relative(const string& requested, const string& full)
 {
-    string clean_requested = slash(slash(requested, true));
-    string clean_full = slash(slash(full, true));
+    string clean_requested = clean(requested, true, false);
+    string clean_full = clean(full, true, false);
     if (clean_full.find(clean_requested) != 0)
     {
         lout << "error in expected relative truncation, could not find root path [";
@@ -76,7 +89,7 @@ string Filesystem::relative(const string& requested, const string& full)
 
 string Filesystem::path() const
 {
-    return slash(slash(host()->envPath()) + address());
+    return clean(host()->envPath(), false, true) + clean(address(), true, true);
 }
 
 ValuePack Filesystem::open(const ValuePack& args)
@@ -118,7 +131,8 @@ ValuePack Filesystem::open(const ValuePack& args)
     }
 
     fstream* pf = new fstream;
-    pf->open(path() + filepath, mode);
+    string fullpath = path() + clean(filepath, true, false);
+    pf->open(fullpath, mode);
 
     if (!pf->is_open())
     {
@@ -195,14 +209,14 @@ ValuePack Filesystem::getLabel(const ValuePack& args)
 
 ValuePack Filesystem::list(const ValuePack& args)
 {
-    string request_path = path() + Value::check(args, 0, "string").toString();
+    string request_path = path() + clean(Value::check(args, 0, "string").toString(), true, false);
     auto listing = utils::list(request_path);
 
     ValuePack result {Value::table()};
     Value& t = result.at(0);
     for (const auto& item : listing)
     {
-        string relative_item = relative(request_path, item);
+        string relative_item = clean(relative(request_path, item), false, false);
         t.insert(relative_item);
     }
 
@@ -211,7 +225,7 @@ ValuePack Filesystem::list(const ValuePack& args)
 
 ValuePack Filesystem::isDirectory(const ValuePack& args)
 {
-    string relpath = Value::check(args, 0, "string").toString();
+    string relpath = clean(Value::check(args, 0, "string").toString(), true, true);
     ValuePack pack;
     pack.push_back( {utils::isDirectory(path() + relpath)} );
     return pack;

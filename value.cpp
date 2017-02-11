@@ -1,6 +1,7 @@
 #include "value.h"
 #include "log.h"
 
+#include <limits>
 #include <lua.hpp>
 
 Value Value::nil; // the nil
@@ -233,7 +234,12 @@ string Value::serialize() const
     }
     else if (_type == "number")
     {
-        ss << _number;
+        if (_number >= std::numeric_limits<double>::max())
+            ss << "math.huge";
+        else if (_number <= std::numeric_limits<double>::min())
+            ss << "-math.huge";
+        else
+            ss << _number;
     }
     else if (_type == "nil")
     {
