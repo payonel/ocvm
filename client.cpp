@@ -41,14 +41,14 @@ bool Client::load(LuaEnv* lua)
     }
 
     // load components from config
-    for (const auto& pair : _config->pairs())
+    for (auto& pair : _config->pairs())
     {
         string section = pair.first.toString();
         if (section == "components")
         {
-            for (const auto& component_config_pair : pair.second.pairs())
+            for (auto& component_config_pair : pair.second.pairs())
             {
-                const auto& component_config = component_config_pair.second;
+                auto& component_config = component_config_pair.second;
                 string key = component_config.get(1).toString();
                 lout << key << ": ";
                 Component* pc = _host->create(component_config);

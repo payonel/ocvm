@@ -3,7 +3,7 @@
 #include "frame.h"
 #include <iostream>
 
-Gpu::Gpu(const Value& config, Host* host) :
+Gpu::Gpu(Value& config, Host* host) :
     Component(config, host)
 {
     add("setResolution", &Gpu::setResolution);

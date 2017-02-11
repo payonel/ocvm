@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "host.h"
 
-Eeprom::Eeprom(const Value& config, Host* host) :
+Eeprom::Eeprom(Value& config, Host* host) :
     Component(config, host)
 {
     add("get", &Eeprom::get);

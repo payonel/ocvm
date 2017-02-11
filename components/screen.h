@@ -5,7 +5,7 @@
 class Screen : public Component
 {
 public:
-    Screen(const Value& config, Host* host);
+    Screen(Value& config, Host* host);
 
     ValuePack getKeyboards(const ValuePack& args);
 private:

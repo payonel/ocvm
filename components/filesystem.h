@@ -10,7 +10,7 @@ using std::fstream;
 class Filesystem : public Component
 {
 public:
-    Filesystem(const Value& config, Host* host);
+    Filesystem(Value& config, Host* host);
 
     string path() const;
 

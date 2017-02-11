@@ -12,7 +12,7 @@
 class ScreenFrame : public Frame, public Screen
 {
 public:
-    ScreenFrame(const Value& config, Host* host) :
+    ScreenFrame(Value& config, Host* host) :
         Screen(config, host)
     {
     }
@@ -66,7 +66,7 @@ string Host::envPath() const
     return _env_path;
 }
 
-Component* Host::create(const Value& config)
+Component* Host::create(Value& config)
 {
     string type = config.get(1).toString();
     Component* p = nullptr;

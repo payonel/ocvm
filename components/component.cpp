@@ -8,7 +8,7 @@
 #include <vector>
 #include <sstream>
 
-Component::Component(const Value& config, Host* phost) :
+Component::Component(Value& config, Host* phost) :
     LuaProxy(config.get(1).toString()),
     _host(phost)
 {

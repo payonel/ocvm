@@ -5,7 +5,7 @@
 class Computer : public Component
 {
 public:
-    Computer(const Value& config, Host* host);
+    Computer(Value& config, Host* host);
 
     ValuePack realTime(const ValuePack& args);
     ValuePack setArchitecture(const ValuePack& args);

@@ -13,7 +13,7 @@ class Host;
 class Component : public LuaProxy
 {
 public:
-    Component(const Value& config, Host* host);
+    Component(Value& config, Host* host);
     virtual ~Component() {}
     string type() const;
     string address() const;

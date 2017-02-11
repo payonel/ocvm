@@ -4,7 +4,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-Computer::Computer(const Value& config, Host* host) :
+Computer::Computer(Value& config, Host* host) :
     Component(config, host)
 {
     _start_time = now();

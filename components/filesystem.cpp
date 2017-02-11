@@ -4,7 +4,7 @@
 #include "utils.h"
 using std::streamsize;
 
-Filesystem::Filesystem(const Value& config, Host* host) :
+Filesystem::Filesystem(Value& config, Host* host) :
     Component(config, host)
 {
     // mkdir in host env path and filesystem address
