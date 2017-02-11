@@ -152,7 +152,6 @@ bool Shell::open()
     return true;
 }
 
-int g = 0;
 bool Shell::update()
 {
     lout << "shell update\n";
