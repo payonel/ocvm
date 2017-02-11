@@ -10,17 +10,18 @@ using std::cerr;
 int main(int argc, char** argv)
 {
     string client_env_path = argc > 1 ? argv[1] : "tmp";
-    // init host config
-    // // prepares component factories such as screen, keyboard, and filesystem
-    Host host(client_env_path);
+    Framer* framer = new Shell;
 
     // create profile shell (houses screen component [list?])
-    Framer* framer = host.getFramer();
     if (!framer)
     {
         cerr << "no framer available\n";
         return 1;
     }
+
+    // init host config
+    // // prepares component factories such as screen, keyboard, and filesystem
+    Host host(client_env_path, framer);
 
     if (!framer->open())  // open the ui
     {

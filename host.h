@@ -8,7 +8,7 @@ class Framer;
 class Host
 {
 public:
-    Host(const string& env_path);
+    Host(const string& env_path, Framer* framer);
     ~Host();
 
     string machinePath() const;

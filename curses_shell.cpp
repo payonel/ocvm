@@ -1,4 +1,4 @@
-#include "shell.h"
+#include "curses_shell.h"
 #include "frame.h"
 #include "log.h"
 #include <ncurses.h>

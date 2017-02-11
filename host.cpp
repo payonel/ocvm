@@ -1,5 +1,5 @@
 #include "host.h"
-#include "shell.h"
+#include "frame.h"
 #include "utils.h"
 #include "components/component.h"
 #include "components/screen.h"
@@ -38,12 +38,12 @@ public:
     }
 };
 
-Host::Host(const string& env_path) : _env_path(env_path)
+Host::Host(const string& env_path, Framer* framer) :
+    _env_path(env_path),
+    _framer(framer)
 {
     // make the env path if it doesn't already exist
     this->mkdir("");
-    
-    _framer = new Shell;
 }
 
 Host::~Host()
