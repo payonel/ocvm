@@ -10,9 +10,7 @@ public:
     ValuePack allowGC(const ValuePack& args);
     ValuePack allowBytecode(const ValuePack& args);
 
-    void setTimeout(double t);
-    void setAllowBytecode(bool enable);
-    void setAllowGC(bool enable);
+    void configure(const Value& settings);
 private:
     SystemApi();
 

@@ -33,17 +33,9 @@ ValuePack SystemApi::allowBytecode(const ValuePack& args)
 }
 
 ////////
-void SystemApi::setTimeout(double t)
+void SystemApi::configure(const Value& settings)
 {
-    _timeout = t;
-}
-
-void SystemApi::setAllowBytecode(bool enable)
-{
-    _bytecode = enable;
-}
-
-void SystemApi::setAllowGC(bool enable)
-{
-    _gc = enable;
+    _timeout = settings.get("timeout").Or(_timeout).toNumber();
+    _bytecode = settings.get("allowBytecode").Or(_bytecode).toBool();
+    _gc = settings.get("allowGC").Or(_gc).toBool();
 }

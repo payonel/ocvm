@@ -23,7 +23,7 @@ Computer::Computer(const Value& config, Host* host) :
     // add("setBootAddress", &Computer::setBootAddress);
     // add("getBootAddress", &Computer::getBootAddress);
     // add("isRobot", &Computer::isRobot);
-    // add("tmpAddress", &Computer::tmpAddress);
+    add("tmpAddress", &Computer::tmpAddress);
     // add("freeMemory", &Computer::freeMemory);
     // add("totalMemory", &Computer::totalMemory);
     // add("energy", &Computer::energy);
@@ -92,16 +92,6 @@ ValuePack Computer::addUser(const ValuePack& args)
     return ValuePack();
 }
 
-ValuePack Computer::setBootAddress(const ValuePack& args)
-{
-    return ValuePack();
-}
-
-ValuePack Computer::getBootAddress(const ValuePack& args)
-{
-    return ValuePack();
-}
-
 ValuePack Computer::isRobot(const ValuePack& args)
 {
     return ValuePack();
@@ -109,7 +99,7 @@ ValuePack Computer::isRobot(const ValuePack& args)
 
 ValuePack Computer::tmpAddress(const ValuePack& args)
 {
-    return ValuePack();
+    return ValuePack { _tmp_address };
 }
 
 ValuePack Computer::freeMemory(const ValuePack& args)

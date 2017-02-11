@@ -19,15 +19,16 @@ public:
     ValuePack pushSignal(const ValuePack& args);
     ValuePack removeUser(const ValuePack& args);
     ValuePack addUser(const ValuePack& args);
-    ValuePack setBootAddress(const ValuePack& args);
-    ValuePack getBootAddress(const ValuePack& args);
     ValuePack isRobot(const ValuePack& args);
     ValuePack tmpAddress(const ValuePack& args);
     ValuePack freeMemory(const ValuePack& args);
     ValuePack totalMemory(const ValuePack& args);
     ValuePack energy(const ValuePack& args);
     ValuePack maxEnergy(const ValuePack& args);
+
+    void setTmpAddress(string addr);
 private:
     int64_t now() const;
     int64_t _start_time;
+    string _tmp_address;
 };

@@ -22,8 +22,8 @@ public:
     ValuePack isDirectory(const ValuePack& args);
     ValuePack exists(const ValuePack& args);
     
-    static string clean(string arg, bool bAbs, bool removeEnd);
 protected:
+    static string clean(string arg, bool bAbs, bool removeEnd);
     static string relative(const string& requested, const string& full);
     void init(const string& loot);
 private:

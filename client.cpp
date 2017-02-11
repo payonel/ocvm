@@ -64,17 +64,9 @@ bool Client::load(LuaEnv* lua)
                 }
             }
         }
-        else if (section == "timeout")
+        else if (section == "system")
         {
-            SystemApi::get()->setTimeout(pair.second.toNumber());
-        }
-        else if (section == "allowBytecode")
-        {
-            SystemApi::get()->setAllowBytecode(pair.second.toBool());
-        }
-        else if (section == "allowGC")
-        {
-            SystemApi::get()->setAllowGC(pair.second.toBool());
+            SystemApi::get()->configure(pair.second);
         }
     }
     lout << "components loaded: " << _components.size() << "\n";
