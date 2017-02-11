@@ -1,7 +1,8 @@
 #include <string>
 #include "host.h"
 #include "client.h"
-#include "framing/curses_shell.h"
+#include "framing/frame_factory.h"
+#include "framing/frame.h"
 #include "luaenv.h"
 #include "log.h"
 
@@ -10,7 +11,7 @@ using std::cerr;
 int main(int argc, char** argv)
 {
     string client_env_path = argc > 1 ? argv[1] : "tmp";
-    Framer* framer = new CursesShell;
+    Framer* framer = FrameFactory::create(FrameFactory::EFramer::Curses);
 
     // create profile shell (houses screen component [list?])
     if (!framer)
