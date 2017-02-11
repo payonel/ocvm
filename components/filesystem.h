@@ -20,6 +20,7 @@ public:
     ValuePack getLabel(const ValuePack& args);
     ValuePack list(const ValuePack& args);
     ValuePack isDirectory(const ValuePack& args);
+    ValuePack exists(const ValuePack& args);
     
     static string clean(string arg, bool bAbs, bool removeEnd);
 protected:

@@ -38,3 +38,7 @@ ValuePack GlobalMethods::error(const ValuePack& args)
     return ValuePack();
 }
 
+ValuePack GlobalMethods::loadfile(const ValuePack& args)
+{
+    return ValuePack { };
+}

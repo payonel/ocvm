@@ -34,6 +34,7 @@ public:
     Value(int n) : Value(double(n)) {}
     Value(const char* cstr) : Value(string(cstr)) {}
     Value(int64_t n) : Value(double(n)) {}
+    Value(size_t n) : Value(double(n)) {}
     Value(lua_State*);
     Value(lua_State*, int);
     Value();
@@ -45,6 +46,8 @@ public:
     {
         return ValuePack();
     }
+
+    const Value& Or(const Value& def) const;
 
     template<typename T, typename... Ts>
     static ValuePack pack(T arg, Ts... args)

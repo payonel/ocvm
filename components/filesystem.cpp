@@ -16,6 +16,7 @@ Filesystem::Filesystem(const Value& config, Host* host) :
     add("getLabel", &Filesystem::getLabel);
     add("list", &Filesystem::list);
     add("isDirectory", &Filesystem::isDirectory);
+    add("exists", &Filesystem::exists);
 }
 
 void Filesystem::init(const string& loot)
@@ -229,4 +230,9 @@ ValuePack Filesystem::isDirectory(const ValuePack& args)
     ValuePack pack;
     pack.push_back( {utils::isDirectory(path() + relpath)} );
     return pack;
+}
+
+ValuePack Filesystem::exists(const ValuePack& args)
+{
+    return ValuePack { utils::exists(path() + clean(Value::check(args, 0, "string").toString(), true, true)) };
 }

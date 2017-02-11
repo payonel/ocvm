@@ -370,3 +370,8 @@ ostream& operator << (ostream& os, const ValuePack& pack)
     os << text.substr(0, cut);
     return os;
 }
+
+const Value& Value::Or(const Value& def) const
+{
+    return (!*this) ? def : *this;
+}
