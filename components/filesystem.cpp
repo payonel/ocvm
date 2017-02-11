@@ -4,16 +4,18 @@
 #include "utils.h"
 using std::streamsize;
 
-Filesystem::Filesystem(const string& type, const Value& init, Host* host) :
-    Component(type, init, host)
+Filesystem::Filesystem(const Value& config, Host* host) :
+    Component(config, host)
 {
     // mkdir in host env path and filesystem address
-    this->init(init.get(2).toString());
+    this->init(config.get(3).toString());
 
     add("open", &Filesystem::open);
     add("read", &Filesystem::read);
     add("close", &Filesystem::close);
     add("getLabel", &Filesystem::getLabel);
+    add("list", &Filesystem::list);
+    add("isDirectory", &Filesystem::isDirectory);
 }
 
 void Filesystem::init(const string& loot)
@@ -28,9 +30,53 @@ void Filesystem::init(const string& loot)
     }
 }
 
+string Filesystem::slash(const string& arg, bool bFront)
+{
+    string result = arg;
+    while (true)
+    {
+        size_t len = result.size();
+        if (len == 0)
+            break;
+
+        size_t index = bFront ? result.find("/") : result.rfind("/");
+        if (index == string::npos)
+            break;
+
+        if (bFront)
+        {
+            if (index != 0)
+                break;
+            result = result.substr(1);
+        }
+        else if (len - 1 != index)
+        {
+            break;
+            result = result.substr(0, index);
+        }
+    }
+    return bFront ? ("/" + result) : (result + "/");
+}
+
+string Filesystem::relative(const string& requested, const string& full)
+{
+    string clean_requested = slash(slash(requested, true));
+    string clean_full = slash(slash(full, true));
+    if (clean_full.find(clean_requested) != 0)
+    {
+        lout << "error in expected relative truncation, could not find root path [";
+        lout << clean_requested;
+        lout << "] in [";
+        lout << clean_full;
+        lout << "]\n";
+        return clean_full;
+    }
+    return clean_full.substr(clean_requested.size());
+}
+
 string Filesystem::path() const
 {
-    return host()->envPath() + "/" + address();
+    return slash(slash(host()->envPath()) + address());
 }
 
 ValuePack Filesystem::open(const ValuePack& args)
@@ -145,4 +191,28 @@ ValuePack Filesystem::close(const ValuePack& args)
 ValuePack Filesystem::getLabel(const ValuePack& args)
 {
     return ValuePack {"label stub"};
+}
+
+ValuePack Filesystem::list(const ValuePack& args)
+{
+    string request_path = path() + Value::check(args, 0, "string").toString();
+    auto listing = utils::list(request_path);
+
+    ValuePack result {Value::table()};
+    Value& t = result.at(0);
+    for (const auto& item : listing)
+    {
+        string relative_item = relative(request_path, item);
+        t.insert(relative_item);
+    }
+
+    return result;
+}
+
+ValuePack Filesystem::isDirectory(const ValuePack& args)
+{
+    string relpath = Value::check(args, 0, "string").toString();
+    ValuePack pack;
+    pack.push_back( {utils::isDirectory(path() + relpath)} );
+    return pack;
 }

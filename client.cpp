@@ -23,6 +23,7 @@ Client::Client(Host* host) : LuaProxy("component"), _host(host)
     add("invoke", &Client::component_invoke);
     add("methods", &Client::component_methods);
     add("type", &Client::component_type);
+    add("slot", &Client::component_slot);
 }
 
 Client::~Client()
@@ -39,28 +40,32 @@ bool Client::load(LuaEnv* lua)
     }
 
     // load components from config
-    for (auto pair : _config->pairs())
+    for (const auto& pair : _config->pairs())
     {
-        if (pair.first.type() != "string")
+        string section = pair.first.toString();
+        if (section == "components")
         {
-            lout << "bad config key, not string: " << pair.first.type() << endl;
-            return false;
+            for (const auto& component_config_pair : pair.second.pairs())
+            {
+                const auto& component_config = component_config_pair.second;
+                string key = component_config.get(1).toString();
+                lout << key << ": ";
+                Component* pc = _host->create(component_config);
+                if (pc)
+                {
+                    lout << "created\n";
+                    _components.push_back(pc);
+                }
+                else
+                {
+                    lout << "failed! The host could not create a " << key << endl;
+                    return false;
+                }
+            }
         }
-        else
+        else if (section == "timeout")
         {
-            string key = pair.first.toString();
-            lout << key << ": ";
-            Component* pc = _host->create(key, pair.second);
-            if (pc)
-            {
-                lout << "created\n";
-                _components.push_back(pc);
-            }
-            else
-            {
-                lout << "failed! The host could not create a " << key << endl;
-                return false;
-            }
+            SystemApi::get()->setTimeout(pair.second.toNumber());
         }
     }
     lout << "components loaded: " << _components.size() << "\n";
@@ -215,6 +220,24 @@ ValuePack Client::component_type(const ValuePack& args)
     if (pc)
     {
         result.push_back(pc->type());
+    }
+    else
+    {
+        result.push_back(Value::nil);
+        result.push_back("no such component");
+    }
+
+    return result;
+}
+
+ValuePack Client::component_slot(const ValuePack& args)
+{
+    string address = Value::check(args, 0, "string").toString();
+    ValuePack result(args.state);
+    Component* pc = component(address);
+    if (pc)
+    {
+        result.push_back(pc->slot());
     }
     else
     {

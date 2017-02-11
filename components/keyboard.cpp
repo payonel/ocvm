@@ -1,6 +1,6 @@
 #include "keyboard.h"
 
-Keyboard::Keyboard(const string& type, const Value& init, Host* host) : 
-    Component(type, init, host)
+Keyboard::Keyboard(const Value& config, Host* host) : 
+    Component(config, host)
 {
 }

@@ -14,7 +14,7 @@ public:
     string machinePath() const;
     string envPath() const;
     Framer* getFramer() const;
-    Component* create(const string& type, const Value& init);
+    Component* create(const Value& config);
     void close();
     void mkdir(const string& path);
 private:

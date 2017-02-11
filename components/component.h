@@ -13,17 +13,18 @@ class Host;
 class Component : public LuaProxy
 {
 public:
-    Component(const string& type, const Value& init, Host* host);
+    Component(const Value& config, Host* host);
     virtual ~Component() {}
     string type() const;
     string address() const;
+    int slot() const;
 
     static string make_address();
 protected:
     Host* host() const;
 private:
-    string _type;
     string _address;
+    int _slot;
     Host* _host;
     
     ValuePack get_address(const ValuePack&);

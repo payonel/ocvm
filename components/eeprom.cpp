@@ -6,20 +6,20 @@
 #include "utils.h"
 #include "host.h"
 
-Eeprom::Eeprom(const string& type, const Value& args, Host* host) :
-    Component(type, args, host)
+Eeprom::Eeprom(const Value& config, Host* host) :
+    Component(config, host)
 {
     add("get", &Eeprom::get);
     add("getData", &Eeprom::getData);
     add("setData", &Eeprom::setData);
 
-    int config_bios_size = args.get(3).toNumber();
-    int config_data_size = args.get(4).toNumber();
+    int config_bios_size = config.get(4).toNumber();
+    int config_data_size = config.get(5).toNumber();
 
     _bios_size_limit = config_bios_size == 0 ? _bios_size_limit : config_bios_size;
     _data_size_limit = config_data_size == 0 ? _data_size_limit : config_data_size;
 
-    init(args.get(2).toString());
+    init(config.get(3).toString());
 }
 
 void Eeprom::init(const string& originalBiosPath)

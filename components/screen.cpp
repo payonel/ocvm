@@ -3,8 +3,8 @@
 #include <iostream>
 #include <vector>
 
-Screen::Screen(const string& type, const Value& init, Host* host) : 
-    Component(type, init, host)
+Screen::Screen(const Value& config, Host* host) : 
+    Component(config, host)
 {
     add("getKeyboards", &Screen::getKeyboards);
 }

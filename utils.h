@@ -1,7 +1,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
 using std::string;
+using std::vector;
 
 namespace utils
 {
@@ -11,5 +13,8 @@ namespace utils
 
     void mkdir(const string& path);
     bool exists(const string& path);
+
+    vector<string> list(const string& path);
+    bool isDirectory(const string& path);
 };
 

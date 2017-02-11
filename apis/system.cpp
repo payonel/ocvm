@@ -24,10 +24,16 @@ ValuePack SystemApi::allowGC(const ValuePack& args)
 
 ValuePack SystemApi::timeout(const ValuePack& args)
 {
-    return ValuePack({5});
+    return ValuePack({_timeout});
 }
 
 ValuePack SystemApi::allowBytecode(const ValuePack& args)
 {
     return ValuePack();
+}
+
+////////
+void SystemApi::setTimeout(double t)
+{
+    _timeout = t;
 }

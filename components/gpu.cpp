@@ -3,8 +3,8 @@
 #include "frame.h"
 #include <iostream>
 
-Gpu::Gpu(const string& type, const Value& init, Host* host) :
-    Component(type, init, host)
+Gpu::Gpu(const Value& config, Host* host) :
+    Component(config, host)
 {
     add("setResolution", &Gpu::setResolution);
     add("bind", &Gpu::bind);

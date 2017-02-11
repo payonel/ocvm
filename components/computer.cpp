@@ -4,8 +4,8 @@
 #include <chrono>
 using namespace std::chrono;
 
-Computer::Computer(const string& type, const Value& init, Host* host) :
-    Component(type, init, host)
+Computer::Computer(const Value& config, Host* host) :
+    Component(config, host)
 {
     _start_time = now();
 

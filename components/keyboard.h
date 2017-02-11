@@ -5,5 +5,5 @@
 class Keyboard : public Component
 {
 public:
-    Keyboard(const string& type, const Value& init, Host* host);
+    Keyboard(const Value& config, Host* host);
 };

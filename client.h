@@ -26,6 +26,7 @@ public:
     ValuePack component_list(const ValuePack& args);
     ValuePack component_methods(const ValuePack& args);
     ValuePack component_type(const ValuePack& args);
+    ValuePack component_slot(const ValuePack& args);
 protected:
     bool loadLuaComponentApi(LuaEnv*);
 private:

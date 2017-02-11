@@ -5,7 +5,7 @@
 class Eeprom : public Component
 {
 public:
-    Eeprom(const string& type, const Value& init, Host* host);
+    Eeprom(const Value& config, Host* host);
 
     ValuePack get(const ValuePack& args);
     ValuePack getData(const ValuePack& args);

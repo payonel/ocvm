@@ -61,7 +61,19 @@ bool Config::load(const string& path, const string& name)
         lua_setglobal(lua, "cpp_store");
         lua_pushlightuserdata(lua, this);
         lua_setglobal(lua, "_this");
-        lua_pcall(lua, 0, LUA_MULTRET, 0);
+        int result_status = lua_pcall(lua, 0, LUA_MULTRET, 0);
+        if (result_status != LUA_OK)
+        {
+            lout << "Failed to digest the configuration\n";
+            lout << lua_tostring(lua, -1) << endl;
+            return false;
+        }
+    }
+    else
+    {
+        lout << "Configuration could not load\n";
+        lout << lua_tostring(lua, -1) << endl;
+        return false;
     }
     lua_close(lua);
     return true;

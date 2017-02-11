@@ -84,3 +84,50 @@ bool utils::exists(const string& path)
 {
     return fs::exists(path);
 }
+
+vector<string> utils::list(const string& path)
+{
+    vector<string> result;
+    if (!utils::exists(path))
+        return result;
+
+    try
+    {
+        for (const auto& ele : fs::directory_iterator(path))
+        {
+            result.push_back(ele.path());
+        }
+    }
+    catch (std::exception& se)
+    {
+        lout << se.what() << std::endl;
+        std::cerr << se.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::exception_ptr p = std::current_exception();
+        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
+    }
+
+    return result;
+}
+
+bool utils::isDirectory(const string& path)
+{
+    try
+    {
+        return utils::exists(path) && fs::is_directory(path);
+    }
+    catch (std::exception& se)
+    {
+        lout << se.what() << std::endl;
+        std::cerr << se.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::exception_ptr p = std::current_exception();
+        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
+    }
+
+    return false;
+}

@@ -10,7 +10,7 @@ using std::fstream;
 class Filesystem : public Component
 {
 public:
-    Filesystem(const string& type, const Value& init, Host* host);
+    Filesystem(const Value& config, Host* host);
 
     string path() const;
 
@@ -18,7 +18,11 @@ public:
     ValuePack read(const ValuePack& args);
     ValuePack close(const ValuePack& args);
     ValuePack getLabel(const ValuePack& args);
+    ValuePack list(const ValuePack& args);
+    ValuePack isDirectory(const ValuePack& args);
 protected:
+    static string slash(const string& arg, bool bFront = false);
+    static string relative(const string& requested, const string& full);
     void init(const string& loot);
 private:
     map<int, fstream*> _handles;

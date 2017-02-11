@@ -12,8 +12,8 @@
 class ScreenFrame : public Frame, public Screen
 {
 public:
-    ScreenFrame(const string& type, const Value& init, Host* host) :
-        Screen(type, init, host)
+    ScreenFrame(const Value& config, Host* host) :
+        Screen(config, host)
     {
     }
 
@@ -66,36 +66,37 @@ string Host::envPath() const
     return _env_path;
 }
 
-Component* Host::create(const string& type, const Value& init)
+Component* Host::create(const Value& config)
 {
+    string type = config.get(1).toString();
     Component* p = nullptr;
 
     if (type == "screen")
     {
-        auto* sf = new ScreenFrame(type, init, this);
+        auto* sf = new ScreenFrame(config, this);
         getFramer()->add(sf, 0); // insert at top
         //sf->setResolution(50, 10);
         p = sf;
     }
     else if (type == "gpu")
     {
-        p = new Gpu(type, init, this);
+        p = new Gpu(config, this);
     }
     else if (type == "eeprom")
     {
-        p = new Eeprom(type, init, this);
+        p = new Eeprom(config, this);
     }
     else if (type == "computer")
     {
-        p = new Computer(type, init, this);
+        p = new Computer(config, this);
     }
     else if (type == "filesystem")
     {
-        p = new Filesystem(type, init, this);
+        p = new Filesystem(config, this);
     }
     else if (type == "keyboard")
     {
-        p = new Keyboard(type, init, this);
+        p = new Keyboard(config, this);
     }
 
     return p;

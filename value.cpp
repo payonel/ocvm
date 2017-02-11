@@ -59,34 +59,35 @@ Value::Value(lua_State* s)
 
 Value::Value(lua_State* lua, int index)
 {
-    _id = lua_type(lua, index);
+    lua_pushvalue(lua, index);
+    _id = lua_type(lua, -1);
     _type = lua_typename(lua, _id);
 
     switch (_id)
     {
         case LUA_TSTRING:
-            _string = lua_tostring(lua, index);
+            _string = lua_tostring(lua, -1);
         break;
         case LUA_TBOOLEAN:
-            _bool = lua_toboolean(lua, index);
+            _bool = lua_toboolean(lua, -1);
         break;
         case LUA_TNUMBER:
-            _number = lua_tonumber(lua, index);
+            _number = lua_tonumber(lua, -1);
         break;
         case LUA_TNIL:
         break;
         case LUA_TLIGHTUSERDATA:
-            _pointer = lua_touserdata(lua, index);
+            _pointer = lua_touserdata(lua, -1);
         break;
         case LUA_TUSERDATA:
-            _pointer = (void*)lua_topointer(lua, index);
+            _pointer = (void*)lua_topointer(lua, -1);
         break;
         case LUA_TTHREAD:
-            _thread = lua_tothread(lua, index);
+            _thread = lua_tothread(lua, -1);
         break;
         case LUA_TTABLE:
             lua_pushnil(lua); // push nil as first key for next()
-            while (lua_next(lua, index))
+            while (lua_next(lua, -2))
             {
                 // return key, value
                 Value value(lua, -1);
@@ -96,7 +97,8 @@ Value::Value(lua_State* lua, int index)
             }
         break;
     }
-    getmetatable(lua, index);
+    getmetatable(lua, -1);
+    lua_pop(lua, 1);
 }
 
 Value Value::table()
