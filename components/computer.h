@@ -26,7 +26,7 @@ public:
     ValuePack energy(const ValuePack& args);
     ValuePack maxEnergy(const ValuePack& args);
 
-    void setTmpAddress(string addr);
+    void setTmpAddress(const string& addr);
 private:
     int64_t now() const;
     int64_t _start_time;

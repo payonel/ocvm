@@ -17,7 +17,7 @@ public:
     ~Client();
     bool load(LuaEnv*);
     void close();
-    vector<Component*> components(string filter, bool exact = false) const;
+    vector<Component*> components(string filter = "", bool exact = false) const;
     Component* component(const string& address) const;
 
     // global api that is actually computer specific
@@ -28,6 +28,8 @@ public:
     ValuePack component_type(const ValuePack& args);
     ValuePack component_slot(const ValuePack& args);
 protected:
+    bool createComponents();
+    bool postInit();
     bool loadLuaComponentApi(LuaEnv*);
 private:
     vector<Component*> _components;

@@ -35,6 +35,11 @@ int64_t Computer::now() const
     return duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
 }
 
+void Computer::setTmpAddress(const string& addr)
+{
+    _tmp_address = addr;
+}
+
 ValuePack Computer::realTime(const ValuePack& args)
 {
     return ValuePack{now()};

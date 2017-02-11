@@ -13,6 +13,7 @@ public:
     Filesystem(Value& config, Host* host);
 
     string path() const;
+    string src() const;
 
     ValuePack open(const ValuePack& args);
     ValuePack read(const ValuePack& args);
@@ -28,4 +29,5 @@ protected:
     void init(const string& loot);
 private:
     map<int, fstream*> _handles;
+    string _src;
 };

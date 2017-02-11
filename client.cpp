@@ -1,6 +1,9 @@
 #include "client.h"
 #include "host.h"
 #include "components/component.h"
+#include "components/filesystem.h"
+#include "components/computer.h"
+
 #include "config.h"
 #include "log.h"
 #include "luaenv.h"
@@ -40,6 +43,19 @@ bool Client::load(LuaEnv* lua)
         return false;
     }
 
+    if (!createComponents())
+        return false;
+    lout << "components loaded: " << _components.size() << "\n";
+
+    if (!postInit())
+        return false;
+    lout << "components post initialized: " << _components.size() << "\n";
+
+    return loadLuaComponentApi(lua);
+}
+
+bool Client::createComponents()
+{
     // load components from config
     for (auto& pair : _config->pairs())
     {
@@ -69,9 +85,35 @@ bool Client::load(LuaEnv* lua)
             SystemApi::get()->configure(pair.second);
         }
     }
-    lout << "components loaded: " << _components.size() << "\n";
+    return true;
+}
 
-    return loadLuaComponentApi(lua);
+bool Client::postInit()
+{
+    // find fs with no source content, that is the tmp fs
+    Component* tmpfs = nullptr;
+    Computer* pComputer = nullptr;
+    for (auto* pc : components())
+    {
+        if (!tmpfs)
+        {
+            Filesystem* fs = dynamic_cast<Filesystem*>(pc);
+            if (fs && fs->src() == "")
+            {
+                tmpfs = fs;
+            }
+        }
+        if (!pComputer)
+        {
+            pComputer = dynamic_cast<Computer*>(pc);
+        }
+        if (pComputer && tmpfs)
+        {
+            pComputer->setTmpAddress(tmpfs->address());
+            break;
+        }
+    }
+    return true;
 }
 
 bool Client::loadLuaComponentApi(LuaEnv* lua)

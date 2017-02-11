@@ -5,7 +5,8 @@
 using std::streamsize;
 
 Filesystem::Filesystem(Value& config, Host* host) :
-    Component(config, host)
+    Component(config, host),
+    _src()
 {
     // mkdir in host env path and filesystem address
     this->init(config.get(3).toString());
@@ -91,6 +92,11 @@ string Filesystem::relative(const string& requested, const string& full)
 string Filesystem::path() const
 {
     return clean(host()->envPath(), false, true) + clean(address(), true, true);
+}
+
+string Filesystem::src() const
+{
+    return _src;
 }
 
 ValuePack Filesystem::open(const ValuePack& args)
