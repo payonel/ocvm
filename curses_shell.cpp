@@ -16,20 +16,20 @@ using std::flush;
 #include <unistd.h>
 #include <termios.h>
 
-Shell::Shell()
+CursesShell::CursesShell()
 {
 }
 
-Shell::~Shell()
+CursesShell::~CursesShell()
 {
     close();
 }
 
-void Shell::onWrite(Frame* pWhichFrame)
+void CursesShell::onWrite(Frame* pWhichFrame)
 {
 }
 
-void Shell::onResolution(Frame* pWhichFrame)
+void CursesShell::onResolution(Frame* pWhichFrame)
 {
     int col, row;
     getmaxyx(stdscr, row, col);
@@ -98,7 +98,7 @@ void Shell::onResolution(Frame* pWhichFrame)
     }
 }
 
-Frame* Shell::getFrame(int x, int y) const
+Frame* CursesShell::getFrame(int x, int y) const
 {
     for (auto pf : _frames)
     {
@@ -118,7 +118,7 @@ Frame* Shell::getFrame(int x, int y) const
     return nullptr;
 }
 
-bool Shell::add(Frame* pf, size_t index)
+bool CursesShell::add(Frame* pf, size_t index)
 {
     bool result = Framer::add(pf, index);
     if (result)
@@ -132,7 +132,7 @@ bool Shell::add(Frame* pf, size_t index)
     return result;
 }
 
-bool Shell::open()
+bool CursesShell::open()
 {
     initscr();
 
@@ -152,7 +152,7 @@ bool Shell::open()
     return true;
 }
 
-bool Shell::update()
+bool CursesShell::update()
 {
     lout << "shell update\n";
 
@@ -185,7 +185,7 @@ bool Shell::update()
     return true;
 }
 
-void Shell::close()
+void CursesShell::close()
 {
     for (auto& pair : _states)
     {

@@ -10,7 +10,7 @@ using std::cerr;
 int main(int argc, char** argv)
 {
     string client_env_path = argc > 1 ? argv[1] : "tmp";
-    Framer* framer = new Shell;
+    Framer* framer = new CursesShell;
 
     // create profile shell (houses screen component [list?])
     if (!framer)

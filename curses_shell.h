@@ -14,11 +14,11 @@ struct FrameState
     WINDOW* window;
 };
 
-class Shell : public Framer
+class CursesShell : public Framer
 {
 public:
-    Shell();
-    ~Shell();
+    CursesShell();
+    ~CursesShell();
     bool update() override;
     bool open() override;
     void close() override;
