@@ -191,11 +191,21 @@ int Value::len() const
         return (int)_string.size();
     else if (type() == "table")
     {
-        for (size_t i = 0; i < _table.size(); i++)
+        map<int, bool> ids;
+        for (const auto& pair : _table)
         {
-            if (_table.find((double)i) == _table.end())
+            const auto& v = pair.first;
+            if (v.type() == "number")
+            {
+                ids[static_cast<int>(v.toNumber())] = true;
+            }
+        }
+        for (size_t i = 0; i < ids.size(); i++)
+        {
+            if (ids.find((int)i + 1) == ids.end())
                 return (int)i;
         }
+        return (int)ids.size();
     }
 
     return 0;
