@@ -234,10 +234,9 @@ string Value::serialize() const
     }
     else if (_type == "number")
     {
-        if (_number >= std::numeric_limits<double>::max())
-            ss << "math.huge";
-        else if (_number <= std::numeric_limits<double>::min())
-            ss << "-math.huge";
+        bool neg = _number < 0;
+        if ((neg ? -_number : _number) >= std::numeric_limits<double>::max())
+            ss << (neg ? "-" : "") << "math.huge";
         else
             ss << _number;
     }

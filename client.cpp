@@ -9,6 +9,7 @@
 #include "apis/os.h"
 #include "apis/global_methods.h"
 #include "apis/system.h"
+#include "apis/unicode.h"
 
 #include <string>
 #include <functional>
@@ -89,6 +90,7 @@ bool Client::loadLuaComponentApi(LuaEnv* lua)
     lua->newlib(OSApi::get());
     lua->newlib(GlobalMethods::get());
     lua->newlib(SystemApi::get());
+    lua->newlib(UnicodeApi::get());
     return true;
 }
 
