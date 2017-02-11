@@ -22,8 +22,6 @@ struct ValuePack : public vector<Value>
 };
 ostream& operator << (ostream& os, const ValuePack& pack);
 
-typedef map<Value, Value>::value_type ValuePair;
-
 class Value
 {
 public:
@@ -40,7 +38,7 @@ public:
     Value();
 
     static Value table();
-    static Value nil;
+    static const Value nil;
 
     static ValuePack pack()
     {
@@ -75,12 +73,13 @@ public:
     static const Value& check(const ValuePack& pack, size_t index, const string& required, const string& optional = "");
 
     // table functions
+    void set(const Value& key, const Value& value);
     const Value& get(const Value& key) const;
     Value& get(const Value& key);
-    void set(const Value& key, const Value& value);
-    vector<ValuePair> pairs() const;
+    const map<Value, Value>& pairs() const;
+    map<Value, Value>& pairs();
 
-    string serialize() const;
+    string serialize(bool bSpacey = false) const;
     operator bool() const;
 protected:
     void getmetatable(lua_State* lua, int index);

@@ -12,11 +12,12 @@ Component::Component(Value& config, Host* phost) :
     LuaProxy(config.get(1).toString()),
     _host(phost)
 {
-    Value v;
-    v = config.get(2);
-    if (!v || v.type() != "string" || v.toString().empty())
-        v = Value(make_address());
-    _address = v.toString();
+    Value& vaddr = config.get(2);
+    if (vaddr.type() != "string" || vaddr.toString().empty())
+    {
+        vaddr = Value(make_address());
+    }
+    _address = vaddr.toString();
 
     add("address", &Component::get_address);
     add("type", &Component::get_type);

@@ -4,7 +4,7 @@
 #include <limits>
 #include <lua.hpp>
 
-Value Value::nil; // the nil
+const Value Value::nil; // the nil
 
 Value::Value(const string& v)
 {
@@ -161,7 +161,9 @@ const Value& Value::select(const ValuePack& pack, size_t index)
 const Value& Value::get(const Value& key) const
 {
     if (_table.find(key) == _table.end())
+    {
         return Value::nil;
+    }
     
     return _table.at(key);
 }
@@ -169,7 +171,7 @@ const Value& Value::get(const Value& key) const
 Value& Value::get(const Value& key)
 {
     if (_table.find(key) == _table.end())
-        return Value::nil;
+        _table[key] = Value::nil;
     
     return _table.at(key);
 }
@@ -211,14 +213,14 @@ int Value::len() const
     return 0;
 }
 
-vector<ValuePair> Value::pairs() const
+const map<Value, Value>& Value::pairs() const
 {
-    vector<ValuePair> vec;
-    for (const auto& pair : _table)
-    {
-        vec.push_back(pair);
-    }
-    return vec;
+    return _table;
+}
+
+map<Value, Value>& Value::pairs()
+{
+    return _table;
 }
 
 string Value::type() const
@@ -231,9 +233,11 @@ int Value::type_id() const
     return _id;
 }
 
-string Value::serialize() const
+string Value::serialize(bool bSpacey) const
 {
     stringstream ss;
+    string sp = bSpacey ? "\n" : "";
+    string tab = bSpacey ? "\t" : "";
     if (_type == "string")
     {
         ss << "\"" + _string + "\"";
@@ -256,16 +260,16 @@ string Value::serialize() const
     }
     else if (_type == "table")
     {
-        ss << "{";
+        ss << sp << "{";
         for (const auto& pair : pairs())
         {
-            ss << "[";
+            ss << tab << "[";
             ss << pair.first.serialize();
-            ss << "] = ";
+            ss << "]=";
             ss << pair.second.serialize();
-            ss << ",";
+            ss << "," << sp;
         }
-        ss << "}";
+        ss << "}" << sp;
     }
     else
     {

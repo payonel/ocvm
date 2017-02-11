@@ -13,7 +13,7 @@ public:
     bool load(const string& path, const string& name);
     bool save();
     string name() const;
-    vector<ValuePair> pairs() const;
+    map<Value, Value>& pairs();
 private:
     string savePath() const;
     Value _data;

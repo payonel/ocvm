@@ -104,7 +104,7 @@ bool Config::set(const Value& key, const Value& value, bool bCreateOnly)
     return false;
 }
 
-vector<ValuePair> Config::pairs() const
+map<Value, Value>& Config::pairs()
 {
     return _data.pairs();
 }
@@ -118,7 +118,7 @@ bool Config::save()
         ss << "[";
         ss << pair.first.serialize();
         ss << "] = ";
-        ss << pair.second.serialize();
+        ss << pair.second.serialize(true);
         ss << ",\n";
     }
     ss << "}\n";
