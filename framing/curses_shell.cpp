@@ -183,16 +183,20 @@ bool CursesShell::update()
 
     for (const auto& pf : _frames)
     {
-        string buffer = pf->read();
+        auto buffer = pf->pop();
         auto& state = _states[pf];
+
+        int x = std::get<0>(buffer);
+        int y = std::get<1>(buffer);
+        string text = std::get<2>(buffer);
 
         if (pf->scrolling())
         {
-            waddstr(state.window, buffer.c_str());
+            waddstr(state.window, text.c_str());
         }
         else
         {
-            mvwprintw(state.window, pf->y(), pf->x(), buffer.c_str());
+            mvwprintw(state.window, pf->y(), pf->x(), text.c_str());
         }
         wrefresh(state.window);
     }

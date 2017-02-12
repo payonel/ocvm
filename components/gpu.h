@@ -1,6 +1,8 @@
 #pragma once
 #include "component.h"
 #include "value.h"
+#include <tuple>
+using std::tuple;
 
 class Screen;
 
@@ -21,6 +23,7 @@ public:
     ValuePack copy(const ValuePack& args);
 protected:
     bool onInitialize(Value& config) override;
+    bool truncateWH(int x, int y, int* pWidth, int* pHeight) const;
 private:
     Screen* _screen;
 };

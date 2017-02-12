@@ -42,7 +42,8 @@ public:
 
     virtual void write(const string& text);
     virtual void move(int x, int y) {}
-    string read();
+    bool empty() const;
+    tuple<int, int, string> pop();
 
     bool setResolution(int width, int height, bool bQuiet = false);
     tuple<int, int> getResolution() const;
@@ -53,7 +54,7 @@ public:
     int y() const;
 private:
     Framer* _framer;
-    string _buffer;
+    vector<tuple<int, int, string>> _buffer;
 
     int _width;
     int _height;

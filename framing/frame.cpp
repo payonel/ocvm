@@ -82,16 +82,23 @@ Framer* Frame::framer() const
 
 void Frame::write(const string& text)
 {
-    _buffer += text;
+    _buffer.push_back(make_tuple(_x, _y, text));
     if (_framer)
     {
         _framer->onWrite(this);
     }
 }
 
-string Frame::read()
+tuple<int, int, string> Frame::pop()
 {
-    return std::move(_buffer);
+    auto last = _buffer.back();
+    _buffer.pop_back();
+    return last;
+}
+
+bool Frame::empty() const
+{
+    return _buffer.empty();
 }
 
 void Frame::scrolling(bool enable)

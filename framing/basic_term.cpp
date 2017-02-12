@@ -24,7 +24,11 @@ bool BasicTerm::onAdd(Frame* pf)
 
 void BasicTerm::onWrite(Frame* pWhichFrame)
 {
-    cout << pWhichFrame->read() << flush;
+    while (!pWhichFrame->empty())
+    {
+        cout << std::get<2>(pWhichFrame->pop());
+    }
+    cout << flush;
 }
 
 void BasicTerm::onResolution(Frame* pWhichFrame)
