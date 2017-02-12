@@ -30,7 +30,7 @@ bool Framer::add(Frame* pframe, size_t index)
         _frames.push_back(pframe);
     }
 
-    pframe->setFramer(this);
+    pframe->framer(this);
 
     return onAdd(pframe);
 }
@@ -66,13 +66,18 @@ tuple<int, int> Frame::getResolution() const
     return std::make_tuple(_width, _height);
 }
 
-void Frame::setFramer(Framer* pfr)
+void Frame::framer(Framer* pfr)
 {
     _framer = pfr;
     if (!_buffer.empty())
     {
         _framer->onWrite(this);
     }
+}
+
+Framer* Frame::framer() const
+{
+    return _framer;
 }
 
 void Frame::write(const string& text)

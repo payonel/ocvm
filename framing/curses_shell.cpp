@@ -32,33 +32,9 @@ void CursesShell::onWrite(Frame* pWhichFrame)
 
 void CursesShell::onResolution(Frame* pWhichFrame)
 {
-    // auto max = maxResolution();
-
-    int col, row;
-    getmaxyx(stdscr, row, col);
-    lout << "main window max resolution: " << col << "," << row << endl;
-
-    int availableLines = row;
-    size_t fullsizers = 0;
-
-    for (auto& pf : _frames)
-    {
-        if (!pf->scrolling())
-        {
-            auto dim = pf->getResolution();
-            availableLines -= std::get<1>(dim);
-        }
-        else
-        {
-            fullsizers++;
-        }
-    }
-
-    int heightToBeDivided = availableLines;
-    if (fullsizers)
-    {
-        heightToBeDivided /= fullsizers;
-    }
+    auto max = maxResolution();
+    int maxWidth = std::get<0>(max);
+    int maxHeight = std::get<1>(max);
 
     int top = 0;
     for (auto& pf : _frames)
@@ -68,32 +44,35 @@ void CursesShell::onResolution(Frame* pWhichFrame)
         int width = std::get<0>(dim);
         int height = std::get<1>(dim);
 
+        bool noDim = !width || !height;
+
         int y, x;
         getyx(pwin, y, x);
 
-        bool remake = false;
+        int curWidth, curHeight;
+        getmaxyx(pwin, curHeight, curWidth);
 
-        int curCol, curRow;
-        getmaxyx(pwin, curRow, curCol);
+        bool remake = false;
 
         if (pf->scrolling())
         {
-            if (heightToBeDivided != curRow)
+            if (curHeight != maxHeight)
             {
                 remake = true;
             }
             
-            height = heightToBeDivided;
+            height = maxHeight;
         }
         
-        if (remake || !width)
+        if (remake || noDim)
         {
-            if (!width)
-            {
-                width = col;//max width
-            }
+            width = width ? width : maxWidth;
+            height = height ? height : maxHeight;
             pf->setResolution(width, height, true);
         }
+
+        bool badDim = curWidth != width || curHeight != height;
+        remake = remake || badDim;
 
         if (y != top)
         {
@@ -125,10 +104,13 @@ tuple<int, int> CursesShell::maxResolution() const
 
     for (auto& pf : _frames)
     {
-        if (!pf->scrolling())
+        auto dim = pf->getResolution();
+        int height = std::get<1>(dim);
+        // might be a fixed window
+        // but if it has no height yet, it is acting full size
+        if (height && !pf->scrolling())
         {
-            auto dim = pf->getResolution();
-            availableLines -= std::get<1>(dim);
+            availableLines -= height;
         }
         else
         {

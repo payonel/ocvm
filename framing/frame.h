@@ -34,7 +34,8 @@ class Frame
 public:
     Frame();
     virtual ~Frame();
-    void setFramer(Framer* pfr);
+    void framer(Framer* pfr);
+    Framer* framer() const;
 
     virtual void mouse(int x, int y) {}
     virtual void keyboard(char c) {}

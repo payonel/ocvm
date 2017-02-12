@@ -46,9 +46,9 @@ ValuePack Gpu::setResolution(const ValuePack& args)
     int width = (int)Value::check(args, 0, "number").toNumber();
     int height = (int)Value::check(args, 1, "number").toNumber();
 
-    tuple<int, int> res = _screen->getResolution();
-    if (width < 1 || width > std::get<0>(res) ||
-        height < 1 || height > std::get<1>(res))
+    tuple<int, int> max = _screen->framer()->maxResolution();
+    if (width < 1 || width > std::get<0>(max) ||
+        height < 1 || height > std::get<1>(max))
     {
         luaL_error(args.state, "unsupported resolution");
         return ValuePack { };
@@ -72,7 +72,7 @@ ValuePack Gpu::set(const ValuePack& args)
 
 ValuePack Gpu::maxResolution(const ValuePack& args)
 {
-    tuple<int, int> res = _screen->getResolution();
+    tuple<int, int> res = _screen->framer()->maxResolution();
     return ValuePack({std::get<0>(res), std::get<1>(res)});
 }
 
