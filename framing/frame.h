@@ -4,10 +4,12 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <queue>
 
 using std::tuple;
 using std::vector;
 using std::string;
+using std::queue;
 
 class Frame;
 
@@ -54,7 +56,7 @@ public:
     int y() const;
 private:
     Framer* _framer;
-    vector<tuple<int, int, string>> _buffer;
+    queue<tuple<int, int, string>> _buffer;
 
     int _width;
     int _height;

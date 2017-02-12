@@ -82,7 +82,7 @@ Framer* Frame::framer() const
 
 void Frame::write(const string& text)
 {
-    _buffer.push_back(make_tuple(_x, _y, text));
+    _buffer.push(make_tuple(_x, _y, text));
     if (_framer)
     {
         _framer->onWrite(this);
@@ -91,9 +91,9 @@ void Frame::write(const string& text)
 
 tuple<int, int, string> Frame::pop()
 {
-    auto last = _buffer.back();
-    _buffer.pop_back();
-    return last;
+    auto next = _buffer.front();
+    _buffer.pop();
+    return next;
 }
 
 bool Frame::empty() const
