@@ -12,9 +12,13 @@
 class ScreenFrame : public Frame, public Screen
 {
 public:
-    ScreenFrame(Value& config, Host* host) :
-        Screen(config, host)
+    ScreenFrame()
     {
+    }
+
+    bool onInitialize(Value& config) override
+    {
+        return Screen::onInitialize(config);
     }
 
     void move(int x, int y) override
@@ -38,12 +42,9 @@ public:
     }
 };
 
-Host::Host(const string& env_path, Framer* framer) :
-    _env_path(env_path),
+Host::Host(Framer* framer) :
     _framer(framer)
 {
-    // make the env path if it doesn't already exist
-    this->mkdir("");
 }
 
 Host::~Host()
@@ -51,55 +52,39 @@ Host::~Host()
     close();
 }
 
-void Host::mkdir(const string& path)
-{
-    utils::mkdir(_env_path + "/" + path);
-}
-
 string Host::machinePath() const
 {
     return "system/machine.lua";
 }
 
-string Host::envPath() const
+Component* Host::create(const string& type)
 {
-    return _env_path;
-}
-
-Component* Host::create(Value& config)
-{
-    string type = config.get(1).toString();
-    Component* p = nullptr;
-
     if (type == "screen")
     {
-        auto* sf = new ScreenFrame(config, this);
-        getFramer()->add(sf, 0); // insert at top
-        //sf->setResolution(50, 10);
-        p = sf;
+        return new ScreenFrame;
     }
     else if (type == "gpu")
     {
-        p = new Gpu(config, this);
+        return new Gpu;
     }
     else if (type == "eeprom")
     {
-        p = new Eeprom(config, this);
+        return new Eeprom;
     }
     else if (type == "computer")
     {
-        p = new Computer(config, this);
+        return new Computer;
     }
     else if (type == "filesystem")
     {
-        p = new Filesystem(config, this);
+        return new Filesystem;
     }
     else if (type == "keyboard")
     {
-        p = new Keyboard(config, this);
+        return new Keyboard;
     }
 
-    return p;
+    return nullptr;
 }
 
 Framer* Host::getFramer() const

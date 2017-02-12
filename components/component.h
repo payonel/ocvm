@@ -8,12 +8,13 @@
 class Component;
 typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);
 
-class Host;
+class Client;
 
 class Component : public LuaProxy
 {
 public:
-    Component(Value& config, Host* host);
+    Component();
+    bool initialize(Client* client, Value& config);
     virtual ~Component() {}
     string type() const;
     string address() const;
@@ -21,11 +22,12 @@ public:
 
     static string make_address();
 protected:
-    Host* host() const;
+    virtual bool onInitialize(Value& config) = 0;
+    Client* client() const;
 private:
     string _address;
     int _slot;
-    Host* _host;
+    Client* _client;
     
     ValuePack get_address(const ValuePack&);
     ValuePack get_type(const ValuePack&);

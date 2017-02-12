@@ -183,7 +183,6 @@ bool LuaEnv::newlib(LuaProxy* proxy)
 string LuaEnv::stack(lua_State* state)
 {
     luaL_traceback(state, state, NULL, 1);
-    int top = lua_gettop(state);
     string stacktrace = string(lua_tostring(state, -1));
     lua_pop(state, 1);
     return stacktrace;

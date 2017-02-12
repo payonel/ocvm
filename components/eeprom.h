@@ -5,13 +5,13 @@
 class Eeprom : public Component
 {
 public:
-    Eeprom(Value& config, Host* host);
+    Eeprom();
 
     ValuePack get(const ValuePack& args);
     ValuePack getData(const ValuePack& args);
     ValuePack setData(const ValuePack& args);
 protected:
-    void init(const string& originalBiosPath);
+    bool onInitialize(Value& config) override;
     string biosPath() const;
     string dataPath() const;
     string load(const string& path) const;

@@ -8,19 +8,33 @@
 #include <vector>
 #include <sstream>
 
-Component::Component(Value& config, Host* phost) :
-    LuaProxy(config.get(1).toString()),
-    _host(phost)
+Component::Component() :
+    LuaProxy("unnamed"),
+    _address(make_address()),
+    _slot(-1),
+    _client(nullptr)
 {
+}
+
+bool Component::initialize(Client* client, Value& config)
+{
+    this->name(config.get(1).toString());
+    _client = client;
+
     Value& vaddr = config.get(2);
     if (vaddr.type() != "string" || vaddr.toString().empty())
     {
-        vaddr = Value(make_address());
+        vaddr = _address;
     }
-    _address = vaddr.toString();
+    else
+    {
+        _address =  vaddr.toString();
+    }
 
     add("address", &Component::get_address);
     add("type", &Component::get_type);
+
+    return onInitialize(config);
 }
 
 string Component::type() const
@@ -63,9 +77,9 @@ string Component::make_address()
     return result;
 }
 
-Host* Component::host() const
+Client* Component::client() const
 {
-    return _host;
+    return _client;
 }
 
 ValuePack Component::get_address(const ValuePack&)

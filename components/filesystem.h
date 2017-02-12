@@ -10,7 +10,7 @@ using std::fstream;
 class Filesystem : public Component
 {
 public:
-    Filesystem(Value& config, Host* host);
+    Filesystem();
 
     string path() const;
     string src() const;
@@ -24,6 +24,7 @@ public:
     ValuePack exists(const ValuePack& args);
     
 protected:
+    bool onInitialize(Value& config) override;
     static string clean(string arg, bool bAbs, bool removeEnd);
     static string relative(const string& requested, const string& full);
     void init(const string& loot);

@@ -1,16 +1,11 @@
 #include "filesystem.h"
-#include "host.h"
+#include "client.h"
 #include "log.h"
 #include "utils.h"
 using std::streamsize;
 
-Filesystem::Filesystem(Value& config, Host* host) :
-    Component(config, host),
-    _src()
+Filesystem::Filesystem()
 {
-    // mkdir in host env path and filesystem address
-    this->init(config.get(3).toString());
-
     add("open", &Filesystem::open);
     add("read", &Filesystem::read);
     add("close", &Filesystem::close);
@@ -20,16 +15,23 @@ Filesystem::Filesystem(Value& config, Host* host) :
     add("exists", &Filesystem::exists);
 }
 
-void Filesystem::init(const string& loot)
+bool Filesystem::onInitialize(Value& config)
 {
-    if (!utils::exists(path()))
+    Value& vloot = config.get(3);
+    if (vloot.type() == "string")
     {
-        utils::mkdir(path());
-        if (!utils::copy(loot, path()))
+        string loot = vloot.toString();
+        if (!loot.empty())
         {
-            lout << "filesystem failed to initialized, the source loot does not exist\n";
+            utils::mkdir(path());
+            if (!utils::copy(loot, path()))
+            {
+                lout << "filesystem failed to initialized, the source loot does not exist\n";
+                return false;
+            }
         }
     }
+    return true;
 }
 
 string Filesystem::clean(string arg, bool bAbs, bool removeEnd)
@@ -91,7 +93,7 @@ string Filesystem::relative(const string& requested, const string& full)
 
 string Filesystem::path() const
 {
-    return clean(host()->envPath(), false, true) + clean(address(), true, true);
+    return clean(client()->envPath(), false, true) + clean(address(), true, true);
 }
 
 string Filesystem::src() const
@@ -129,8 +131,10 @@ ValuePack Filesystem::open(const ValuePack& args)
             mode = mode | it->second;
         }
     }
-
-    if (uninitialized || (mode & mode_map['r']) && (mode & mode_map['w']) || (mode & mode_map['a']) && (mode & mode_map['r']))
+    
+    if (uninitialized || 
+        ((mode & mode_map['r']) && (mode & mode_map['w'])) || 
+        ((mode & mode_map['a']) && (mode & mode_map['r'])))
     {
         lout << "bad file mode: " << mode_text << endl;
         return ValuePack({Value::nil, filepath});
@@ -146,7 +150,7 @@ ValuePack Filesystem::open(const ValuePack& args)
         return ValuePack({Value::nil, filepath});
     }
     // find next open handle index
-    int index = 0;
+    size_t index = 0;
     for (; index < _handles.size(); index++)
     {
         if (_handles.find(index) == _handles.end())

@@ -2,10 +2,12 @@
 #include "component.h"
 #include "value.h"
 
+class Surface;
+
 class Gpu : public Component
 {
 public:
-    Gpu(Value& config, Host* host);
+    Gpu();
 
     ValuePack setResolution(const ValuePack& args);
     ValuePack bind(const ValuePack& args);
@@ -17,4 +19,8 @@ public:
     ValuePack getForeground(const ValuePack& args);
     ValuePack fill(const ValuePack& args);
     ValuePack copy(const ValuePack& args);
+protected:
+    bool onInitialize(Value& config) override;
+private:
+    Surface* _surface;
 };

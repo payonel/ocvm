@@ -3,10 +3,14 @@
 #include <iostream>
 #include <vector>
 
-Screen::Screen(Value& config, Host* host) : 
-    Component(config, host)
+Screen::Screen()
 {
     add("getKeyboards", &Screen::getKeyboards);
+}
+
+bool Screen::onInitialize(Value& config)
+{
+    return true;
 }
 
 ValuePack Screen::getKeyboards(const ValuePack& args)

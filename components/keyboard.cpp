@@ -1,6 +1,11 @@
 #include "keyboard.h"
 
-Keyboard::Keyboard(Value& config, Host* host) : 
-    Component(config, host)
+Keyboard::Keyboard()
 {
 }
+
+bool Keyboard::onInitialize(Value& config)
+{
+    return true;
+}
+

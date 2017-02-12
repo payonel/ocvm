@@ -25,6 +25,8 @@ public:
     vector<LuaMethod> methods() const;
     ValuePack invoke(const string& methodName, const ValuePack& args);
 protected:
+    void name(const string& v);
+
     void add(const string& methodName, ProxyMethod method);
     template <typename Derived>
     void add(const string& methodName, ValuePack (Derived::*derivedMethod)(const ValuePack&))

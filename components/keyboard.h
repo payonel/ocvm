@@ -5,5 +5,7 @@
 class Keyboard : public Component
 {
 public:
-    Keyboard(Value& config, Host* host);
+    Keyboard();
+protected:
+    bool onInitialize(Value& config) override;
 };

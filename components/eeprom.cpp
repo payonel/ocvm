@@ -4,14 +4,18 @@
 #include <string>
 #include <fstream>
 #include "utils.h"
-#include "host.h"
+#include "client.h"
 
-Eeprom::Eeprom(Value& config, Host* host) :
-    Component(config, host)
+Eeprom::Eeprom()
 {
     add("get", &Eeprom::get);
     add("getData", &Eeprom::getData);
     add("setData", &Eeprom::setData);
+}
+
+bool Eeprom::onInitialize(Value& config)
+{
+    string originalBiosPath = config.get(3).toString();
 
     int config_bios_size = config.get(4).toNumber();
     int config_data_size = config.get(5).toNumber();
@@ -19,21 +23,18 @@ Eeprom::Eeprom(Value& config, Host* host) :
     _bios_size_limit = config_bios_size == 0 ? _bios_size_limit : config_bios_size;
     _data_size_limit = config_data_size == 0 ? _data_size_limit : config_data_size;
 
-    init(config.get(3).toString());
-}
-
-void Eeprom::init(const string& originalBiosPath)
-{
-    if (host()->envPath().empty())
+    if (client()->envPath().empty())
     {
         lerr << "bug, eeprom env dir path empty\n";
-        return;
+        return false;
     }
 
     if (!utils::read(biosPath()))
     {
-        utils::copy(originalBiosPath, biosPath());
+        return utils::copy(originalBiosPath, biosPath());
     }
+
+    return true;
 }
 
 ValuePack Eeprom::get(const ValuePack& args)
@@ -49,7 +50,8 @@ ValuePack Eeprom::getData(const ValuePack& args)
 ValuePack Eeprom::setData(const ValuePack& args)
 {
     string value = Value::check(args, 0, "string").toString();
-    if (value.length() > _data_size_limit)
+    size_t len = value.length();
+    if (_data_size_limit < 0 || len > static_cast<size_t>(_data_size_limit))
         return ValuePack({Value::nil, "data size exceeded"});
 
     return ValuePack({utils::write(value, dataPath())});
@@ -57,12 +59,12 @@ ValuePack Eeprom::setData(const ValuePack& args)
 
 string Eeprom::biosPath() const
 {
-    return host()->envPath() + "/bios.lua";
+    return client()->envPath() + "/bios.lua";
 }
 
 string Eeprom::dataPath() const
 {
-    return host()->envPath() + "/data";
+    return client()->envPath() + "/data";
 }
 
 string Eeprom::load(const string& path) const

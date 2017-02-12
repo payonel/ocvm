@@ -13,12 +13,13 @@ class Config;
 class Client : public LuaProxy
 {
 public:
-    Client(Host*);
+    Client(Host*, const string& env_path);
     ~Client();
     bool load(LuaEnv*);
     void close();
     vector<Component*> components(string filter = "", bool exact = false) const;
     Component* component(const string& address) const;
+    const string& envPath() const;
 
     // global api that is actually computer specific
     // invoke by address
@@ -34,5 +35,6 @@ protected:
 private:
     vector<Component*> _components;
     Config* _config;
+    string _env_path;
     Host* _host;
 };

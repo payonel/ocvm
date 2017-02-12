@@ -8,16 +8,13 @@ class Framer;
 class Host
 {
 public:
-    Host(const string& env_path, Framer* framer);
+    Host(Framer* framer);
     ~Host();
 
     string machinePath() const;
-    string envPath() const;
     Framer* getFramer() const;
-    Component* create(Value& config);
+    Component* create(const string& type);
     void close();
-    void mkdir(const string& path);
 private:
-    string _env_path;
     Framer* _framer;
 };

@@ -3,8 +3,7 @@
 #include "framing/frame.h"
 #include <iostream>
 
-Gpu::Gpu(Value& config, Host* host) :
-    Component(config, host)
+Gpu::Gpu() : _surface(nullptr)
 {
     add("setResolution", &Gpu::setResolution);
     add("bind", &Gpu::bind);
@@ -18,8 +17,15 @@ Gpu::Gpu(Value& config, Host* host) :
     add("copy", &Gpu::copy);
 }
 
+bool Gpu::onInitialize(Value& config)
+{
+    return true;
+}
+
 ValuePack Gpu::bind(const ValuePack& args)
 {
+    string address = Value::check(args, 0, "string").toString();
+
     return ValuePack();
 }
 

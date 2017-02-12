@@ -15,6 +15,11 @@ const string& LuaProxy::name() const
     return _name;
 }
 
+void LuaProxy::name(const string& v)
+{
+    _name = v;
+}
+
 int lua_proxy_static_caller(lua_State* lua)
 {
     Value caller(lua, lua_upvalueindex(1));
@@ -64,7 +69,9 @@ void LuaProxy::add(const string& methodName, ProxyMethod method)
 
 ValuePack LuaProxy::invoke(const string& methodName, const ValuePack& args)
 {
-    lout << "LuaProxy." << _name << "." << methodName << "(" << args << "):";
+    bool verbose = !(_name == "computer" && (methodName == "realTime" || methodName == "uptime"));
+    if (verbose)
+        lout << "LuaProxy." << _name << "." << methodName << "(" << args << "):";
     const auto& mit = _methods.find(methodName);
     if (mit == _methods.end())
     {
@@ -74,6 +81,7 @@ ValuePack LuaProxy::invoke(const string& methodName, const ValuePack& args)
 
     ProxyMethod pmethod = mit->second;
     auto result = ((*this).*pmethod)(args);
-    lout << result << endl;
+    if (verbose)
+        lout << result << endl;
     return result;
 }

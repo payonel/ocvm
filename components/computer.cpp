@@ -5,8 +5,7 @@
 #include <chrono>
 using namespace std::chrono;
 
-Computer::Computer(Value& config, Host* host) :
-    Component(config, host)
+Computer::Computer()
 {
     _start_time = now();
 
@@ -27,6 +26,11 @@ Computer::Computer(Value& config, Host* host) :
     add("totalMemory", &Computer::totalMemory);
     add("energy", &Computer::energy);
     add("maxEnergy", &Computer::maxEnergy);
+}
+
+bool Computer::onInitialize(Value& config)
+{
+    return true;
 }
 
 int64_t Computer::now() const

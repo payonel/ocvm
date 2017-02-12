@@ -24,7 +24,7 @@ public:
     virtual void onWrite(Frame*) = 0;
     virtual void onResolution(Frame*) = 0;
 protected:
-    virtual bool onAdd(Frame* pf) {}
+    virtual bool onAdd(Frame* pf) = 0;
     vector<Frame*> _frames;
 };
 

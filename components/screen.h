@@ -5,9 +5,10 @@
 class Screen : public Component
 {
 public:
-    Screen(Value& config, Host* host);
-
+    Screen();
     ValuePack getKeyboards(const ValuePack& args);
+protected:
+    bool onInitialize(Value& config) override;
 private:
     vector<string> _keyboards;
 };

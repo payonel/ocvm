@@ -50,9 +50,6 @@ bool Frame::setResolution(int width, int height)
     if (width > 255 || height > 255)
         return false;
 
-    int oldw = _width;
-    int oldh = _height;
-
     _width = width;
     _height = height;
 
@@ -60,6 +57,8 @@ bool Frame::setResolution(int width, int height)
     {
         _framer->onResolution(this);
     }
+
+    return true;
 }
 
 tuple<int, int> Frame::getResolution() const

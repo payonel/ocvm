@@ -7,6 +7,7 @@
 #include "config.h"
 #include "log.h"
 #include "luaenv.h"
+#include "utils.h"
 #include <lua.hpp>
 
 #include "apis/os.h"
@@ -19,7 +20,10 @@
 
 using std::make_tuple;
 
-Client::Client(Host* host) : LuaProxy("component"), _host(host)
+Client::Client(Host* host, const string& env_path) : 
+    LuaProxy("component"), 
+    _env_path(env_path),
+    _host(host)
 {
     _config = new Config();
 
@@ -28,6 +32,9 @@ Client::Client(Host* host) : LuaProxy("component"), _host(host)
     add("methods", &Client::component_methods);
     add("type", &Client::component_type);
     add("slot", &Client::component_slot);
+
+    // make the env path if it doesn't already exist
+    utils::mkdir(_env_path);
 }
 
 Client::~Client()
@@ -37,7 +44,7 @@ Client::~Client()
 
 bool Client::load(LuaEnv* lua)
 {
-    if (!_config->load(_host->envPath(), "client"))
+    if (!_config->load(envPath(), "client"))
     {
         lout << "failed to load client config\n";
         return false;
@@ -67,16 +74,16 @@ bool Client::createComponents()
                 auto& component_config = component_config_pair.second;
                 string key = component_config.get(1).toString();
                 lout << key << ": ";
-                Component* pc = _host->create(component_config);
-                if (pc)
-                {
-                    lout << "created\n";
-                    _components.push_back(pc);
-                }
-                else
+                Component* pc = _host->create(key);
+                if (!(pc && pc->initialize(this, component_config)))
                 {
                     lout << "failed! The host could not create a " << key << endl;
                     return false;
+                }
+                else
+                {
+                    _components.push_back(pc);
+                    lout << "ready\n";
                 }
             }
         }
@@ -289,3 +296,9 @@ ValuePack Client::component_slot(const ValuePack& args)
 
     return result;
 }
+
+const string& Client::envPath() const
+{
+    return _env_path;
+}
+

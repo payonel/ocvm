@@ -1,4 +1,4 @@
-flags=-g --std=c++11 -Wl,--no-as-needed
+flags=-g --std=c++11 -Wl,--no-as-needed -Wall
 includes=-I. -I/usr/include/lua5.2/
 libs=-llua5.2-c++ -lstdc++ -lncurses -lstdc++fs
 files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp) $(wildcard framing/*.cpp)

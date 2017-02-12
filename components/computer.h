@@ -5,7 +5,7 @@
 class Computer : public Component
 {
 public:
-    Computer(Value& config, Host* host);
+    Computer();
 
     ValuePack realTime(const ValuePack& args);
     ValuePack setArchitecture(const ValuePack& args);
@@ -27,6 +27,8 @@ public:
     ValuePack maxEnergy(const ValuePack& args);
 
     void setTmpAddress(const string& addr);
+protected:
+    bool onInitialize(Value& config) override;
 private:
     int64_t now() const;
     int64_t _start_time;

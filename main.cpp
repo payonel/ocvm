@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
-    Host host(client_env_path, framer);
+    Host host(framer);
 
     if (!framer->open())  // open the ui
     {
@@ -35,7 +35,7 @@ int main(int argc, char** argv)
 
     // init client config
     // // creates instances of host components
-    Client client(&host);
+    Client client(&host, client_env_path);
 
     // init lua environment
     LuaEnv lenv;
