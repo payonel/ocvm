@@ -1,7 +1,7 @@
 #include "curses_shell.h"
 #include "frame.h"
 #include "log.h"
-#include <ncurses.h>
+#include <curses.h>
 
 #include <iostream>
 #include <string>
