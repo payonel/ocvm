@@ -9,39 +9,6 @@
 #include "components/filesystem.h"
 #include "components/keyboard.h"
 
-class ScreenFrame : public Frame, public Screen
-{
-public:
-    ScreenFrame()
-    {
-    }
-
-    bool onInitialize(Value& config) override
-    {
-        return Screen::onInitialize(config);
-    }
-
-    void move(int x, int y) override
-    {
-    }
-
-    bool setResolution(int width, int height) override
-    {
-        // resolution is +2 greater in each dim
-        return Frame::setResolution(width + 2, height + 2);
-    }
-
-    void mouse(int x, int y) override
-    {
-        auto dim = getResolution();
-        int w = std::get<0>(dim);
-        int h = std::get<1>(dim);
-        if (x <= 1 || x >= w || y <= 1 || y >= h)
-            return; // do nothing
-        Frame::mouse(x - 1, y - 1);
-    }
-};
-
 Host::Host(Framer* framer) :
     _framer(framer)
 {
@@ -61,7 +28,7 @@ Component* Host::create(const string& type)
 {
     if (type == "screen")
     {
-        return new ScreenFrame;
+        return new Screen;
     }
     else if (type == "gpu")
     {

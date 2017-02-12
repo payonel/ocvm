@@ -31,3 +31,7 @@ void BasicTerm::onResolution(Frame* pWhichFrame)
 {
 }
 
+tuple<int, int> BasicTerm::maxResolution() const
+{
+    return std::make_tuple(100, 100);
+}

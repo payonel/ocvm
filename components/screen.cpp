@@ -3,6 +3,10 @@
 #include <iostream>
 #include <vector>
 
+#include "client.h"
+#include "host.h"
+#include "framing/frame.h"
+
 Screen::Screen()
 {
     add("getKeyboards", &Screen::getKeyboards);
@@ -10,7 +14,8 @@ Screen::Screen()
 
 bool Screen::onInitialize(Value& config)
 {
-    return true;
+    // we now have a client and can add ourselves to the framer
+    return client()->host()->getFramer()->add(this, 0);
 }
 
 ValuePack Screen::getKeyboards(const ValuePack& args)

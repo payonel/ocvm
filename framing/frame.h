@@ -23,6 +23,7 @@ public:
     virtual bool update() = 0;
     virtual void onWrite(Frame*) = 0;
     virtual void onResolution(Frame*) = 0;
+    virtual tuple<int, int> maxResolution() const = 0;
 protected:
     virtual bool onAdd(Frame* pf) = 0;
     vector<Frame*> _frames;
@@ -42,7 +43,7 @@ public:
     virtual void move(int x, int y) {}
     string read();
 
-    virtual bool setResolution(int width, int height);
+    bool setResolution(int width, int height, bool bQuiet = false);
     tuple<int, int> getResolution() const;
     bool scrolling() const;
     void scrolling(bool enable);

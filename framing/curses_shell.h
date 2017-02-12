@@ -24,6 +24,7 @@ public:
     void close() override;
 
     Frame* getFrame(int x, int y) const;
+    tuple<int, int> maxResolution() const override;
 protected:
     bool onAdd(Frame* pf);
     void onWrite(Frame* pWhichFrame) override;

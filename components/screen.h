@@ -1,8 +1,9 @@
 #pragma once
 #include "component.h"
 #include "value.h"
+#include "framing/frame.h"
 
-class Screen : public Component
+class Screen : public Component, public Frame
 {
 public:
     Screen();

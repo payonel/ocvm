@@ -1,9 +1,10 @@
 #include "gpu.h"
 #include "log.h"
-#include "framing/frame.h"
+#include "client.h"
+#include "screen.h"
 #include <iostream>
 
-Gpu::Gpu() : _surface(nullptr)
+Gpu::Gpu()
 {
     add("setResolution", &Gpu::setResolution);
     add("bind", &Gpu::bind);
@@ -25,14 +26,36 @@ bool Gpu::onInitialize(Value& config)
 ValuePack Gpu::bind(const ValuePack& args)
 {
     string address = Value::check(args, 0, "string").toString();
+    Component* pc = client()->component(address);
+    if (!pc)
+    {
+        return ValuePack { Value::nil, "invalid address" };
+    }
+    Screen* screen = dynamic_cast<Screen*>(pc);
+    if (!screen)
+    {
+        return ValuePack { Value::nil, "not a screen" };
+    }
+    _screen = screen;
 
     return ValuePack();
 }
 
 ValuePack Gpu::setResolution(const ValuePack& args)
 {
-    lout << "set resolution: " << args.at(0).serialize() << ", " << args.at(1).serialize() << endl;
-    return ValuePack();
+    int width = (int)Value::check(args, 0, "number").toNumber();
+    int height = (int)Value::check(args, 1, "number").toNumber();
+
+    tuple<int, int> res = _screen->getResolution();
+    if (width < 1 || width > std::get<0>(res) ||
+        height < 1 || height > std::get<1>(res))
+    {
+        luaL_error(args.state, "unsupported resolution");
+        return ValuePack { };
+    }
+
+    _screen->setResolution(width, height);
+    return ValuePack { true };
 }
 
 ValuePack Gpu::set(const ValuePack& args)
@@ -49,8 +72,8 @@ ValuePack Gpu::set(const ValuePack& args)
 
 ValuePack Gpu::maxResolution(const ValuePack& args)
 {
-    lout << "TODO, stub gpu max res, i'll have to use a screen frame to know\n";
-    return ValuePack({50, 16});
+    tuple<int, int> res = _screen->getResolution();
+    return ValuePack({std::get<0>(res), std::get<1>(res)});
 }
 
 ValuePack Gpu::setBackground(const ValuePack& args)

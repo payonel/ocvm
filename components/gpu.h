@@ -2,7 +2,7 @@
 #include "component.h"
 #include "value.h"
 
-class Surface;
+class Screen;
 
 class Gpu : public Component
 {
@@ -22,5 +22,5 @@ public:
 protected:
     bool onInitialize(Value& config) override;
 private:
-    Surface* _surface;
+    Screen* _screen;
 };

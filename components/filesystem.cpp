@@ -17,17 +17,20 @@ Filesystem::Filesystem()
 
 bool Filesystem::onInitialize(Value& config)
 {
-    Value& vloot = config.get(3);
-    if (vloot.type() == "string")
+    if (!utils::exists(path()))
     {
-        string loot = vloot.toString();
-        if (!loot.empty())
+        Value& vloot = config.get(3);
+        if (vloot.type() == "string")
         {
-            utils::mkdir(path());
-            if (!utils::copy(loot, path()))
+            string loot = vloot.toString();
+            if (!loot.empty())
             {
-                lout << "filesystem failed to initialized, the source loot does not exist\n";
-                return false;
+                utils::mkdir(path());
+                if (!utils::copy(loot, path()))
+                {
+                    lout << "filesystem failed to initialized, the source loot does not exist\n";
+                    return false;
+                }
             }
         }
     }

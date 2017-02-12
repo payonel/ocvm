@@ -8,6 +8,7 @@
 #include <sstream>
 using std::cout;
 using std::flush;
+using std::make_tuple;
 
 #include <chrono>
 #include <thread>
@@ -31,33 +32,40 @@ void CursesShell::onWrite(Frame* pWhichFrame)
 
 void CursesShell::onResolution(Frame* pWhichFrame)
 {
+    // auto max = maxResolution();
+
     int col, row;
     getmaxyx(stdscr, row, col);
     lout << "main window max resolution: " << col << "," << row << endl;
 
-    auto dim = pWhichFrame->getResolution();
     int availableLines = row;
     size_t fullsizers = 0;
 
     for (auto& pf : _frames)
     {
-        dim = pf->getResolution();
-        int height = std::get<1>(dim);
-        availableLines -= height;
-        fullsizers += height == 0 ? 1 : 0;
+        if (!pf->scrolling())
+        {
+            auto dim = pf->getResolution();
+            availableLines -= std::get<1>(dim);
+        }
+        else
+        {
+            fullsizers++;
+        }
     }
 
-    int heightToBeDivided = 0;
+    int heightToBeDivided = availableLines;
     if (fullsizers)
     {
-        heightToBeDivided = availableLines / fullsizers;
+        heightToBeDivided /= fullsizers;
     }
 
     int top = 0;
     for (auto& pf : _frames)
     {
         WINDOW* pwin = _states[pf].window;
-        dim = pf->getResolution();
+        auto dim = pf->getResolution();
+        int width = std::get<0>(dim);
         int height = std::get<1>(dim);
 
         int y, x;
@@ -68,7 +76,7 @@ void CursesShell::onResolution(Frame* pWhichFrame)
         int curCol, curRow;
         getmaxyx(pwin, curRow, curCol);
 
-        if (!height)
+        if (pf->scrolling())
         {
             if (heightToBeDivided != curRow)
             {
@@ -76,6 +84,15 @@ void CursesShell::onResolution(Frame* pWhichFrame)
             }
             
             height = heightToBeDivided;
+        }
+        
+        if (remake || !width)
+        {
+            if (!width)
+            {
+                width = col;//max width
+            }
+            pf->setResolution(width, height, true);
         }
 
         if (y != top)
@@ -86,16 +103,46 @@ void CursesShell::onResolution(Frame* pWhichFrame)
         if (remake)
         {
             delwin(pwin);
-            pwin = newwin(height, std::get<0>(dim), top, 0);
+            pwin = newwin(height, width, top, 0);
             scrollok(pwin, pf->scrolling());
             wrefresh(pwin);
             refresh();
-
             _states[pf].window = pwin;
         }
 
         top += height;
     }
+}
+
+tuple<int, int> CursesShell::maxResolution() const
+{
+    int col, row;
+    getmaxyx(stdscr, row, col);
+    lout << "main window max resolution: " << col << "," << row << endl;
+
+    int availableLines = row;
+    size_t fullsizers = 0;
+
+    for (auto& pf : _frames)
+    {
+        if (!pf->scrolling())
+        {
+            auto dim = pf->getResolution();
+            availableLines -= std::get<1>(dim);
+        }
+        else
+        {
+            fullsizers++;
+        }
+    }
+
+    int heightToBeDivided = availableLines;
+    if (fullsizers)
+    {
+        heightToBeDivided /= fullsizers;
+    }
+
+    return make_tuple(col, heightToBeDivided);
 }
 
 Frame* CursesShell::getFrame(int x, int y) const
@@ -195,13 +242,4 @@ void CursesShell::close()
 
     _states.clear();
     endwin();
-
-    // disable mouse tracking
-    // ::write(STDOUT_FILENO, "\e[?9l", 5);
-    // screen buffer
-    // ::write(STDOUT_FILENO, "\e[?47l", 6);
-    // original attributes (we've had it in raw mode)
-    // ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
-    // delete _original;
-    // _original = nullptr;
 }

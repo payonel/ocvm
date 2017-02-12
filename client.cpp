@@ -42,6 +42,11 @@ Client::~Client()
     close();
 }
 
+Host* Client::host() const
+{
+    return _host;
+}
+
 bool Client::load(LuaEnv* lua)
 {
     if (!_config->load(envPath(), "client"))
@@ -56,7 +61,7 @@ bool Client::load(LuaEnv* lua)
 
     if (!postInit())
         return false;
-    lout << "components post initialized: " << _components.size() << "\n";
+    lout << "components post initialized\n";
 
     return loadLuaComponentApi(lua);
 }
