@@ -81,6 +81,7 @@ public:
 
     string serialize(bool bSpacey = false) const;
     operator bool() const;
+    bool operator< (const Value& rhs) const;
 protected:
     void getmetatable(lua_State* lua, int index);
 private:
@@ -96,4 +97,3 @@ private:
     map<Value, Value> _table;
 };
 
-bool operator< (const Value& a, const Value& b);

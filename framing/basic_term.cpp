@@ -5,7 +5,7 @@ using namespace std;
 bool BasicTerm::update()
 {
     cout << "update\n" << endl;
-    return cin.get() != 'q';
+    return true;// cin.get() != 'q';
 }
 
 bool BasicTerm::open()

@@ -278,9 +278,19 @@ string Value::serialize(bool bSpacey) const
     return ss.str();
 }
 
-bool operator< (const Value& a, const Value& b)
+bool Value::operator< (const Value& rhs) const
 {
-    return a.serialize() < b.serialize();
+    if (_id != rhs._id) return _id < rhs._id;
+    switch (_id)
+    {
+        case LUA_TNUMBER:
+            return _number < rhs._number;
+        break;
+        case LUA_TSTRING:
+            return _string < rhs._string;
+        break;
+    }
+    return false;
 }
 
 Value::operator bool() const
