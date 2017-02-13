@@ -43,7 +43,7 @@ public:
     virtual void keyboard(char c) {}
 
     virtual void write(const string& text);
-    virtual void move(int x, int y) {}
+    void move(int x, int y);
     bool empty() const;
     tuple<int, int, string> pop();
 

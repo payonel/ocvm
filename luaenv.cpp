@@ -96,6 +96,11 @@ bool LuaEnv::resume(int nargs)
                 top = lua_gettop(_state);
                 return resume(top);
             }
+            else if (result.type_id() == LUA_TBOOLEAN)
+            {
+                // shutdown or reboot
+                return false;
+            }
         }
         return true;
     }

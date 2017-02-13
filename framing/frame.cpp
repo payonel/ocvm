@@ -120,3 +120,9 @@ int Frame::y() const
 {
     return _y;
 }
+
+void Frame::move(int x, int y)
+{
+    _x = x;
+    _y = y;
+}

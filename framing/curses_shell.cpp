@@ -183,27 +183,30 @@ bool CursesShell::update()
 
     for (const auto& pf : _frames)
     {
-        auto buffer = pf->pop();
         auto& state = _states[pf];
-
-        int x = std::get<0>(buffer);
-        int y = std::get<1>(buffer);
-        string text = std::get<2>(buffer);
-
-        if (pf->scrolling())
+        while (!pf->empty())
         {
-            waddstr(state.window, text.c_str());
-        }
-        else
-        {
-            mvwprintw(state.window, pf->y(), pf->x(), text.c_str());
+            auto buffer = pf->pop();
+            string text = std::get<2>(buffer);
+
+            if (pf->scrolling())
+            {
+                waddstr(state.window, text.c_str());
+            }
+            else
+            {
+                int x = std::get<0>(buffer);
+                int y = std::get<1>(buffer);
+                mvwprintw(state.window, y, x, text.c_str());
+            }
         }
         wrefresh(state.window);
     }
 
+    // wrefresh(stdscr);
     refresh();
-    int ch = 0;//getch();
-    // lout << "getch: " << ch << "\n";
+    int ch = getch();
+    lout << "getch: " << ch << "\n";
 
     if (ch == 3) // ^c
     {
