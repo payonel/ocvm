@@ -14,17 +14,17 @@ SystemApi* SystemApi::get()
     return &it;
 }
 
-ValuePack SystemApi::allowGC(const ValuePack& args)
+ValuePack SystemApi::allowGC(lua_State* lua)
 {
     return ValuePack { _gc };
 }
 
-ValuePack SystemApi::timeout(const ValuePack& args)
+ValuePack SystemApi::timeout(lua_State* lua)
 {
     return ValuePack { _timeout };
 }
 
-ValuePack SystemApi::allowBytecode(const ValuePack& args)
+ValuePack SystemApi::allowBytecode(lua_State* lua)
 {
     return ValuePack { _bytecode };
 }

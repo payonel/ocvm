@@ -205,14 +205,14 @@ bool CursesShell::update()
 
     // wrefresh(stdscr);
     refresh();
-    int ch = getch();
-    lout << "getch: " << ch << "\n";
+    //int ch = getch();
+    //lout << "getch: " << ch << "\n";
 
-    if (ch == 3) // ^c
-    {
-        lout << "shell closing\n";
-        return false;
-    }
+    //if (ch == 3) // ^c
+    //{
+    //    lout << "shell closing\n";
+    //    return false;
+    //}
 
     return true;
 }

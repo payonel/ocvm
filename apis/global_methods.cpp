@@ -14,26 +14,27 @@ GlobalMethods* GlobalMethods::get()
     return &it;
 }
 
-ValuePack GlobalMethods::print(const ValuePack& args)
+ValuePack GlobalMethods::print(lua_State* lua)
 {
     bool bFirst = true;
-    for (const auto& arg : args)
+    int top = lua_gettop(lua);
+    for (int i = 1; i <= top; i++)
     {
         string separator = bFirst ? "[--vm--] " : "\t";
-        lout << separator << arg.toString();
+        lout << separator << Value(lua, i).toString();
         bFirst = false;
     }
 
     lout << endl;
-    return ValuePack();
+    return { };
 }
 
-ValuePack GlobalMethods::error(const ValuePack& args)
+ValuePack GlobalMethods::error(lua_State* lua)
 {
-    string msg = Value::select(args, 0).toString();
-    string stack = LuaEnv::stack(args.state);
+    string msg = Value(lua, 1).toString();
+    string stack = LuaEnv::stack(lua);
     lout << "[--vm--] [ERROR] " << msg << endl;
     lout << stack << endl;
-    luaL_error(args.state, stack.c_str());
-    return ValuePack();
+    luaL_error(lua, stack.c_str());
+    return { };
 }

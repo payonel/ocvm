@@ -148,15 +148,15 @@ int Value::status() const
     return _thread_status;
 }
 
-const Value& Value::select(const ValuePack& pack, size_t index)
-{
-    if (index >= pack.size())
-    {
-        return Value::nil;
-    }
+// const Value& Value::select(const ValuePack& pack, size_t index)
+// {
+//     if (index >= pack.size())
+//     {
+//         return Value::nil;
+//     }
 
-    return pack.at(index);
-}
+//     return pack.at(index);
+// }
 
 const Value& Value::get(const Value& key) const
 {
@@ -350,21 +350,33 @@ void Value::push(lua_State* lua) const
     }
 }
 
-const Value& Value::check(const ValuePack& pack, size_t index, const string& required, const string& optional)
+Value Value::check(lua_State* lua, size_t index, const string& required, const string& optional)
 {
-    const Value* pv = &Value::select(pack, index);
-    if (pv->type() != required)
+    int top = lua_gettop(lua);
+    int id = LUA_TNIL;
+    string type = "nil";
+    if (index < (size_t)top) // top:1, index:0 is max
     {
-        if (optional.empty() || pv->type() != optional)
+        index++;
+        id = lua_type(lua, index);
+        type = lua_typename(lua, id);
+    }
+
+    if (type != required)
+    {
+        if (optional.empty() || type != optional)
         {
-            luaL_error(pack.state, "bad arguments #%d (%s expected, got %s) ",
-                index+1,
+            luaL_error(lua, "bad arguments #%d (%s expected, got %s) ",
+                index,
                 required.c_str(),
-                pv->type().c_str());
+                type.c_str());
         }
     }
 
-    return *pv;
+    if (id == LUA_TNIL)
+        return Value::nil;
+
+    return Value(lua, index);
 }
 
 ValuePack::ValuePack(std::initializer_list<Value> values)

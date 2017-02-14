@@ -69,8 +69,8 @@ public:
     int status() const;
     const Value& metatable() const;
 
-    static const Value& select(const ValuePack& pack, size_t index);
-    static const Value& check(const ValuePack& pack, size_t index, const string& required, const string& optional = "");
+    // static const Value& select(const ValuePack& pack, size_t index);
+    static Value check(lua_State* lua, size_t index, const string& required, const string& optional = "");
 
     // table functions
     void set(const Value& key, const Value& value);

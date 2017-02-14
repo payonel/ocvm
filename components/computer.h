@@ -7,24 +7,24 @@ class Computer : public Component
 public:
     Computer();
 
-    ValuePack realTime(const ValuePack& args);
-    ValuePack setArchitecture(const ValuePack& args);
-    ValuePack getArchitecture(const ValuePack& args);
-    ValuePack getArchitectures(const ValuePack& args);
-    ValuePack address(const ValuePack& args);
-    ValuePack beep(const ValuePack& args);
-    ValuePack getDeviceInfo(const ValuePack& args);
-    ValuePack getProgramLocations(const ValuePack& args);
-    ValuePack uptime(const ValuePack& args);
-    ValuePack pushSignal(const ValuePack& args);
-    ValuePack removeUser(const ValuePack& args);
-    ValuePack addUser(const ValuePack& args);
-    ValuePack isRobot(const ValuePack& args);
-    ValuePack tmpAddress(const ValuePack& args);
-    ValuePack freeMemory(const ValuePack& args);
-    ValuePack totalMemory(const ValuePack& args);
-    ValuePack energy(const ValuePack& args);
-    ValuePack maxEnergy(const ValuePack& args);
+    ValuePack realTime(lua_State* lua);
+    ValuePack setArchitecture(lua_State* lua);
+    ValuePack getArchitecture(lua_State* lua);
+    ValuePack getArchitectures(lua_State* lua);
+    ValuePack address(lua_State* lua);
+    ValuePack beep(lua_State* lua);
+    ValuePack getDeviceInfo(lua_State* lua);
+    ValuePack getProgramLocations(lua_State* lua);
+    ValuePack uptime(lua_State* lua);
+    ValuePack pushSignal(lua_State* lua);
+    ValuePack removeUser(lua_State* lua);
+    ValuePack addUser(lua_State* lua);
+    ValuePack isRobot(lua_State* lua);
+    ValuePack tmpAddress(lua_State* lua);
+    ValuePack freeMemory(lua_State* lua);
+    ValuePack totalMemory(lua_State* lua);
+    ValuePack energy(lua_State* lua);
+    ValuePack maxEnergy(lua_State* lua);
 
     void setTmpAddress(const string& addr);
 protected:

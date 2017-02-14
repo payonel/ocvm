@@ -6,9 +6,9 @@ class SystemApi : public LuaProxy
 public:
     static SystemApi* get();
 
-    ValuePack timeout(const ValuePack& args);
-    ValuePack allowGC(const ValuePack& args);
-    ValuePack allowBytecode(const ValuePack& args);
+    ValuePack timeout(lua_State* lua);
+    ValuePack allowGC(lua_State* lua);
+    ValuePack allowBytecode(lua_State* lua);
 
     void configure(const Value& settings);
 private:

@@ -15,13 +15,13 @@ public:
     string path() const;
     string src() const;
 
-    ValuePack open(const ValuePack& args);
-    ValuePack read(const ValuePack& args);
-    ValuePack close(const ValuePack& args);
-    ValuePack getLabel(const ValuePack& args);
-    ValuePack list(const ValuePack& args);
-    ValuePack isDirectory(const ValuePack& args);
-    ValuePack exists(const ValuePack& args);
+    ValuePack open(lua_State* lua);
+    ValuePack read(lua_State* lua);
+    ValuePack close(lua_State* lua);
+    ValuePack getLabel(lua_State* lua);
+    ValuePack list(lua_State* lua);
+    ValuePack isDirectory(lua_State* lua);
+    ValuePack exists(lua_State* lua);
     
 protected:
     bool onInitialize(Value& config) override;

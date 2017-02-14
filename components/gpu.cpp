@@ -24,9 +24,9 @@ bool Gpu::onInitialize(Value& config)
     return true;
 }
 
-ValuePack Gpu::bind(const ValuePack& args)
+ValuePack Gpu::bind(lua_State* lua)
 {
-    string address = Value::check(args, 0, "string").toString();
+    string address = Value::check(lua, 0, "string").toString();
     Component* pc = client()->component(address);
     if (!pc)
     {
@@ -42,14 +42,14 @@ ValuePack Gpu::bind(const ValuePack& args)
     return {};
 }
 
-ValuePack Gpu::setResolution(const ValuePack& args)
+ValuePack Gpu::setResolution(lua_State* lua)
 {
     if (!_screen)
     {
         return { false, "no screen" };
     }
-    int width = (int)Value::check(args, 0, "number").toNumber();
-    int height = (int)Value::check(args, 1, "number").toNumber();
+    int width = (int)Value::check(lua, 0, "number").toNumber();
+    int height = (int)Value::check(lua, 1, "number").toNumber();
 
     tuple<int, int> max = _screen->framer()->maxResolution();
     if (width < 1 || width > std::get<0>(max) ||
@@ -62,23 +62,33 @@ ValuePack Gpu::setResolution(const ValuePack& args)
     return { true };
 }
 
-ValuePack Gpu::set(const ValuePack& args)
+bool Gpu::set(int x, int y, const string& text)
+{
+    if (!_screen)
+    {
+        return false;
+    }
+
+    _screen->move(x, y);
+    _screen->write(text);
+
+    return true;
+}
+
+ValuePack Gpu::set(lua_State* lua)
 {
     if (!_screen)
     {
         return { false, "no screen" };
     }
-    int x = Value::check(args, 0, "number").toNumber();
-    int y = Value::check(args, 1, "number").toNumber();
-    string text = Value::check(args, 2, "string").toString();
+    int x = Value::check(lua, 0, "number").toNumber();
+    int y = Value::check(lua, 1, "number").toNumber();
+    string text = Value::check(lua, 2, "string").toString();
 
-    _screen->move(x, y);
-    _screen->write(text);
-
-    return { true };
+    return { set(x, y, text) };
 }
 
-ValuePack Gpu::maxResolution(const ValuePack& args)
+ValuePack Gpu::maxResolution(lua_State* lua)
 {
     if (!_screen)
     {
@@ -88,7 +98,7 @@ ValuePack Gpu::maxResolution(const ValuePack& args)
     return {std::get<0>(res), std::get<1>(res)};
 }
 
-ValuePack Gpu::setBackground(const ValuePack& args)
+ValuePack Gpu::setBackground(lua_State* lua)
 {
     if (!_screen)
     {
@@ -98,7 +108,7 @@ ValuePack Gpu::setBackground(const ValuePack& args)
     return {0, false};
 }
 
-ValuePack Gpu::getBackground(const ValuePack& args)
+ValuePack Gpu::getBackground(lua_State* lua)
 {
     if (!_screen)
     {
@@ -108,7 +118,7 @@ ValuePack Gpu::getBackground(const ValuePack& args)
     return {0, false};
 }
 
-ValuePack Gpu::setForeground(const ValuePack& args)
+ValuePack Gpu::setForeground(lua_State* lua)
 {
     if (!_screen)
     {
@@ -118,7 +128,7 @@ ValuePack Gpu::setForeground(const ValuePack& args)
     return {0, false};
 }
 
-ValuePack Gpu::getForeground(const ValuePack& args)
+ValuePack Gpu::getForeground(lua_State* lua)
 {
     if (!_screen)
     {
@@ -128,25 +138,25 @@ ValuePack Gpu::getForeground(const ValuePack& args)
     return {0, false};
 }
 
-ValuePack Gpu::fill(const ValuePack& args)
+ValuePack Gpu::fill(lua_State* lua)
 {
     if (!_screen)
     {
         return { false, "no screen" };
     }
 
-    int x = Value::check(args, 0, "number").toNumber();
-    int y = Value::check(args, 1, "number").toNumber();
-    int width = Value::check(args, 2, "number").toNumber();
-    int height = Value::check(args, 3, "number").toNumber();
-    string text = Value::check(args, 4, "string").toString();
+    int x = Value::check(lua, 0, "number").toNumber();
+    int y = Value::check(lua, 1, "number").toNumber();
+    int width = Value::check(lua, 2, "number").toNumber();
+    int height = Value::check(lua, 3, "number").toNumber();
+    string text = Value::check(lua, 4, "string").toString();
 
     if (!truncateWH(x, y, &width, &height))
     {
         return { false, "out of bounds" };
     }
 
-    if (UnicodeApi::get()->wlen(ValuePack{text}).at(0).toNumber() != 1)
+    if (UnicodeApi::get()->wlen(text) != 1)
     {
         return { false, "fill char not length 1" };
     }
@@ -155,23 +165,23 @@ ValuePack Gpu::fill(const ValuePack& args)
 
     for (int row = y; row <= height; row++)
     {
-        set(ValuePack { x, row, text });
+        set(x, row, text);
     }
 
     return { true };
 }
 
-ValuePack Gpu::copy(const ValuePack& args)
+ValuePack Gpu::copy(lua_State* lua)
 {
     if (!_screen)
         return { false, "no screen" };
 
-    int x = Value::check(args, 0, "number").toNumber();
-    int y = Value::check(args, 1, "number").toNumber();
-    int width = Value::check(args, 2, "number").toNumber();
-    int height = Value::check(args, 3, "number").toNumber();
-    int tx = Value::check(args, 4, "number").toNumber();
-    int ty = Value::check(args, 5, "number").toNumber();
+    int x = Value::check(lua, 0, "number").toNumber();
+    int y = Value::check(lua, 1, "number").toNumber();
+    int width = Value::check(lua, 2, "number").toNumber();
+    int height = Value::check(lua, 3, "number").toNumber();
+    int tx = Value::check(lua, 4, "number").toNumber();
+    int ty = Value::check(lua, 5, "number").toNumber();
 
     if (!truncateWH(x, y, &width, &height))
     {

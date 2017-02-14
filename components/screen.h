@@ -7,7 +7,7 @@ class Screen : public Component, public Frame
 {
 public:
     Screen();
-    ValuePack getKeyboards(const ValuePack& args);
+    ValuePack getKeyboards(lua_State*);
 protected:
     bool onInitialize(Value& config) override;
 private:

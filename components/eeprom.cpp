@@ -37,24 +37,24 @@ bool Eeprom::onInitialize(Value& config)
     return true;
 }
 
-ValuePack Eeprom::get(const ValuePack& args)
+ValuePack Eeprom::get(lua_State* lua)
 {
-    return ValuePack{load(biosPath())};
+    return {load(biosPath())};
 }
 
-ValuePack Eeprom::getData(const ValuePack& args)
+ValuePack Eeprom::getData(lua_State* lua)
 {
-    return ValuePack{load(dataPath())};
+    return {load(dataPath())};
 }
 
-ValuePack Eeprom::setData(const ValuePack& args)
+ValuePack Eeprom::setData(lua_State* lua)
 {
-    string value = Value::check(args, 0, "string").toString();
+    string value = Value::check(lua, 0, "string", "nil").Or("").toString();
     size_t len = value.length();
     if (_data_size_limit < 0 || len > static_cast<size_t>(_data_size_limit))
-        return ValuePack({Value::nil, "data size exceeded"});
+        return { Value::nil, "data size exceeded" };
 
-    return ValuePack({utils::write(value, dataPath())});
+    return { utils::write(value, dataPath()) };
 }
 
 string Eeprom::biosPath() const

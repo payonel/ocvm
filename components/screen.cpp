@@ -18,13 +18,12 @@ bool Screen::onInitialize(Value& config)
     return client()->host()->getFramer()->add(this, 0);
 }
 
-ValuePack Screen::getKeyboards(const ValuePack& args)
+ValuePack Screen::getKeyboards(lua_State*)
 {
-    ValuePack pack({Value::table()});
-    Value& list = pack.at(0);
+    Value list = Value::table();
     for (const auto& kb : _keyboards)
     {
         list.insert(kb);
     }
-    return pack;
+    return { list };
 }

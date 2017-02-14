@@ -43,100 +43,100 @@ void Computer::setTmpAddress(const string& addr)
     _tmp_address = addr;
 }
 
-ValuePack Computer::realTime(const ValuePack& args)
+ValuePack Computer::realTime(lua_State* lua)
 {
     return ValuePack{now()};
 }
 
-ValuePack Computer::setArchitecture(const ValuePack& args)
+ValuePack Computer::setArchitecture(lua_State* lua)
 {
-    luaL_error(args.state, "setArchitecture not implemented");
-    return ValuePack();
+    luaL_error(lua, "setArchitecture not implemented");
+    return { };
 }
 
-ValuePack Computer::getArchitecture(const ValuePack& args)
+ValuePack Computer::getArchitecture(lua_State* lua)
 {
-    luaL_error(args.state, "getArchitecture not implemented");
-    return ValuePack();
+    luaL_error(lua, "getArchitecture not implemented");
+    return { };
 }
 
-ValuePack Computer::getArchitectures(const ValuePack& args)
+ValuePack Computer::getArchitectures(lua_State* lua)
 {
-    luaL_error(args.state, "getArchitectures not implemented");
-    return ValuePack();
+    luaL_error(lua, "getArchitectures not implemented");
+    return { };
 }
 
-ValuePack Computer::beep(const ValuePack& args)
+ValuePack Computer::beep(lua_State* lua)
 {
     lout << "\a" << "BEEP\n";
-    return ValuePack();
+    return { };
 }
 
-ValuePack Computer::getDeviceInfo(const ValuePack& args)
+ValuePack Computer::getDeviceInfo(lua_State* lua)
 {
-    luaL_error(args.state, "getDeviceInfo not implemented");
-    return ValuePack();
+    luaL_error(lua, "getDeviceInfo not implemented");
+    return { };
 }
 
-ValuePack Computer::getProgramLocations(const ValuePack& args)
+ValuePack Computer::getProgramLocations(lua_State* lua)
 {
-    luaL_error(args.state, "getProgramLocations not implemented");
-    return ValuePack();
+    luaL_error(lua, "getProgramLocations not implemented");
+    return { };
 }
 
 // in seconds
-ValuePack Computer::uptime(const ValuePack& args)
+ValuePack Computer::uptime(lua_State* lua)
 {
     return ValuePack({now() - _start_time});
 }
 
-ValuePack Computer::pushSignal(const ValuePack& args)
+ValuePack Computer::pushSignal(lua_State* lua)
 {
-    return ValuePack();
+    return { };
 }
 
-ValuePack Computer::removeUser(const ValuePack& args)
+ValuePack Computer::removeUser(lua_State* lua)
 {
-    luaL_error(args.state, "removeUser not implemented");
-    return ValuePack();
+    luaL_error(lua, "removeUser not implemented");
+    return { };
 }
 
-ValuePack Computer::addUser(const ValuePack& args)
+ValuePack Computer::addUser(lua_State* lua)
 {
-    luaL_error(args.state, "addUser not implemented");
-    return ValuePack();
+    luaL_error(lua, "addUser not implemented");
+    return { };
 }
 
-ValuePack Computer::isRobot(const ValuePack& args)
+ValuePack Computer::isRobot(lua_State* lua)
 {
-    return ValuePack { false };
+    return { false };
 }
 
-ValuePack Computer::tmpAddress(const ValuePack& args)
+ValuePack Computer::tmpAddress(lua_State* lua)
 {
-    return ValuePack { _tmp_address };
+    return { _tmp_address };
 }
 
-ValuePack Computer::freeMemory(const ValuePack& args)
+ValuePack Computer::freeMemory(lua_State* lua)
 {
-    return ValuePack { std::numeric_limits<double>::max() };
+    return { std::numeric_limits<double>::max() };
 }
 
-ValuePack Computer::totalMemory(const ValuePack& args)
+ValuePack Computer::totalMemory(lua_State* lua)
 {
-    luaL_error(args.state, "totalMemory not implemented");
-    return ValuePack();
+    luaL_error(lua, "totalMemory not implemented");
+    return { };
 }
 
-ValuePack Computer::energy(const ValuePack& args)
+ValuePack Computer::energy(lua_State* lua)
 {
-    luaL_error(args.state, "energy not implemented");
-    return ValuePack();
+    luaL_error(lua, "energy not implemented");
+    return { };
 }
 
-ValuePack Computer::maxEnergy(const ValuePack& args)
+ValuePack Computer::maxEnergy(lua_State* lua)
 {
-    luaL_error(args.state, "maxEnergy not implemented");
-    return ValuePack();
+    luaL_error(lua, "maxEnergy not implemented");
+    return { };
 }
 

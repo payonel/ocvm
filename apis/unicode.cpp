@@ -13,12 +13,9 @@ UnicodeApi* UnicodeApi::get()
     return &it;
 }
 
-ValuePack UnicodeApi::sub(const ValuePack& args)
+string UnicodeApi::sub(const string& text, size_t from, size_t to)
 {
-    string text = Value::check(args, 0, "string").toString();
     size_t len = text.size();
-    size_t from = (size_t)Value::check(args, 1, "number").toNumber();
-    size_t to = (size_t)Value::check(args, 2, "number", "nil").Or(len).toNumber();
 
     // respect 1-based lua
     if (from < 0)
@@ -28,7 +25,7 @@ ValuePack UnicodeApi::sub(const ValuePack& args)
 
     if (from > to || to == 0 || from > len)
     {
-        return ValuePack { "" };
+        return "";
     }
 
     to = std::min(to, len);
@@ -37,16 +34,36 @@ ValuePack UnicodeApi::sub(const ValuePack& args)
     from--;
     to--;
 
-    return ValuePack { text.substr(from, to - from + 1) };
+    return text.substr(from, to - from + 1);
 }
 
-ValuePack UnicodeApi::len(const ValuePack& args)
+size_t UnicodeApi::len(const string& text)
 {
-    return ValuePack { Value::check(args, 0, "string").toString().size() };
+    return text.size();
 }
 
-ValuePack UnicodeApi::wlen(const ValuePack& args)
+size_t UnicodeApi::wlen(const string& text)
 {
-    return ValuePack { Value::check(args, 0, "string").toString().size() };
+    return text.size();
+}
+
+ValuePack UnicodeApi::sub(lua_State* lua)
+{
+    string text = Value::check(lua, 0, "string").toString();
+    size_t len = text.size();
+    size_t from = (size_t)Value::check(lua, 1, "number").toNumber();
+    size_t to = (size_t)Value::check(lua, 2, "number", "nil").Or(len).toNumber();
+
+    return { sub(text, from, to) };
+}
+
+ValuePack UnicodeApi::len(lua_State* lua)
+{
+    return { len(Value::check(lua, 0, "string").toString()) };
+}
+
+ValuePack UnicodeApi::wlen(lua_State* lua)
+{
+    return { wlen(Value::check(lua, 0, "string").toString()) };
 }
 

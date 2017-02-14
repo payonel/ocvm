@@ -11,16 +11,18 @@ class Gpu : public Component
 public:
     Gpu();
 
-    ValuePack setResolution(const ValuePack& args);
-    ValuePack bind(const ValuePack& args);
-    ValuePack set(const ValuePack& args);
-    ValuePack maxResolution(const ValuePack& args);
-    ValuePack setBackground(const ValuePack& args);
-    ValuePack getBackground(const ValuePack& args);
-    ValuePack setForeground(const ValuePack& args);
-    ValuePack getForeground(const ValuePack& args);
-    ValuePack fill(const ValuePack& args);
-    ValuePack copy(const ValuePack& args);
+    bool set(int x, int y, const string& text);
+
+    ValuePack setResolution(lua_State* lua);
+    ValuePack bind(lua_State* lua);
+    ValuePack set(lua_State* lua);
+    ValuePack maxResolution(lua_State* lua);
+    ValuePack setBackground(lua_State* lua);
+    ValuePack getBackground(lua_State* lua);
+    ValuePack setForeground(lua_State* lua);
+    ValuePack getForeground(lua_State* lua);
+    ValuePack fill(lua_State* lua);
+    ValuePack copy(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     bool truncateWH(int x, int y, int* pWidth, int* pHeight) const;

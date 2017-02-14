@@ -104,10 +104,10 @@ string Filesystem::src() const
     return _src;
 }
 
-ValuePack Filesystem::open(const ValuePack& args)
+ValuePack Filesystem::open(lua_State* lua)
 {
-    string filepath = Value::check(args, 0, "string").toString();
-    string mode_text = Value::check(args, 1, "string", "nil").Or("r").toString();
+    string filepath = Value::check(lua, 0, "string").toString();
+    string mode_text = Value::check(lua, 1, "string", "nil").Or("r").toString();
 
     map<char, fstream::openmode> mode_map;
     mode_map['r'] = fstream::in;
@@ -140,7 +140,7 @@ ValuePack Filesystem::open(const ValuePack& args)
         ((mode & mode_map['a']) && (mode & mode_map['r'])))
     {
         lout << "bad file mode: " << mode_text << endl;
-        return ValuePack({Value::nil, filepath});
+        return { Value::nil, filepath };
     }
 
     fstream* pf = new fstream;
@@ -150,7 +150,7 @@ ValuePack Filesystem::open(const ValuePack& args)
     if (!pf->is_open())
     {
         delete pf;
-        return ValuePack({Value::nil, filepath});
+        return { Value::nil, filepath };
     }
     // find next open handle index
     size_t index = 0;
@@ -165,24 +165,24 @@ ValuePack Filesystem::open(const ValuePack& args)
     // OR the is sequentially full, but index is now beyond size
     // either way, index is available
     _handles[index] = pf;
-    return ValuePack({index});
+    return { index };
 }
 
-ValuePack Filesystem::read(const ValuePack& args)
+ValuePack Filesystem::read(lua_State* lua)
 {
-    int index = (int)Value::check(args, 0, "number").toNumber(); // handle
-    double dsize = Value::check(args, 1, "number").toNumber();
+    int index = (int)Value::check(lua, 0, "number").toNumber(); // handle
+    double dsize = Value::check(lua, 1, "number").toNumber();
     static const streamsize max_read = (1024*1024*1024);
     streamsize size = (dsize > (double)max_read) ? max_read : static_cast<streamsize>(dsize);
 
     const auto& it = _handles.find(index);
     if (it == _handles.end())
     {
-        return ValuePack({Value::nil, "bad file handle"});
+        return { Value::nil, "bad file handle" };
     }
     fstream* fs = it->second;
     if (!fs->good())
-        return ValuePack({Value::nil});
+        return { Value::nil };
 
     string buffer;
 
@@ -197,54 +197,51 @@ ValuePack Filesystem::read(const ValuePack& args)
         buffer += c;
     }
 
-    return ValuePack({buffer});
+    return { buffer };
 }
 
-ValuePack Filesystem::close(const ValuePack& args)
+ValuePack Filesystem::close(lua_State* lua)
 {
-    int index = (int)Value::check(args, 0, "number").toNumber(); // handle
+    int index = (int)Value::check(lua, 0, "number").toNumber(); // handle
     const auto& it = _handles.find(index);
     if (it == _handles.end())
     {
-        return ValuePack({Value::nil, "bad file handle"});
+        return { Value::nil, "bad file handle" };
     }
     fstream* fs = it->second;
     fs->close();
     _handles.erase(it);
 
-    return ValuePack();
+    return { };
 }
 
-ValuePack Filesystem::getLabel(const ValuePack& args)
+ValuePack Filesystem::getLabel(lua_State* lua)
 {
-    return ValuePack {"label stub"};
+    return {"label stub"};
 }
 
-ValuePack Filesystem::list(const ValuePack& args)
+ValuePack Filesystem::list(lua_State* lua)
 {
-    string request_path = path() + clean(Value::check(args, 0, "string").toString(), true, false);
+    string request_path = path() + clean(Value::check(lua, 0, "string").toString(), true, false);
     auto listing = utils::list(request_path);
 
-    ValuePack result {Value::table()};
-    Value& t = result.at(0);
+    Value t = Value::table();
     for (const auto& item : listing)
     {
         string relative_item = clean(relative(request_path, item), false, false);
         t.insert(relative_item);
     }
 
-    return result;
+    return { t };
 }
 
-ValuePack Filesystem::isDirectory(const ValuePack& args)
+ValuePack Filesystem::isDirectory(lua_State* lua)
 {
-    string relpath = clean(Value::check(args, 0, "string").toString(), true, true);
-    ValuePack pack;
-    pack.push_back( {utils::isDirectory(path() + relpath)} );
-    return pack;
+    string relpath = clean(Value::check(lua, 0, "string").toString(), true, true);
+    return { utils::isDirectory(path() + relpath) };
 }
 
-ValuePack Filesystem::exists(const ValuePack& args)
+ValuePack Filesystem::exists(lua_State* lua)
 {
-    return ValuePack { utils::exists(path() + clean(Value::check(args, 0, "string").toString(), true, true)) };
+    return { utils::exists(path() + clean(Value::check(lua, 0, "string").toString(), true, true)) };
 }

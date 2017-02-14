@@ -7,9 +7,9 @@ class Eeprom : public Component
 public:
     Eeprom();
 
-    ValuePack get(const ValuePack& args);
-    ValuePack getData(const ValuePack& args);
-    ValuePack setData(const ValuePack& args);
+    ValuePack get(lua_State* lua);
+    ValuePack getData(lua_State* lua);
+    ValuePack setData(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     string biosPath() const;
