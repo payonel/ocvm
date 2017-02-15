@@ -14,19 +14,22 @@ SystemApi* SystemApi::get()
     return &it;
 }
 
-ValuePack SystemApi::allowGC(lua_State* lua)
+int SystemApi::allowGC(lua_State* lua)
 {
-    return ValuePack { _gc };
+    Value(get()->_gc).push(lua);
+    return 1;
 }
 
-ValuePack SystemApi::timeout(lua_State* lua)
+int SystemApi::timeout(lua_State* lua)
 {
-    return ValuePack { _timeout };
+    Value(get()->_timeout).push(lua);
+    return 1;
 }
 
-ValuePack SystemApi::allowBytecode(lua_State* lua)
+int SystemApi::allowBytecode(lua_State* lua)
 {
-    return ValuePack { _bytecode };
+    Value(get()->_bytecode).push(lua);
+    return 1;
 }
 
 ////////

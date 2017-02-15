@@ -60,12 +60,21 @@ vector<LuaMethod> LuaProxy::methods() const
     {
         result.push_back(std::make_tuple(pair.first, &lua_proxy_static_caller));
     }
+    for (const auto& pair : _cmethods)
+    {
+        result.push_back(std::make_tuple(pair.first, pair.second));
+    }
     return result;
 }
 
 void LuaProxy::add(const string& methodName, ProxyMethod method)
 {
     _methods[methodName] = method;
+}
+
+void LuaProxy::add(const string& methodName, lua_CFunction cfunction)
+{
+    _cmethods[methodName] = cfunction;
 }
 
 ValuePack LuaProxy::invoke(const string& methodName, lua_State* lua)

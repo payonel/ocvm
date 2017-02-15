@@ -156,7 +156,7 @@ ValuePack Gpu::fill(lua_State* lua)
         return { false, "out of bounds" };
     }
 
-    if (UnicodeApi::get()->wlen(text) != 1)
+    if (UnicodeApi::wlen(text) != 1)
     {
         return { false, "fill char not length 1" };
     }
