@@ -33,7 +33,7 @@ bool Computer::onInitialize(Value& config)
     return true;
 }
 
-int64_t Computer::now() const
+int64_t Computer::now()
 {
     return duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
 }

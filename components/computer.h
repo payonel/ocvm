@@ -30,7 +30,7 @@ public:
 protected:
     bool onInitialize(Value& config) override;
 private:
-    int64_t now() const;
+    static int64_t now();
     int64_t _start_time;
     string _tmp_address;
 };
