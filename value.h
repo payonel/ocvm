@@ -40,20 +40,7 @@ public:
     static Value table();
     static const Value nil;
 
-    static ValuePack pack()
-    {
-        return ValuePack();
-    }
-
     const Value& Or(const Value& def) const;
-
-    template<typename T, typename... Ts>
-    static ValuePack pack(T arg, Ts... args)
-    {
-        ValuePack vec = pack(args...);
-        vec.insert(vec.begin(), Value(arg));
-        return vec;
-    }
 
     void push(lua_State* lua) const;
 
@@ -67,7 +54,6 @@ public:
     void* toPointer() const;
     lua_State* toThread() const;
     int status() const;
-    const Value& metatable() const;
 
     // static const Value& select(const ValuePack& pack, size_t index);
     static Value check(lua_State* lua, size_t index, const string& required, const string& optional = "");
@@ -82,8 +68,6 @@ public:
     string serialize(bool bSpacey = false) const;
     operator bool() const;
     bool operator< (const Value& rhs) const;
-protected:
-    void getmetatable(lua_State* lua, int index);
 private:
     string _type;
     int _id;
@@ -93,7 +77,6 @@ private:
     void* _pointer = nullptr;
     lua_State* _thread = nullptr;
     int _thread_status = 0;
-    shared_ptr<Value> _pmetatable;
     map<Value, Value> _table;
 };
 

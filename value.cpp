@@ -98,7 +98,6 @@ Value::Value(lua_State* lua, int index)
             }
         break;
     }
-    getmetatable(lua, -1);
     lua_pop(lua, 1);
 }
 
@@ -136,11 +135,6 @@ void* Value::toPointer() const
 lua_State* Value::toThread() const
 {
     return _thread;
-}
-
-const Value& Value::metatable() const
-{
-    return _pmetatable ? *_pmetatable : Value::nil;
 }
 
 int Value::status() const
@@ -296,22 +290,6 @@ bool Value::operator< (const Value& rhs) const
 Value::operator bool() const
 {
     return _type != "nil" && (_type != "boolean" || _bool);
-}
-
-void Value::getmetatable(lua_State* lua, int index)
-{
-    if (type() == "table" || type() == "userdata")
-    {
-        if (lua_getmetatable(lua, index))
-        {
-            std::shared_ptr<Value> pmt(new Value(lua, -1));
-            if (pmt->type() == "table")
-            {
-                _pmetatable = pmt;
-            }
-            lua_pop(lua, 1); // pushes NOTHING if not metatable, not nil
-        }
-    }
 }
 
 void Value::push(lua_State* lua) const
