@@ -34,6 +34,7 @@
         "bin": true,
         "tmp": true,
         ".gitignore": true,
-        ".vscode": true
+        ".vscode": true,
+        "system/loot": true
     }
 }

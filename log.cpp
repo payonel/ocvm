@@ -2,14 +2,10 @@
 #include "framing/frame.h"
 
 #include <iostream>
-#include <list>
 using std::cout;
-using std::list;
 
 Logger lout(1);
 Logger lerr(0);
-
-static const int LOG_DUMP_SIZE = 10000;
 
 class LogFrame : public Frame
 {
@@ -20,23 +16,7 @@ public:
     }
     ~LogFrame()
     {
-        for (auto part : _rolling_buffer)
-        {
-            cout << part;
-        }
-        _rolling_buffer.clear();
     }
-    void write(const string& text) override
-    {
-        _rolling_buffer.push_back(text);
-        if (_rolling_buffer.size() > LOG_DUMP_SIZE)
-        {
-            _rolling_buffer.remove(_rolling_buffer.front());
-        }
-        Frame::write(text);
-    }
-private:
-    list<string> _rolling_buffer;
 } single_log_frame;
 
 Frame* Logger::getFrame()

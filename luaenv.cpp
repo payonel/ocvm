@@ -18,12 +18,6 @@ LuaEnv::~LuaEnv()
     close();
 }
 
-int run_caller(lua_State* lua)
-{
-    lout << "in lua callback\n";
-    return 0;
-}
-
 bool LuaEnv::run()
 {
     /*
@@ -145,7 +139,6 @@ void LuaEnv::close()
 bool LuaEnv::newlib(LuaProxy* proxy)
 {
     string libname = proxy->name();
-    vector<LuaMethod> methods = proxy->methods();
 
     bool bGlobalMethods = libname.empty();
 
@@ -154,18 +147,25 @@ bool LuaEnv::newlib(LuaProxy* proxy)
         lua_newtable(_state); // create lib tbl
     }
 
-    for (const auto& tup : methods)
+    for (const auto& tup : proxy->methods())
     {
         const string& name = std::get<0>(tup);
-        lua_CFunction pf = std::get<1>(tup);
+        bool isDirect = std::get<1>(tup);
+        lua_CFunction pf = std::get<2>(tup);
 
-        lua_newtable(_state);
-        lua_pushstring(_state, name.c_str());
-        lua_setfield(_state, -2, "name");
-        lua_pushlightuserdata(_state, proxy);
-        lua_setfield(_state, -2, "instance");
-
-        lua_pushcclosure(_state, pf, 1);
+        if (isDirect)
+        {
+            lua_pushcfunction(_state, pf);
+        }
+        else
+        {
+            lua_newtable(_state);
+            lua_pushstring(_state, name.c_str());
+            lua_setfield(_state, -2, "name");
+            lua_pushlightuserdata(_state, proxy);
+            lua_setfield(_state, -2, "instance");
+            lua_pushcclosure(_state, pf, 1);
+        }
 
         if (bGlobalMethods)
         {
@@ -176,6 +176,8 @@ bool LuaEnv::newlib(LuaProxy* proxy)
             lua_setfield(_state, -2, name.c_str()); // tbl[name] = udata, pops udata
         }
     }
+
+    proxy->injectCustomLua(_state);
 
     if (!bGlobalMethods)
     {

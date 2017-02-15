@@ -4,7 +4,6 @@ using namespace std;
 
 bool BasicTerm::update()
 {
-    cout << "update\n" << endl;
     return true;// cin.get() != 'q';
 }
 

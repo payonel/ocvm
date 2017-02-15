@@ -7,7 +7,6 @@ class Computer : public Component
 public:
     Computer();
 
-    ValuePack realTime(lua_State* lua);
     ValuePack setArchitecture(lua_State* lua);
     ValuePack getArchitecture(lua_State* lua);
     ValuePack getArchitectures(lua_State* lua);
@@ -27,6 +26,7 @@ public:
     ValuePack maxEnergy(lua_State* lua);
 
     void setTmpAddress(const string& addr);
+    void injectCustomLua(lua_State* lua) override;
 protected:
     bool onInitialize(Value& config) override;
 private:

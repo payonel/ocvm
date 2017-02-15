@@ -1,5 +1,6 @@
 #include "computer.h"
 #include "log.h"
+#include <lua.hpp>
 
 #include <iostream>
 #include <chrono>
@@ -9,7 +10,6 @@ Computer::Computer()
 {
     _start_time = now();
 
-    add("realTime", &Computer::realTime);
     add("setArchitecture", &Computer::setArchitecture);
     add("getArchitecture", &Computer::getArchitecture);
     add("getArchitectures", &Computer::getArchitectures);
@@ -43,9 +43,13 @@ void Computer::setTmpAddress(const string& addr)
     _tmp_address = addr;
 }
 
-ValuePack Computer::realTime(lua_State* lua)
+void Computer::injectCustomLua(lua_State* lua)
 {
-    return ValuePack{now()};
+    lua_getglobal(lua, "os"); // +1
+    lua_pushstring(lua, "time"); // push key name, +1
+    lua_gettable(lua, -2); // push time on stack, pop key name, +1-1
+    lua_remove(lua, -2); // pop os, -1
+    lua_setfield(lua, -2, "realTime"); // computer.realTime = time, pops time, -1
 }
 
 ValuePack Computer::setArchitecture(lua_State* lua)

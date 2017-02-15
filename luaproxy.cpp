@@ -58,11 +58,11 @@ vector<LuaMethod> LuaProxy::methods() const
     vector<LuaMethod> result;
     for (const auto& pair : _methods)
     {
-        result.push_back(std::make_tuple(pair.first, &lua_proxy_static_caller));
+        result.push_back(std::make_tuple(pair.first, false, &lua_proxy_static_caller));
     }
     for (const auto& pair : _cmethods)
     {
-        result.push_back(std::make_tuple(pair.first, pair.second));
+        result.push_back(std::make_tuple(pair.first, true, pair.second));
     }
     return result;
 }
@@ -81,7 +81,7 @@ ValuePack LuaProxy::invoke(const string& methodName, lua_State* lua)
 {
     bool verbose = !(_name == "computer" && (methodName == "realTime" || methodName == "uptime"));
     if (verbose)
-        lout << "LuaProxy." << _name << "." << methodName << ":";
+        lout << "LuaProxy." << _name << "." << methodName << endl;
     const auto& mit = _methods.find(methodName);
     if (mit == _methods.end())
     {
@@ -90,9 +90,5 @@ ValuePack LuaProxy::invoke(const string& methodName, lua_State* lua)
     }
 
     ProxyMethod pmethod = mit->second;
-    auto result = ((*this).*pmethod)(lua);
-    if (verbose)
-        lout << result << endl;
-
-    return result;
+    return ((*this).*pmethod)(lua);
 }

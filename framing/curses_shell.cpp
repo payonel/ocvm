@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <list>
+using std::list;
 using std::cout;
 using std::flush;
 using std::make_tuple;
@@ -16,6 +18,26 @@ using std::make_tuple;
 #include <stdio.h>
 #include <unistd.h>
 #include <termios.h>
+
+list<string> _rolling_buffer;
+void push_log_history(const string& text)
+{
+    static const int LOG_DUMP_SIZE = 10000;
+    _rolling_buffer.push_back(text);
+    if (_rolling_buffer.size() > LOG_DUMP_SIZE)
+    {
+        _rolling_buffer.remove(_rolling_buffer.front());
+    }
+}
+
+void dump_log_history()
+{
+    for (auto part : _rolling_buffer)
+    {
+        cout << part;
+    }
+    _rolling_buffer.clear();
+}
 
 CursesShell::CursesShell()
 {
@@ -179,8 +201,6 @@ bool CursesShell::open()
 
 bool CursesShell::update()
 {
-    lout << "shell update\n";
-
     for (const auto& pf : _frames)
     {
         auto& state = _states[pf];
@@ -192,6 +212,7 @@ bool CursesShell::update()
             if (pf->scrolling())
             {
                 waddstr(state.window, text.c_str());
+                push_log_history(text);
             }
             else
             {
@@ -231,4 +252,6 @@ void CursesShell::close()
 
     _states.clear();
     endwin();
+
+    dump_log_history();
 }
