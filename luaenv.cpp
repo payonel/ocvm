@@ -1,6 +1,7 @@
 #include "luaenv.h"
 #include "log.h"
 #include "luaproxy.h"
+#include "components/computer.h"
 #include <iostream>
 #include <string>
 #include <tuple>
@@ -92,6 +93,7 @@ bool LuaEnv::resume(int nargs)
                     return resume(top);
                 break;
                 case LUA_TNUMBER:
+                    _standby = std::min(0.0, result.toNumber()) + Computer::now();
                 break;
                 case LUA_TBOOLEAN:
                     // shutdown or reboot

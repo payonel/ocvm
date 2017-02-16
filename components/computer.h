@@ -28,10 +28,10 @@ public:
 
     void setTmpAddress(const string& addr);
     void injectCustomLua(lua_State* lua) override;
+    static int64_t now();
 protected:
     bool onInitialize(Value& config) override;
 private:
-    static int64_t now();
     int64_t _start_time;
     string _tmp_address;
 

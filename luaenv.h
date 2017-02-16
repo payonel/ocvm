@@ -33,4 +33,5 @@ protected:
 private:
     lua_State* _state = nullptr;
     lua_State* _machine = nullptr;
+    double _standby = 0;
 };

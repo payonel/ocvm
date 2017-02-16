@@ -23,7 +23,8 @@
         "functional": "cpp",
         "thread": "cpp",
         "string": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "iostream": "cpp"
     },
     "files.exclude": {
         "**/.git": true,
