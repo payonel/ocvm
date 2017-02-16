@@ -72,7 +72,7 @@ void LuaProxy::add(const string& methodName, ProxyMethod method)
     _methods[methodName] = method;
 }
 
-void LuaProxy::add(const string& methodName, lua_CFunction cfunction)
+void LuaProxy::cadd(const string& methodName, lua_CFunction cfunction)
 {
     _cmethods[methodName] = cfunction;
 }

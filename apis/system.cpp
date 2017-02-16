@@ -3,9 +3,9 @@
 
 SystemApi::SystemApi() : LuaProxy("system")
 {
-    add("allowGC", &SystemApi::allowGC);
-    add("timeout", &SystemApi::timeout);
-    add("allowBytecode", &SystemApi::allowBytecode);
+    cadd("allowGC", &SystemApi::allowGC);
+    cadd("timeout", &SystemApi::timeout);
+    cadd("allowBytecode", &SystemApi::allowBytecode);
 }
 
 SystemApi* SystemApi::get()

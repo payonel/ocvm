@@ -12,16 +12,6 @@ using std::shared_ptr;
 using std::ostream;
 
 class lua_State;
-class Value;
-struct ValuePack : public vector<Value>
-{
-    lua_State* state;
-    ValuePack(std::initializer_list<Value>);
-    ValuePack(lua_State* state);
-    ValuePack() = default;
-};
-ostream& operator << (ostream& os, const ValuePack& pack);
-
 class Value
 {
 public:
@@ -80,3 +70,30 @@ private:
     map<Value, Value> _table;
 };
 
+struct ValuePack : public vector<Value>
+{
+    lua_State* state;
+    ValuePack(std::initializer_list<Value>);
+    ValuePack(lua_State* state);
+    ValuePack() = default;
+
+    inline static int push(lua_State* lua, const char* arg)
+    {
+        Value(arg).push(lua);
+        return 1;
+    }
+
+    template <typename T>
+    inline static int push(lua_State* lua, const T& arg)
+    {
+        Value(arg).push(lua);
+        return 1;
+    }
+
+    template <typename T, typename ...Ts>
+    inline static int push(lua_State* lua, const T& arg, const Ts&... args)
+    {
+        return push(lua, arg) + push(lua, args...);
+    }
+};
+ostream& operator << (ostream& os, const ValuePack& pack);

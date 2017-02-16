@@ -2,9 +2,9 @@
 
 UnicodeApi::UnicodeApi() : LuaProxy("unicode")
 {
-    add("sub", &UnicodeApi::sub);
-    add("len", &UnicodeApi::len);
-    add("wlen", &UnicodeApi::wlen);
+    cadd("sub", &UnicodeApi::sub);
+    cadd("len", &UnicodeApi::len);
+    cadd("wlen", &UnicodeApi::wlen);
 }
 
 UnicodeApi* UnicodeApi::get()
@@ -54,19 +54,16 @@ int UnicodeApi::sub(lua_State* lua)
     size_t from = (size_t)Value::check(lua, 1, "number").toNumber();
     size_t to = (size_t)Value::check(lua, 2, "number", "nil").Or(len).toNumber();
 
-    Value(sub(text, from, to)).push(lua);
-    return 1;
+    return ValuePack::push(lua, sub(text, from, to));
 }
 
 int UnicodeApi::len(lua_State* lua)
 {
-    Value(len(Value::check(lua, 0, "string").toString())).push(lua);
-    return 1;
+    return ValuePack::push(lua, len(Value::check(lua, 0, "string").toString()));
 }
 
 int UnicodeApi::wlen(lua_State* lua)
 {
-    Value(wlen(Value::check(lua, 0, "string").toString())).push(lua);
-    return 1;
+    return ValuePack::push(lua, wlen(Value::check(lua, 0, "string").toString()));
 }
 

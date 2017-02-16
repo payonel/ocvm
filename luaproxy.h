@@ -34,7 +34,7 @@ protected:
     {
         add(methodName, static_cast<ProxyMethod>(derivedMethod));
     }
-    void add(const string& methodName, lua_CFunction cfunction);
+    void cadd(const string& methodName, lua_CFunction cfunction);
 private:
     map<string, ProxyMethod> _methods;
     map<string, lua_CFunction> _cmethods; // for statics - faster dispatch
