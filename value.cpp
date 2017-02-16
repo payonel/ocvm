@@ -419,3 +419,14 @@ const Value& Value::Or(const Value& def) const
 {
     return (!*this) ? def : *this;
 }
+
+ValuePack ValuePack::pack(lua_State* lua)
+{
+    int top = lua_gettop(lua);
+    ValuePack result;
+    for (int i = 1; i <= top; i++)
+    {
+        result.push_back(Value(lua, i));
+    }
+    return result;
+}

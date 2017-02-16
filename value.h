@@ -78,8 +78,9 @@ private:
 struct ValuePack : public vector<Value>
 {
     ValuePack(std::initializer_list<Value>);
-    ValuePack(lua_State* state);
     ValuePack() = default;
+
+    static ValuePack pack(lua_State* lua);
 
     inline static int push(lua_State* lua, const char* arg)
     {

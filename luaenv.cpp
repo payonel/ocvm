@@ -81,19 +81,26 @@ bool LuaEnv::resume(int nargs)
         if (top > 0)
         {
             Value result(_state, -1);
-            if (result.type_id() == LUA_TFUNCTION)
+            switch (result.type_id())
             {
-                lua_settop(_state, 1);
-                lua_pcall(_state, 0, LUA_MULTRET, 0);
-                // the returns, if any, are on the stack
-                // should be given to the machine to resume
-                top = lua_gettop(_state);
-                return resume(top);
-            }
-            else if (result.type_id() == LUA_TBOOLEAN)
-            {
-                // shutdown or reboot
-                return false;
+                case LUA_TFUNCTION:
+                    lua_settop(_state, 1);
+                    lua_pcall(_state, 0, LUA_MULTRET, 0);
+                    // the returns, if any, are on the stack
+                    // should be given to the machine to resume
+                    top = lua_gettop(_state);
+                    return resume(top);
+                break;
+                case LUA_TNUMBER:
+                break;
+                case LUA_TBOOLEAN:
+                    // shutdown or reboot
+                    return false;
+                break;
+                default:
+                    lout << "unsupported yield: " << result.type() << endl;
+                    return false;
+                break;
             }
         }
         return true;

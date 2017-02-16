@@ -1,6 +1,8 @@
 #pragma once
 
 #include "component.h"
+#include <queue>
+using std::queue;
 
 class Computer : public Component
 {
@@ -32,4 +34,6 @@ private:
     static int64_t now();
     int64_t _start_time;
     string _tmp_address;
+
+    queue<ValuePack> _signals;
 };

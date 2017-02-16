@@ -95,6 +95,7 @@ int Computer::getProgramLocations(lua_State* lua)
 
 int Computer::pushSignal(lua_State* lua)
 {
+    _signals.push(ValuePack::pack(lua));
     return 0;
 }
 
