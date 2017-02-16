@@ -106,8 +106,8 @@ string Filesystem::src() const
 
 int Filesystem::open(lua_State* lua)
 {
-    string filepath = Value::check(lua, 0, "string").toString();
-    string mode_text = Value::check(lua, 1, "string", "nil").Or("r").toString();
+    string filepath = Value::check(lua, 1, "string").toString();
+    string mode_text = Value::check(lua, 2, "string", "nil").Or("r").toString();
 
     map<char, fstream::openmode> mode_map;
     mode_map['r'] = fstream::in;
@@ -170,8 +170,8 @@ int Filesystem::open(lua_State* lua)
 
 int Filesystem::read(lua_State* lua)
 {
-    int index = (int)Value::check(lua, 0, "number").toNumber(); // handle
-    double dsize = Value::check(lua, 1, "number").toNumber();
+    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
+    double dsize = Value::check(lua, 2, "number").toNumber();
     static const streamsize max_read = (1024*1024*1024);
     streamsize size = (dsize > (double)max_read) ? max_read : static_cast<streamsize>(dsize);
 
@@ -202,7 +202,7 @@ int Filesystem::read(lua_State* lua)
 
 int Filesystem::close(lua_State* lua)
 {
-    int index = (int)Value::check(lua, 0, "number").toNumber(); // handle
+    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
     const auto& it = _handles.find(index);
     if (it == _handles.end())
     {
@@ -222,7 +222,7 @@ int Filesystem::getLabel(lua_State* lua)
 
 int Filesystem::list(lua_State* lua)
 {
-    string request_path = path() + clean(Value::check(lua, 0, "string").toString(), true, false);
+    string request_path = path() + clean(Value::check(lua, 1, "string").toString(), true, false);
     auto listing = utils::list(request_path);
 
     Value t = Value::table();
@@ -237,11 +237,11 @@ int Filesystem::list(lua_State* lua)
 
 int Filesystem::isDirectory(lua_State* lua)
 {
-    string relpath = clean(Value::check(lua, 0, "string").toString(), true, true);
+    string relpath = clean(Value::check(lua, 1, "string").toString(), true, true);
     return ValuePack::push(lua, utils::isDirectory(path() + relpath));
 }
 
 int Filesystem::exists(lua_State* lua)
 {
-    return ValuePack::push(lua, utils::exists(path() + clean(Value::check(lua, 0, "string").toString(), true, true)));
+    return ValuePack::push(lua, utils::exists(path() + clean(Value::check(lua, 1, "string").toString(), true, true)));
 }

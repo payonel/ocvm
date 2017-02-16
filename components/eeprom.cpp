@@ -49,7 +49,7 @@ int Eeprom::getData(lua_State* lua)
 
 int Eeprom::setData(lua_State* lua)
 {
-    string value = Value::check(lua, 0, "string", "nil").Or("").toString();
+    string value = Value::check(lua, 1, "string", "nil").Or("").toString();
     size_t len = value.length();
     if (_data_size_limit < 0 || len > static_cast<size_t>(_data_size_limit))
         return ValuePack::push(lua, Value::nil, "data size exceeded");

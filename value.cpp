@@ -369,9 +369,8 @@ Value Value::check(lua_State* lua, size_t index, const string& required, const s
     int top = lua_gettop(lua);
     int id = LUA_TNIL;
     string type = "nil";
-    if (index < (size_t)top) // top:1, index:0 is max
+    if (index <= (size_t)top) // top:1, index:0 is max
     {
-        index++;
         id = lua_type(lua, index);
         type = lua_typename(lua, id);
     }

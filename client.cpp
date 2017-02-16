@@ -202,8 +202,8 @@ Component* Client::component(const string& address) const
 
 int Client::component_list(lua_State* lua)
 {
-    string filter = Value::check(lua, 0, "string", "nil").Or("").toString();
-    bool exact = Value::check(lua, 1, "boolean", "nil").toBool();
+    string filter = Value::check(lua, 1, "string", "nil").Or("").toString();
+    bool exact = Value::check(lua, 2, "boolean", "nil").toBool();
 
     Value result = Value::table();
     for (auto* pc : components(filter, exact))
@@ -220,9 +220,9 @@ int Client::component_invoke(lua_State* lua)
     // LuaProxy::invoke has already logged much about this call, but is waiting to log the result
     // but, logging from here on out will look like a return value, so we add some indentation here
     lout << "-> ";
-    string address = Value::check(lua, 0, "string").toString();
+    string address = Value::check(lua, 1, "string").toString();
     lua_remove(lua, 1);
-    string methodName = Value::check(lua, 0, "string").toString();
+    string methodName = Value::check(lua, 1, "string").toString();
     lua_remove(lua, 1);
     
     Component* pc = component(address);
@@ -237,7 +237,7 @@ int Client::component_invoke(lua_State* lua)
 
 int Client::component_methods(lua_State* lua)
 {
-    string address = Value::check(lua, 0, "string").toString();
+    string address = Value::check(lua, 1, "string").toString();
 
     Component* pc = component(address);
     if (!pc)
@@ -255,7 +255,7 @@ int Client::component_methods(lua_State* lua)
 
 int Client::component_type(lua_State* lua)
 {
-    string address = Value::check(lua, 0, "string").toString();
+    string address = Value::check(lua, 1, "string").toString();
     Component* pc = component(address);
     if (!pc)
         return ValuePack::push(lua, Value::nil, "no such component");
@@ -265,7 +265,7 @@ int Client::component_type(lua_State* lua)
 
 int Client::component_slot(lua_State* lua)
 {
-    string address = Value::check(lua, 0, "string").toString();
+    string address = Value::check(lua, 1, "string").toString();
     Component* pc = component(address);
     if (!pc)
         return ValuePack::push(lua, Value::nil, "no such component");

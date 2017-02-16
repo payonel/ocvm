@@ -49,21 +49,21 @@ size_t UnicodeApi::wlen(const string& text)
 
 int UnicodeApi::sub(lua_State* lua)
 {
-    string text = Value::check(lua, 0, "string").toString();
+    string text = Value::check(lua, 1, "string").toString();
     size_t len = text.size();
-    size_t from = (size_t)Value::check(lua, 1, "number").toNumber();
-    size_t to = (size_t)Value::check(lua, 2, "number", "nil").Or(len).toNumber();
+    size_t from = (size_t)Value::check(lua, 2, "number").toNumber();
+    size_t to = (size_t)Value::check(lua, 3, "number", "nil").Or(len).toNumber();
 
     return ValuePack::push(lua, sub(text, from, to));
 }
 
 int UnicodeApi::len(lua_State* lua)
 {
-    return ValuePack::push(lua, len(Value::check(lua, 0, "string").toString()));
+    return ValuePack::push(lua, len(Value::check(lua, 1, "string").toString()));
 }
 
 int UnicodeApi::wlen(lua_State* lua)
 {
-    return ValuePack::push(lua, wlen(Value::check(lua, 0, "string").toString()));
+    return ValuePack::push(lua, wlen(Value::check(lua, 1, "string").toString()));
 }
 

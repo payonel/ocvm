@@ -26,7 +26,7 @@ bool Gpu::onInitialize(Value& config)
 
 int Gpu::bind(lua_State* lua)
 {
-    string address = Value::check(lua, 0, "string").toString();
+    string address = Value::check(lua, 1, "string").toString();
     Component* pc = client()->component(address);
     if (!pc)
     {
@@ -48,8 +48,8 @@ int Gpu::setResolution(lua_State* lua)
     {
         return ValuePack::push(lua, false, "no screen");
     }
-    int width = (int)Value::check(lua, 0, "number").toNumber();
-    int height = (int)Value::check(lua, 1, "number").toNumber();
+    int width = (int)Value::check(lua, 1, "number").toNumber();
+    int height = (int)Value::check(lua, 2, "number").toNumber();
 
     tuple<int, int> max = _screen->framer()->maxResolution();
     if (width < 1 || width > std::get<0>(max) ||
@@ -81,9 +81,9 @@ int Gpu::set(lua_State* lua)
     {
         return ValuePack::push(lua, false, "no screen");
     }
-    int x = Value::check(lua, 0, "number").toNumber();
-    int y = Value::check(lua, 1, "number").toNumber();
-    string text = Value::check(lua, 2, "string").toString();
+    int x = Value::check(lua, 1, "number").toNumber();
+    int y = Value::check(lua, 2, "number").toNumber();
+    string text = Value::check(lua, 3, "string").toString();
 
     return ValuePack::push(lua, set(x, y, text));
 }
@@ -145,11 +145,11 @@ int Gpu::fill(lua_State* lua)
         return ValuePack::push(lua, false, "no screen");
     }
 
-    int x = Value::check(lua, 0, "number").toNumber();
-    int y = Value::check(lua, 1, "number").toNumber();
-    int width = Value::check(lua, 2, "number").toNumber();
-    int height = Value::check(lua, 3, "number").toNumber();
-    string text = Value::check(lua, 4, "string").toString();
+    int x = Value::check(lua, 1, "number").toNumber();
+    int y = Value::check(lua, 2, "number").toNumber();
+    int width = Value::check(lua, 3, "number").toNumber();
+    int height = Value::check(lua, 4, "number").toNumber();
+    string text = Value::check(lua, 5, "string").toString();
 
     if (!truncateWH(x, y, &width, &height))
     {
@@ -176,12 +176,12 @@ int Gpu::copy(lua_State* lua)
     if (!_screen)
         return ValuePack::push(lua, false, "no screen");
 
-    int x = Value::check(lua, 0, "number").toNumber();
-    int y = Value::check(lua, 1, "number").toNumber();
-    int width = Value::check(lua, 2, "number").toNumber();
-    int height = Value::check(lua, 3, "number").toNumber();
-    int tx = Value::check(lua, 4, "number").toNumber();
-    int ty = Value::check(lua, 5, "number").toNumber();
+    int x = Value::check(lua, 1, "number").toNumber();
+    int y = Value::check(lua, 2, "number").toNumber();
+    int width = Value::check(lua, 3, "number").toNumber();
+    int height = Value::check(lua, 4, "number").toNumber();
+    int tx = Value::check(lua, 5, "number").toNumber();
+    int ty = Value::check(lua, 6, "number").toNumber();
 
     if (!truncateWH(x, y, &width, &height))
     {
