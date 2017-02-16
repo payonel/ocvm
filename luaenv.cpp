@@ -30,8 +30,8 @@ bool LuaEnv::run()
         4. sleep timeout
             send 0 args to the machine
     */
-    Value env(_state);
-    bool bFirstTimeRun = env.status() == LUA_OK; // FIRST time run, all other resumes come from yield
+    int env_status = lua_status(_state);
+    bool bFirstTimeRun = env_status == LUA_OK; // FIRST time run, all other resumes come from yield
     int nargs = 0;
     //machine signals
     // if signal, nargs = 1
@@ -48,7 +48,7 @@ bool LuaEnv::run()
 
 bool LuaEnv::resume(int nargs)
 {
-    lout << "lua env resume: " << nargs << endl;
+    //lout << "lua env resume: " << nargs << endl;
     int status_id = lua_resume(_state, _machine, nargs);
     /*
         Types of results
@@ -76,7 +76,7 @@ bool LuaEnv::resume(int nargs)
     }
     else if (status_id == LUA_YIELD)
     {
-        lout << "lua env yielded\n";
+        //lout << "lua env yielded\n";
         int top = lua_gettop(_state);
         if (top > 0)
         {

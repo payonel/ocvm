@@ -49,14 +49,18 @@ public:
     static Value check(lua_State* lua, size_t index, const string& required, const string& optional = "");
 
     // table functions
-    void set(const Value& key, const Value& value);
-    const Value& get(const Value& key) const;
-    Value& get(const Value& key);
-    const map<Value, Value>& pairs() const;
-    map<Value, Value>& pairs();
+    vector<string> keys() const;
+    const Value& get(const string& key) const;
+    Value& get(const string& key);
+    const Value& get(int index) const;
+    Value& get(int index);
+    void set(const string& key, const Value& value);
+    void set(int key, const Value& value);
+    bool contains(int key) const;
+    bool contains(const string& key) const;
 
-    string serialize(bool bSpacey = false) const;
-    operator bool() const;
+    string serialize(int spacey = 0) const;
+    explicit operator bool() const;
     bool operator< (const Value& rhs) const;
 private:
     string _type;
@@ -67,12 +71,12 @@ private:
     void* _pointer = nullptr;
     lua_State* _thread = nullptr;
     int _thread_status = 0;
-    map<Value, Value> _table;
+    map<string, Value> _stable;
+    map<int, Value> _ntable;
 };
 
 struct ValuePack : public vector<Value>
 {
-    lua_State* state;
     ValuePack(std::initializer_list<Value>);
     ValuePack(lua_State* state);
     ValuePack() = default;

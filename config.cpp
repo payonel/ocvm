@@ -13,11 +13,11 @@ extern "C"
     {
         const void* raw = lua_topointer(lua, 1);
         Config* self = const_cast<Config*>(static_cast<const Config*>(raw));
-        Value key(lua, 2);
+        string key = Value::check(lua, 1, "string").toString();
         Value value(lua, 3);
         self->set(key, value);
 
-        lout << self->name() << " config loading [" << key.serialize() << "]: " << value.serialize() << "\n";
+        lout << self->name() << " config loading [" << key << "]: " << value.serialize() << "\n";
         return 0;
     }
 }
@@ -89,14 +89,18 @@ string Config::savePath() const
     return _path + "/" + _name + ".cfg";
 }
 
-Value Config::get(const Value& key) const
+const Value& Config::get(const string& key) const
+{
+    return _data.get(key);
+}
+Value& Config::get(const string& key)
 {
     return _data.get(key);
 }
 
-bool Config::set(const Value& key, const Value& value, bool bCreateOnly)
+bool Config::set(const string& key, const Value& value, bool bCreateOnly)
 {
-    if (!bCreateOnly || _data.get(key) == Value::nil)
+    if (!bCreateOnly || !_data.contains(key))
     {
         _data.set(key, value);
         return true;
@@ -104,26 +108,14 @@ bool Config::set(const Value& key, const Value& value, bool bCreateOnly)
     return false;
 }
 
-map<Value, Value>& Config::pairs()
+bool Config::save() const
 {
-    return _data.pairs();
+    lout << "saving " << _name << ": config\n";
+    return utils::write(_data.serialize(2), savePath());
+    return true;
 }
 
-bool Config::save()
+vector<string> Config::keys() const
 {
-    stringstream ss;
-    ss << "{\n";
-    for (auto pair : _data.pairs())
-    {
-        ss << "[";
-        ss << pair.first.serialize();
-        ss << "] = ";
-        ss << pair.second.serialize(true);
-        ss << ",\n";
-    }
-    ss << "}\n";
-
-    lout << "saving " << _name << ": config\n";
-    return utils::write(ss.str(), savePath());
-    return true;
+    return _data.keys();
 }

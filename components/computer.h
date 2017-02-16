@@ -14,7 +14,6 @@ public:
     int beep(lua_State* lua);
     int getDeviceInfo(lua_State* lua);
     int getProgramLocations(lua_State* lua);
-    int uptime(lua_State* lua);
     int pushSignal(lua_State* lua);
     int removeUser(lua_State* lua);
     int addUser(lua_State* lua);

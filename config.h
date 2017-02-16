@@ -7,13 +7,14 @@ class Config
 public:
     Config();
     
-    Value get(const Value& key) const;
-    bool set(const Value& key, const Value& value, bool bCreateOnly = false);
+    const Value& get(const string& key) const;
+    Value& get(const string& key);
+    bool set(const string& key, const Value& value, bool bCreateOnly = false);
 
     bool load(const string& path, const string& name);
-    bool save();
+    bool save() const;
     string name() const;
-    map<Value, Value>& pairs();
+    vector<string> keys() const;
 private:
     string savePath() const;
     Value _data;

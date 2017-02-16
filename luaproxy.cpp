@@ -1,5 +1,8 @@
 #include "luaproxy.h"
 #include "log.h"
+#include <iostream>
+
+map<string, int> calls;
 
 LuaProxy::LuaProxy(const string& name) :
     _name(name)
@@ -8,6 +11,13 @@ LuaProxy::LuaProxy(const string& name) :
 
 LuaProxy::~LuaProxy()
 {
+    if (calls.empty()) return;
+    std::cout << "lua static proxy calls\n";
+    for (auto p : calls)
+    {
+        std::cout << p.first << ": " << p.second << std::endl;
+    }
+    calls.clear();
 }
 
 const string& LuaProxy::name() const
@@ -39,6 +49,7 @@ int lua_proxy_static_caller(lua_State* lua)
     lua_pop(lua, 1);//-1
 
     LuaProxy* p = reinterpret_cast<LuaProxy*>(_this);
+    calls[p->name() + "." + methodName]++;
     return p->invoke(methodName, lua);
 }
 

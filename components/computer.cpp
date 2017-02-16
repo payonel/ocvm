@@ -16,7 +16,6 @@ Computer::Computer()
     add("beep", &Computer::beep);
     add("getDeviceInfo", &Computer::getDeviceInfo);
     add("getProgramLocations", &Computer::getProgramLocations);
-    add("uptime", &Computer::uptime);
     add("pushSignal", &Computer::pushSignal);
     add("removeUser", &Computer::removeUser);
     add("addUser", &Computer::addUser);
@@ -50,6 +49,12 @@ void Computer::injectCustomLua(lua_State* lua)
     lua_gettable(lua, -2); // push time on stack, pop key name, +1-1
     lua_remove(lua, -2); // pop os, -1
     lua_setfield(lua, -2, "realTime"); // computer.realTime = time, pops time, -1
+
+    stringstream ss;
+    ss << _start_time;
+    string code = "return computer.realTime() - " + ss.str() + " ";
+    luaL_loadstring(lua, code.c_str());
+    lua_setfield(lua, -2, "uptime");
 }
 
 int Computer::setArchitecture(lua_State* lua)
@@ -86,12 +91,6 @@ int Computer::getProgramLocations(lua_State* lua)
 {
     luaL_error(lua, "getProgramLocations not implemented");
     return 0;
-}
-
-// in seconds
-int Computer::uptime(lua_State* lua)
-{
-    return ValuePack::push(lua, now() - _start_time);
 }
 
 int Computer::pushSignal(lua_State* lua)

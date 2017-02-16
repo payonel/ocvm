@@ -93,7 +93,21 @@ Value::Value(lua_State* lua, int index)
                 // return key, value
                 Value value(lua, -1);
                 Value key(lua, -2);
-                set(key, value);
+                if (key._id == LUA_TSTRING)
+                {
+                    set(key._string, value);
+                }
+                else if (key._id == LUA_TNUMBER)
+                {
+                    set((int)key._number, value);
+                }
+                else
+                {
+                    string msg = "value conversion for table keys does not support: ";
+                    msg += key._type;
+                    luaL_error(lua, msg.c_str());
+                    return;
+                }
                 lua_pop(lua, 1); // only pop value, next retakes the key
             }
         break;
@@ -142,37 +156,56 @@ int Value::status() const
     return _thread_status;
 }
 
-// const Value& Value::select(const ValuePack& pack, size_t index)
-// {
-//     if (index >= pack.size())
-//     {
-//         return Value::nil;
-//     }
-
-//     return pack.at(index);
-// }
-
-const Value& Value::get(const Value& key) const
+const Value& Value::get(const string& key) const
 {
-    if (_table.find(key) == _table.end())
-    {
+    const auto& it = _stable.find(key);
+    if (it == _stable.end())
         return Value::nil;
-    }
     
-    return _table.at(key);
+    return it->second;
 }
 
-Value& Value::get(const Value& key)
+Value& Value::get(const string& key)
 {
-    if (_table.find(key) == _table.end())
-        _table[key] = Value::nil;
-    
-    return _table.at(key);
+    return _stable[key];
 }
 
-void Value::set(const Value& key, const Value& value)
+const Value& Value::get(int key) const
 {
-    _table[key] = value;
+    const auto& it = _ntable.find(key);
+    if (it == _ntable.end())
+        return Value::nil;
+    
+    return it->second;
+}
+
+Value& Value::get(int key)
+{
+    return _ntable[key];
+}
+
+void Value::set(const string& key, const Value& value)
+{
+    _stable[key] = value;
+}
+void Value::set(int key, const Value& value)
+{
+    _ntable[key] = value;
+}
+bool Value::contains(int key) const
+{
+    return _ntable.find(key) != _ntable.end();
+}
+bool Value::contains(const string& key) const
+{
+    return _stable.find(key) != _stable.end();
+}
+vector<string> Value::keys() const
+{
+    vector<string> result;
+    for (const auto& key : _stable)
+        result.push_back(key.first);
+    return result;
 }
 
 void Value::insert(const Value& value)
@@ -187,34 +220,15 @@ int Value::len() const
         return (int)_string.size();
     else if (type() == "table")
     {
-        map<int, bool> ids;
-        for (const auto& pair : _table)
+        int max = 0;
+        for (const auto& pair : _ntable)
         {
-            const auto& v = pair.first;
-            if (v.type() == "number")
-            {
-                ids[static_cast<int>(v.toNumber())] = true;
-            }
+            max = std::max(max, pair.first);
         }
-        for (size_t i = 0; i < ids.size(); i++)
-        {
-            if (ids.find((int)i + 1) == ids.end())
-                return (int)i;
-        }
-        return (int)ids.size();
+        return max;
     }
 
     return 0;
-}
-
-const map<Value, Value>& Value::pairs() const
-{
-    return _table;
-}
-
-map<Value, Value>& Value::pairs()
-{
-    return _table;
 }
 
 string Value::type() const
@@ -227,11 +241,11 @@ int Value::type_id() const
     return _id;
 }
 
-string Value::serialize(bool bSpacey) const
+string Value::serialize(int spacey) const
 {
     stringstream ss;
-    string sp = bSpacey ? "\n" : "";
-    string tab = bSpacey ? "\t" : "";
+    string sp = spacey > 0 ? "\n" : "";
+    string tab = spacey > 0 ? "\t" : "";
     if (_type == "string")
     {
         ss << "\"" + _string + "\"";
@@ -254,13 +268,29 @@ string Value::serialize(bool bSpacey) const
     }
     else if (_type == "table")
     {
-        ss << sp << "{";
-        for (const auto& pair : pairs())
+        ss << "{" << sp;
+        bool skipped_index = false;
+        int count = len();
+        for (int n = 1; n <= count; n++)
         {
-            ss << tab << "[";
-            ss << pair.first.serialize();
-            ss << "]=";
-            ss << pair.second.serialize();
+            ss << tab;
+            if (_ntable.find(n) == _ntable.end())
+            {
+                skipped_index = true;
+                continue;
+            }
+            if (skipped_index)
+                ss << "[" << n << "]=";
+            ss << _ntable.at(n).serialize(spacey - 1);
+            ss << "," << sp;
+        }
+        vector<string> ks = keys();
+        for (const string& key : ks)
+        {
+            ss << tab << "[\"";
+            ss << key;
+            ss << "\"]=";
+            ss << _stable.at(key).serialize(spacey - 1);
             ss << "," << sp;
         }
         ss << "}" << sp;
@@ -313,9 +343,15 @@ void Value::push(lua_State* lua) const
         break;
         case LUA_TTABLE:
             lua_newtable(lua);
-            for (const auto& pair : _table)
+            for (const auto& pair : _ntable)
             {
-                pair.first.push(lua);
+                Value(pair.first).push(lua);
+                pair.second.push(lua);
+                lua_settable(lua, -3); // pop, pop
+            }
+            for (const auto& pair : _stable)
+            {
+                Value(pair.first).push(lua);
                 pair.second.push(lua);
                 lua_settable(lua, -3); // pop, pop
             }
@@ -361,11 +397,6 @@ ValuePack::ValuePack(std::initializer_list<Value> values)
 {
     for (const auto& v : values)
         push_back(v);
-}
-
-ValuePack::ValuePack(lua_State* state) :
-    state(state)
-{
 }
 
 ostream& operator << (ostream& os, const ValuePack& pack)

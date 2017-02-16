@@ -71,14 +71,17 @@ bool Client::load(LuaEnv* lua)
 bool Client::createComponents()
 {
     // load components from config
-    for (auto& pair : _config->pairs())
+    for (const auto& section : _config->keys())
     {
-        string section = pair.first.toString();
+        auto& section_data = _config->get(section);
         if (section == "components")
         {
-            for (auto& component_config_pair : pair.second.pairs())
+            int count = section_data.len();
+            for (int index = 1; index <= count; index++)
             {
-                auto& component_config = component_config_pair.second;
+                if (!section_data.contains(index))
+                    continue;
+                Value& component_config = section_data.get(index);
                 string key = component_config.get(1).toString();
                 lout << key << ": ";
                 Component* pc = _host->create(key);
@@ -96,7 +99,7 @@ bool Client::createComponents()
         }
         else if (section == "system")
         {
-            SystemApi::get()->configure(pair.second);
+            SystemApi::get()->configure(section_data);
         }
     }
     return true;
