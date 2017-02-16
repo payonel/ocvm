@@ -14,6 +14,7 @@
 #include "apis/global_methods.h"
 #include "apis/system.h"
 #include "apis/unicode.h"
+#include "apis/sandbox_methods.h"
 
 #include <string>
 #include <functional>
@@ -26,6 +27,7 @@ Client::Client(Host* host, const string& env_path) :
     _host(host)
 {
     _config = new Config();
+    _globals = new SandboxMethods(this);
 
     add("list", &Client::component_list);
     add("invoke", &Client::component_invoke);
@@ -141,6 +143,7 @@ bool Client::loadLuaComponentApi(LuaEnv* lua)
 
     lua->newlib(pc); // computer component is also a global api
     lua->newlib(this);
+    lua->newlib(_globals);
     lua->newlib(OSApi::get());
     lua->newlib(GlobalMethods::get());
     lua->newlib(SystemApi::get());

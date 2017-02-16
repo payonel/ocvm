@@ -9,6 +9,7 @@ class Host;
 class LuaEnv;
 class Component;
 class Config;
+class SandboxMethods;
 
 class Client : public LuaProxy
 {
@@ -38,4 +39,5 @@ private:
     Config* _config;
     string _env_path;
     Host* _host;
+    SandboxMethods* _globals;
 };
