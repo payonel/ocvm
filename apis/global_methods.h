@@ -5,8 +5,8 @@ class GlobalMethods : public LuaProxy
 {
 public:
     static GlobalMethods* get();
-    ValuePack print(lua_State* lua);
-    ValuePack error(lua_State* lua);
+    int print(lua_State* lua);
+    int error(lua_State* lua);
 private:
     GlobalMethods();
 };

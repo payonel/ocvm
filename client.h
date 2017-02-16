@@ -24,11 +24,11 @@ public:
 
     // global api that is actually computer specific
     // invoke by address
-    ValuePack component_invoke(lua_State* lua);
-    ValuePack component_list(lua_State* lua);
-    ValuePack component_methods(lua_State* lua);
-    ValuePack component_type(lua_State* lua);
-    ValuePack component_slot(lua_State* lua);
+    int component_invoke(lua_State* lua);
+    int component_list(lua_State* lua);
+    int component_methods(lua_State* lua);
+    int component_type(lua_State* lua);
+    int component_slot(lua_State* lua);
 protected:
     bool createComponents();
     bool postInit();

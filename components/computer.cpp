@@ -52,95 +52,95 @@ void Computer::injectCustomLua(lua_State* lua)
     lua_setfield(lua, -2, "realTime"); // computer.realTime = time, pops time, -1
 }
 
-ValuePack Computer::setArchitecture(lua_State* lua)
+int Computer::setArchitecture(lua_State* lua)
 {
     luaL_error(lua, "setArchitecture not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::getArchitecture(lua_State* lua)
+int Computer::getArchitecture(lua_State* lua)
 {
     luaL_error(lua, "getArchitecture not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::getArchitectures(lua_State* lua)
+int Computer::getArchitectures(lua_State* lua)
 {
     luaL_error(lua, "getArchitectures not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::beep(lua_State* lua)
+int Computer::beep(lua_State* lua)
 {
     lout << "\a" << "BEEP\n";
-    return { };
+    return 0;
 }
 
-ValuePack Computer::getDeviceInfo(lua_State* lua)
+int Computer::getDeviceInfo(lua_State* lua)
 {
     luaL_error(lua, "getDeviceInfo not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::getProgramLocations(lua_State* lua)
+int Computer::getProgramLocations(lua_State* lua)
 {
     luaL_error(lua, "getProgramLocations not implemented");
-    return { };
+    return 0;
 }
 
 // in seconds
-ValuePack Computer::uptime(lua_State* lua)
+int Computer::uptime(lua_State* lua)
 {
-    return ValuePack({now() - _start_time});
+    return ValuePack::push(lua, now() - _start_time);
 }
 
-ValuePack Computer::pushSignal(lua_State* lua)
+int Computer::pushSignal(lua_State* lua)
 {
-    return { };
+    return 0;
 }
 
-ValuePack Computer::removeUser(lua_State* lua)
+int Computer::removeUser(lua_State* lua)
 {
     luaL_error(lua, "removeUser not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::addUser(lua_State* lua)
+int Computer::addUser(lua_State* lua)
 {
     luaL_error(lua, "addUser not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::isRobot(lua_State* lua)
+int Computer::isRobot(lua_State* lua)
 {
-    return { false };
+    return ValuePack::push(lua, false);
 }
 
-ValuePack Computer::tmpAddress(lua_State* lua)
+int Computer::tmpAddress(lua_State* lua)
 {
-    return { _tmp_address };
+    return ValuePack::push(lua, _tmp_address);
 }
 
-ValuePack Computer::freeMemory(lua_State* lua)
+int Computer::freeMemory(lua_State* lua)
 {
-    return { std::numeric_limits<double>::max() };
+    return ValuePack::push(lua, std::numeric_limits<double>::max());
 }
 
-ValuePack Computer::totalMemory(lua_State* lua)
+int Computer::totalMemory(lua_State* lua)
 {
     luaL_error(lua, "totalMemory not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::energy(lua_State* lua)
+int Computer::energy(lua_State* lua)
 {
     luaL_error(lua, "energy not implemented");
-    return { };
+    return 0;
 }
 
-ValuePack Computer::maxEnergy(lua_State* lua)
+int Computer::maxEnergy(lua_State* lua)
 {
     luaL_error(lua, "maxEnergy not implemented");
-    return { };
+    return 0;
 }
 

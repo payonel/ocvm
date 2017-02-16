@@ -13,16 +13,16 @@ public:
 
     bool set(int x, int y, const string& text);
 
-    ValuePack setResolution(lua_State* lua);
-    ValuePack bind(lua_State* lua);
-    ValuePack set(lua_State* lua);
-    ValuePack maxResolution(lua_State* lua);
-    ValuePack setBackground(lua_State* lua);
-    ValuePack getBackground(lua_State* lua);
-    ValuePack setForeground(lua_State* lua);
-    ValuePack getForeground(lua_State* lua);
-    ValuePack fill(lua_State* lua);
-    ValuePack copy(lua_State* lua);
+    int setResolution(lua_State* lua);
+    int bind(lua_State* lua);
+    int set(lua_State* lua);
+    int maxResolution(lua_State* lua);
+    int setBackground(lua_State* lua);
+    int getBackground(lua_State* lua);
+    int setForeground(lua_State* lua);
+    int getForeground(lua_State* lua);
+    int fill(lua_State* lua);
+    int copy(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     bool truncateWH(int x, int y, int* pWidth, int* pHeight) const;

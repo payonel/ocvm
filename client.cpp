@@ -194,22 +194,21 @@ Component* Client::component(const string& address) const
     return nullptr;
 }
 
-ValuePack Client::component_list(lua_State* lua)
+int Client::component_list(lua_State* lua)
 {
     string filter = Value::check(lua, 0, "string", "nil").Or("").toString();
     bool exact = Value::check(lua, 1, "boolean", "nil").toBool();
 
     Value result = Value::table();
-    auto matches = components(filter, exact);
-    for (auto* pc : matches)
+    for (auto* pc : components(filter, exact))
     {
         result.set(pc->address(), pc->type());
     }
 
-    return { result };
+    return ValuePack::push(lua, result);
 }
 
-ValuePack Client::component_invoke(lua_State* lua)
+int Client::component_invoke(lua_State* lua)
 {
     // for logging, this is called via LuaProxy because all method calls are dispatched there first
     // LuaProxy::invoke has already logged much about this call, but is waiting to log the result
@@ -222,20 +221,21 @@ ValuePack Client::component_invoke(lua_State* lua)
     
     Component* pc = component(address);
     if (!pc)
-        return { Value::nil, "no such component " + address };
+        return ValuePack::push(lua, Value::nil, "no such component " + address);
 
-    auto result = pc->invoke(methodName, lua);
-    result.insert(result.begin(), true);
-    return result;
+    int stacked = pc->invoke(methodName, lua);
+    lua_pushboolean(lua, true);
+    lua_insert(lua, 1);
+    return stacked + 1;
 }
 
-ValuePack Client::component_methods(lua_State* lua)
+int Client::component_methods(lua_State* lua)
 {
     string address = Value::check(lua, 0, "string").toString();
 
     Component* pc = component(address);
     if (!pc)
-        return { Value::nil, "no such component" };
+        return ValuePack::push(lua, Value::nil, "no such component");
 
     Value mpack = Value::table();
     Value info = Value::table();
@@ -244,27 +244,27 @@ ValuePack Client::component_methods(lua_State* lua)
     {
         mpack.set(std::get<0>(luaMethod), info);
     }
-    return { mpack };
+    return ValuePack::push(lua, mpack);
 }
 
-ValuePack Client::component_type(lua_State* lua)
+int Client::component_type(lua_State* lua)
 {
     string address = Value::check(lua, 0, "string").toString();
     Component* pc = component(address);
     if (!pc)
-        return { Value::nil, "no such component" };
+        return ValuePack::push(lua, Value::nil, "no such component");
 
-    return { pc->type() };
+    return ValuePack::push(lua, pc->type());
 }
 
-ValuePack Client::component_slot(lua_State* lua)
+int Client::component_slot(lua_State* lua)
 {
     string address = Value::check(lua, 0, "string").toString();
     Component* pc = component(address);
     if (!pc)
-        return { Value::nil, "no such component" };
+        return ValuePack::push(lua, Value::nil, "no such component");
 
-    return { pc->slot() };
+    return ValuePack::push(lua, pc->slot());
 }
 
 const string& Client::envPath() const

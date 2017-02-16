@@ -33,4 +33,4 @@ bin/%$(bin).o : %.cpp
 
 .PHONY : clean
 clean :
-	rm -fr bin ocvm
+	rm -fr bin ocvm ocvm-profiled

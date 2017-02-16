@@ -8,7 +8,7 @@
 using std::tuple;
 
 class LuaProxy;
-typedef ValuePack (LuaProxy::*ProxyMethod)(lua_State* lua);
+typedef int (LuaProxy::*ProxyMethod)(lua_State* lua);
 typedef tuple<string, bool, lua_CFunction> LuaMethod;
 
 class LuaProxy
@@ -23,14 +23,14 @@ public:
 
     const string& name() const;
     vector<LuaMethod> methods() const;
-    ValuePack invoke(const string& methodName, lua_State* lua);
+    int invoke(const string& methodName, lua_State* lua);
     virtual void injectCustomLua(lua_State* lua) {}
 protected:
     void name(const string& v);
 
     void add(const string& methodName, ProxyMethod method);
     template <typename Derived>
-    void add(const string& methodName, ValuePack (Derived::*derivedMethod)(lua_State* lua))
+    void add(const string& methodName, int (Derived::*derivedMethod)(lua_State* lua))
     {
         add(methodName, static_cast<ProxyMethod>(derivedMethod));
     }

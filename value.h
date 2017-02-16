@@ -83,6 +83,12 @@ struct ValuePack : public vector<Value>
         return 1;
     }
 
+    inline static int push(lua_State* lua, const Value& v)
+    {
+        v.push(lua);
+        return 1;
+    }
+
     template <typename T>
     inline static int push(lua_State* lua, const T& arg)
     {

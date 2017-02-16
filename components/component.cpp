@@ -82,12 +82,12 @@ Client* Component::client() const
     return _client;
 }
 
-ValuePack Component::get_address(lua_State*)
+int Component::get_address(lua_State* lua)
 {
-    return { address() };
+    return ValuePack::push(lua, address());
 }
 
-ValuePack Component::get_type(lua_State*)
+int Component::get_type(lua_State* lua)
 {
-    return { type() };
+    return ValuePack::push(lua, type());
 }

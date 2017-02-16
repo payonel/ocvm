@@ -24,29 +24,29 @@ bool Gpu::onInitialize(Value& config)
     return true;
 }
 
-ValuePack Gpu::bind(lua_State* lua)
+int Gpu::bind(lua_State* lua)
 {
     string address = Value::check(lua, 0, "string").toString();
     Component* pc = client()->component(address);
     if (!pc)
     {
-        return { Value::nil, "invalid address" };
+        return ValuePack::push(lua, Value::nil, "invalid address");
     }
     Screen* screen = dynamic_cast<Screen*>(pc);
     if (!screen)
     {
-        return { Value::nil, "not a screen" };
+        return ValuePack::push(lua, Value::nil, "not a screen");
     }
     _screen = screen;
 
-    return {};
+    return 0;
 }
 
-ValuePack Gpu::setResolution(lua_State* lua)
+int Gpu::setResolution(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
     int width = (int)Value::check(lua, 0, "number").toNumber();
     int height = (int)Value::check(lua, 1, "number").toNumber();
@@ -55,11 +55,11 @@ ValuePack Gpu::setResolution(lua_State* lua)
     if (width < 1 || width > std::get<0>(max) ||
         height < 1 || height > std::get<1>(max))
     {
-        return { false, "unsupported resolution" };
+        return ValuePack::push(lua, false, "unsupported resolution");
     }
 
     _screen->setResolution(width, height);
-    return { true };
+    return ValuePack::push(lua, true);
 }
 
 bool Gpu::set(int x, int y, const string& text)
@@ -75,74 +75,74 @@ bool Gpu::set(int x, int y, const string& text)
     return true;
 }
 
-ValuePack Gpu::set(lua_State* lua)
+int Gpu::set(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
     int x = Value::check(lua, 0, "number").toNumber();
     int y = Value::check(lua, 1, "number").toNumber();
     string text = Value::check(lua, 2, "string").toString();
 
-    return { set(x, y, text) };
+    return ValuePack::push(lua, set(x, y, text));
 }
 
-ValuePack Gpu::maxResolution(lua_State* lua)
+int Gpu::maxResolution(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
     tuple<int, int> res = _screen->framer()->maxResolution();
-    return {std::get<0>(res), std::get<1>(res)};
+    return ValuePack::push(lua, std::get<0>(res), std::get<1>(res));
 }
 
-ValuePack Gpu::setBackground(lua_State* lua)
+int Gpu::setBackground(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
     lout << "TODO, stub gpu method\n";
-    return {0, false};
+    return ValuePack::push(lua, 0, false);
 }
 
-ValuePack Gpu::getBackground(lua_State* lua)
+int Gpu::getBackground(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
     lout << "TODO, stub gpu method\n";
-    return {0, false};
+    return ValuePack::push(lua, 0, false);
 }
 
-ValuePack Gpu::setForeground(lua_State* lua)
+int Gpu::setForeground(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
     lout << "TODO, stub gpu method\n";
-    return {0, false};
+    return ValuePack::push(lua, 0, false);
 }
 
-ValuePack Gpu::getForeground(lua_State* lua)
+int Gpu::getForeground(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
     lout << "TODO, stub gpu method\n";
-    return {0, false};
+    return ValuePack::push(lua, 0, false);
 }
 
-ValuePack Gpu::fill(lua_State* lua)
+int Gpu::fill(lua_State* lua)
 {
     if (!_screen)
     {
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
     }
 
     int x = Value::check(lua, 0, "number").toNumber();
@@ -153,12 +153,12 @@ ValuePack Gpu::fill(lua_State* lua)
 
     if (!truncateWH(x, y, &width, &height))
     {
-        return { false, "out of bounds" };
+        return ValuePack::push(lua, false, "out of bounds");
     }
 
     if (UnicodeApi::wlen(text) != 1)
     {
-        return { false, "fill char not length 1" };
+        return ValuePack::push(lua, false, "fill char not length 1");
     }
 
     text.insert(0, width, text.at(0));
@@ -168,13 +168,13 @@ ValuePack Gpu::fill(lua_State* lua)
         set(x, row, text);
     }
 
-    return { true };
+    return ValuePack::push(lua, true);
 }
 
-ValuePack Gpu::copy(lua_State* lua)
+int Gpu::copy(lua_State* lua)
 {
     if (!_screen)
-        return { false, "no screen" };
+        return ValuePack::push(lua, false, "no screen");
 
     int x = Value::check(lua, 0, "number").toNumber();
     int y = Value::check(lua, 1, "number").toNumber();
@@ -185,7 +185,7 @@ ValuePack Gpu::copy(lua_State* lua)
 
     if (!truncateWH(x, y, &width, &height))
     {
-        return { false, "out of bounds" };
+        return ValuePack::push(lua, false, "out of bounds");
     }
 
     int twidth = width;
@@ -193,11 +193,11 @@ ValuePack Gpu::copy(lua_State* lua)
 
     if (!truncateWH(tx, ty, &twidth, &theight))
     {
-        return { false, "out of bounds" };
+        return ValuePack::push(lua, false, "out of bounds");
     }
 
     lout << "TODO, stub gpu method\n";
-    return { false, "not implemented" };
+    return ValuePack::push(lua, false, "not implemented");
 }
 
 bool Gpu::truncateWH(int x, int y, int* pWidth, int* pHeight) const

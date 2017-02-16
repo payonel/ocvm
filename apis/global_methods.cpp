@@ -14,7 +14,7 @@ GlobalMethods* GlobalMethods::get()
     return &it;
 }
 
-ValuePack GlobalMethods::print(lua_State* lua)
+int GlobalMethods::print(lua_State* lua)
 {
     bool bFirst = true;
     int top = lua_gettop(lua);
@@ -26,15 +26,15 @@ ValuePack GlobalMethods::print(lua_State* lua)
     }
 
     lout << endl;
-    return { };
+    return 0;
 }
 
-ValuePack GlobalMethods::error(lua_State* lua)
+int GlobalMethods::error(lua_State* lua)
 {
     string msg = Value(lua, 1).toString();
     string stack = LuaEnv::stack(lua);
     lout << "[--vm--] [ERROR] " << msg << endl;
     lout << stack << endl;
     luaL_error(lua, stack.c_str());
-    return { };
+    return 0;
 }

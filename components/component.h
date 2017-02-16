@@ -29,6 +29,6 @@ private:
     int _slot;
     Client* _client;
 
-    ValuePack get_address(lua_State*);
-    ValuePack get_type(lua_State*);
+    int get_address(lua_State* lua);
+    int get_type(lua_State* lua);
 };

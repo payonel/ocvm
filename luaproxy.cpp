@@ -39,18 +39,7 @@ int lua_proxy_static_caller(lua_State* lua)
     lua_pop(lua, 1);//-1
 
     LuaProxy* p = reinterpret_cast<LuaProxy*>(_this);
-    auto pack = p->invoke(methodName, lua);
-
-    // settop(0) here to save memory but it is NOT necessary
-    lua_settop(lua, 0);
-
-    // push pack result on stack
-    for (size_t index = 0; index < pack.size(); index++)
-    {
-        pack.at(index).push(lua);
-    }
-
-    return (int)pack.size();
+    return p->invoke(methodName, lua);
 }
 
 vector<LuaMethod> LuaProxy::methods() const
@@ -77,7 +66,7 @@ void LuaProxy::cadd(const string& methodName, lua_CFunction cfunction)
     _cmethods[methodName] = cfunction;
 }
 
-ValuePack LuaProxy::invoke(const string& methodName, lua_State* lua)
+int LuaProxy::invoke(const string& methodName, lua_State* lua)
 {
     bool verbose = !(_name == "computer" && (methodName == "realTime" || methodName == "uptime"));
     if (verbose)
