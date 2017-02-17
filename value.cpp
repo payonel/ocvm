@@ -438,3 +438,12 @@ string Value::stack(lua_State* state)
     lua_pop(state, 1);
     return stacktrace;
 }
+
+int ValuePack::push(lua_State* lua) const
+{
+    for (const auto& v : *this)
+    {
+        v.push(lua);
+    }
+    return (int)size();
+}

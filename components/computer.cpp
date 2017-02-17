@@ -118,13 +118,11 @@ int Computer::pushSignal(lua_State* lua)
 
 int Computer::removeUser(lua_State* lua)
 {
-    luaL_error(lua, "removeUser not implemented");
     return 0;
 }
 
 int Computer::addUser(lua_State* lua)
 {
-    luaL_error(lua, "addUser not implemented");
     return 0;
 }
 
@@ -145,20 +143,17 @@ int Computer::freeMemory(lua_State* lua)
 
 int Computer::totalMemory(lua_State* lua)
 {
-    luaL_error(lua, "totalMemory not implemented");
-    return 0;
+    return ValuePack::push(lua, std::numeric_limits<double>::max());
 }
 
 int Computer::energy(lua_State* lua)
 {
-    luaL_error(lua, "energy not implemented");
-    return 0;
+    return ValuePack::push(lua, std::numeric_limits<double>::max());
 }
 
 int Computer::maxEnergy(lua_State* lua)
 {
-    luaL_error(lua, "maxEnergy not implemented");
-    return 0;
+    return ValuePack::push(lua, std::numeric_limits<double>::max());
 }
 
 bool Computer::run()
@@ -176,8 +171,17 @@ bool Computer::run()
     int env_status = lua_status(_state);
     bool bFirstTimeRun = env_status == LUA_OK; // FIRST time run, all other resumes come from yield
     int nargs = 0;
-    //machine signals
-    // if signal, nargs = 1
+    if (!bFirstTimeRun)
+    {
+        if (!_signals.empty())
+        {
+            nargs = _signals.front().push(_state);
+            _signals.pop();
+        }
+        else if (_standby > now())
+        {
+        }
+    }
     //sleep
     // else if timeout, nargs = 0
     // else don't resume
@@ -192,6 +196,7 @@ bool Computer::run()
 bool Computer::resume(int nargs)
 {
     //lout << "lua env resume: " << nargs << endl;
+    _standby = 0;
     int status_id = lua_resume(_state, _machine, nargs);
     /*
         Types of results
@@ -235,7 +240,7 @@ bool Computer::resume(int nargs)
                     return resume(top);
                 break;
                 case LUA_TNUMBER:
-                    _standby = std::min(0.0, result.toNumber()) + Computer::now();
+                    _standby = std::max(0.0, result.toNumber()) + now();
                 break;
                 case LUA_TBOOLEAN:
                     // shutdown or reboot

@@ -83,6 +83,8 @@ struct ValuePack : public vector<Value>
 
     static ValuePack pack(lua_State* lua);
 
+    int push(lua_State* lua) const;
+
     inline static int push(lua_State* lua, const char* arg)
     {
         Value(arg).push(lua);
