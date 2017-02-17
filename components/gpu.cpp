@@ -19,6 +19,11 @@ Gpu::Gpu()
     add("copy", &Gpu::copy);
 }
 
+Gpu::~Gpu()
+{
+    // std::cerr << _buffer.size() << std::endl;
+}
+
 bool Gpu::onInitialize(Value& config)
 {
     return true;
@@ -46,7 +51,7 @@ int Gpu::setResolution(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
     int width = (int)Value::check(lua, 1, "number").toNumber();
     int height = (int)Value::check(lua, 2, "number").toNumber();
@@ -55,7 +60,7 @@ int Gpu::setResolution(lua_State* lua)
     if (width < 1 || width > std::get<0>(max) ||
         height < 1 || height > std::get<1>(max))
     {
-        return ValuePack::push(lua, false, "unsupported resolution");
+        return ValuePack::push(lua, Value::nil, "unsupported resolution");
     }
 
     _screen->setResolution(width, height);
@@ -69,8 +74,23 @@ bool Gpu::set(int x, int y, const string& text)
         return false;
     }
 
+    auto rez = _screen->getResolution();
+    int width_available = std::get<0>(rez) - x + 1;
+
+    string fit = UnicodeApi::sub(text, 1, width_available);
+    while (_buffer.size() < static_cast<size_t>(y))
+        _buffer.push_back("");
+
+    string line = _buffer.at(y - 1);
+    string newline = UnicodeApi::sub(line, 1, x - 1);
+    auto missing = std::max(static_cast<size_t>(0), x - UnicodeApi::wlen(newline) - 1);
+    newline.insert(0, missing, ' ');
+    newline = newline + fit;
+    newline += UnicodeApi::sub(line, UnicodeApi::wlen(newline) + 1, string::npos);
+    _buffer.at(y - 1) = newline;
+
     _screen->move(x, y);
-    _screen->write(text);
+    _screen->write(fit);
 
     return true;
 }
@@ -79,7 +99,7 @@ int Gpu::set(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
@@ -92,7 +112,7 @@ int Gpu::maxResolution(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
     tuple<int, int> res = _screen->framer()->maxResolution();
     return ValuePack::push(lua, std::get<0>(res), std::get<1>(res));
@@ -102,47 +122,51 @@ int Gpu::setBackground(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
-    lout << "TODO, stub gpu method\n";
-    return ValuePack::push(lua, 0, false);
+    int obg = _bg;
+    bool obgp = _bgp;
+    _bg = Value::check(lua, 1, "number").toNumber();
+    _bgp = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
+    return ValuePack::push(lua, obg, obgp);
 }
 
 int Gpu::getBackground(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
-    lout << "TODO, stub gpu method\n";
-    return ValuePack::push(lua, 0, false);
+    return ValuePack::push(lua, _bg, _bgp);
 }
 
 int Gpu::setForeground(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
-    lout << "TODO, stub gpu method\n";
-    return ValuePack::push(lua, 0, false);
+    int ofg = _fg;
+    bool ofgp = _fgp;
+    _fg = Value::check(lua, 1, "number").toNumber();
+    _fgp = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
+    return ValuePack::push(lua, ofg, ofgp);
 }
 
 int Gpu::getForeground(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
-    lout << "TODO, stub gpu method\n";
-    return ValuePack::push(lua, 0, false);
+    return ValuePack::push(lua, _fg, _fgp);
 }
 
 int Gpu::fill(lua_State* lua)
 {
     if (!_screen)
     {
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
     }
 
     int x = Value::check(lua, 1, "number").toNumber();
@@ -153,15 +177,15 @@ int Gpu::fill(lua_State* lua)
 
     if (!truncateWH(x, y, &width, &height))
     {
-        return ValuePack::push(lua, false, "out of bounds");
+        return ValuePack::push(lua, Value::nil, "out of bounds");
     }
 
     if (UnicodeApi::wlen(text) != 1)
     {
-        return ValuePack::push(lua, false, "fill char not length 1");
+        return ValuePack::push(lua, Value::nil, "fill char not length 1");
     }
 
-    text.insert(0, width, text.at(0));
+    text.insert(0, width - 1, text.at(0));
 
     for (int row = y; row <= height; row++)
     {
@@ -174,7 +198,7 @@ int Gpu::fill(lua_State* lua)
 int Gpu::copy(lua_State* lua)
 {
     if (!_screen)
-        return ValuePack::push(lua, false, "no screen");
+        return ValuePack::push(lua, Value::nil, "no screen");
 
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
@@ -185,7 +209,7 @@ int Gpu::copy(lua_State* lua)
 
     if (!truncateWH(x, y, &width, &height))
     {
-        return ValuePack::push(lua, false, "out of bounds");
+        return ValuePack::push(lua, Value::nil, "out of bounds");
     }
 
     int twidth = width;
@@ -193,11 +217,11 @@ int Gpu::copy(lua_State* lua)
 
     if (!truncateWH(tx, ty, &twidth, &theight))
     {
-        return ValuePack::push(lua, false, "out of bounds");
+        return ValuePack::push(lua, Value::nil, "out of bounds");
     }
 
     lout << "TODO, stub gpu method\n";
-    return ValuePack::push(lua, false, "not implemented");
+    return ValuePack::push(lua, Value::nil, "not implemented");
 }
 
 bool Gpu::truncateWH(int x, int y, int* pWidth, int* pHeight) const
@@ -214,12 +238,12 @@ bool Gpu::truncateWH(int x, int y, int* pWidth, int* pHeight) const
     // truncate request, maybe this isn't true to oc behavior
 
     if (*pWidth < 1)
-        *pWidth = 1;
+        *pWidth = 0;
     if (*pHeight < 1)
-        *pHeight = 1;
+        *pHeight = 0;
 
-    *pWidth = std::min(*pWidth, swidth - x);
-    *pHeight = std::min(*pHeight, sheight - y);
+    *pWidth = std::min(*pWidth, swidth - x + 1);
+    *pHeight = std::min(*pHeight, sheight - y + 1);
 
     return true;
 }

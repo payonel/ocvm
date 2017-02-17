@@ -16,20 +16,17 @@ SystemApi* SystemApi::get()
 
 int SystemApi::allowGC(lua_State* lua)
 {
-    Value(get()->_gc).push(lua);
-    return 1;
+    return ValuePack::push(lua, get()->_gc);
 }
 
 int SystemApi::timeout(lua_State* lua)
 {
-    Value(get()->_timeout).push(lua);
-    return 1;
+    return ValuePack::push(lua, get()->_timeout);
 }
 
 int SystemApi::allowBytecode(lua_State* lua)
 {
-    Value(get()->_bytecode).push(lua);
-    return 1;
+    return ValuePack::push(lua, get()->_bytecode);
 }
 
 ////////

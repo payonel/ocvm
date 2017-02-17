@@ -16,7 +16,7 @@ public:
     void close();
     void setTmpAddress(const string& addr);
 
-    static int64_t now();
+    static double now();
 
     int setArchitecture(lua_State* lua);
     int getArchitecture(lua_State* lua);
@@ -34,17 +34,20 @@ public:
     int totalMemory(lua_State* lua);
     int energy(lua_State* lua);
     int maxEnergy(lua_State* lua);
+    int realTime(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     bool resume(int nargs);
+    double trace(lua_State* lua);
 private:
     void injectCustomLua();
 
-    int64_t _start_time;
+    double _start_time;
     string _tmp_address;
     lua_State* _state = nullptr;
     lua_State* _machine = nullptr;
     double _standby = 0;
+    double _nexttrace = 0;
 
     queue<ValuePack> _signals;
 };

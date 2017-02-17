@@ -10,6 +10,7 @@ class Gpu : public Component
 {
 public:
     Gpu();
+    ~Gpu();
 
     bool set(int x, int y, const string& text);
 
@@ -27,5 +28,10 @@ protected:
     bool onInitialize(Value& config) override;
     bool truncateWH(int x, int y, int* pWidth, int* pHeight) const;
 private:
-    Screen* _screen;
+    Screen* _screen = nullptr;
+    vector<string> _buffer;
+    int _fg = 0;
+    bool _fgp = false;
+    int _bg = 0;
+    bool _bgp = false;
 };

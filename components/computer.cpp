@@ -27,6 +27,7 @@ Computer::Computer()
     add("totalMemory", &Computer::totalMemory);
     add("energy", &Computer::energy);
     add("maxEnergy", &Computer::maxEnergy);
+    add("realTime", &Computer::realTime);
 }
 
 Computer::~Computer()
@@ -46,9 +47,9 @@ bool Computer::onInitialize(Value& config)
     return _state != nullptr;
 }
 
-int64_t Computer::now()
+double Computer::now()
 {
-    return duration_cast<seconds>(system_clock::now().time_since_epoch()).count();
+    return duration_cast<duration<double>>(system_clock::now().time_since_epoch()).count();
 }
 
 void Computer::setTmpAddress(const string& addr)
@@ -56,21 +57,38 @@ void Computer::setTmpAddress(const string& addr)
     _tmp_address = addr;
 }
 
+double Computer::trace(lua_State* lua)
+{
+    double thenow = now();
+    if (_nexttrace < thenow)
+    {
+        _nexttrace = thenow + 1;
+        //std::cerr << Value::stack(lua) << endl;
+    }
+    return thenow;
+}
+
+int Computer::realTime(lua_State* lua)
+{
+    return ValuePack::push(lua, trace(lua));
+}
+
 void Computer::injectCustomLua()
 {
     lua_getglobal(_state, name().c_str()); // +1
 
-    lua_getglobal(_state, "os"); // +1
-    lua_pushstring(_state, "time"); // push key name, +1
-    lua_gettable(_state, -2); // push time on stack, pop key name, +1-1
-    lua_remove(_state, -2); // pop os, -1
-    lua_setfield(_state, -2, "realTime"); // computer.realTime = time, pops time, -1
+    //stringstream ss;
+    //ss << _start_time;
+    //string startTimeText = ss.str();
+    //string code = "return " + startTimeText + " + os.clock()";
+    //luaL_loadstring(_state, code.c_str()); // +1
+    //lua_setfield(_state, -2, "realTime"); // -1
 
-    stringstream ss;
-    ss << _start_time;
-    string code = "return computer.realTime() - " + ss.str() + " ";
-    luaL_loadstring(_state, code.c_str()); // +1
-    lua_setfield(_state, -2, "uptime"); // -1
+    lua_getglobal(_state, "os"); // +1
+    lua_pushstring(_state, "clock"); //+1
+    lua_gettable(_state, -2); // push clock on stack, pop key name, +1-1
+    lua_remove(_state, -2); // pop os, -1
+    lua_setfield(_state, -2, "uptime"); // computer.uptime = os.clock, pops clock, -1
 
     lua_pop(_state, 1); // -1
 }
@@ -181,14 +199,29 @@ bool Computer::run()
             nargs = _signals.front().push(_state);
             _signals.pop();
         }
-        else if (_standby < now()) // return true without resume to return to the framer update
+        else if (_standby > now()) // return true without resume to return to the framer update
         {
+            lua_Debug ar;
+            lua_getstack(_state, 1, &ar);
+            for (int n = 1; n < 10; n++)
+            {
+                const char* cstrVarName = lua_getlocal(_state, &ar, n);
+                if (!cstrVarName)
+                {
+                    break;
+                }
+                string varname = cstrVarName;
+                if (varname == "co")
+                {
+                    trace(lua_tothread(_state, -1));
+                }
+                lua_pop(_state, 1);
+                if (varname == "co")
+                    break;
+            }
+
             return true;
         }
-    }
-    else
-    {
-        _standby = now();
     }
 
     bool result = resume(nargs);
@@ -302,10 +335,18 @@ bool Computer::newlib(LuaProxy* proxy)
     string libname = proxy->name();
 
     bool bGlobalMethods = libname.empty();
+    bool bCreated = false; // no need to set if exists
 
     if (!bGlobalMethods)
     {
-        lua_newtable(_state); // create lib tbl
+        // check if it exists already
+        lua_getglobal(_state, libname.c_str());
+        if (lua_type(_state, -1) == LUA_TNIL)
+        {
+            bCreated = true;
+            lua_pop(_state, 1);
+            lua_newtable(_state); // create lib tbl
+        }
     }
 
     for (const auto& tup : proxy->methods())
@@ -338,7 +379,7 @@ bool Computer::newlib(LuaProxy* proxy)
         }
     }
 
-    if (!bGlobalMethods)
+    if (!bGlobalMethods && bCreated)
     {
         lua_setglobal(_state, libname.c_str()); // _G[libname] = tbl, pops tbl
     }
