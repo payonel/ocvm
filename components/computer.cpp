@@ -4,6 +4,7 @@
 
 #include <lua.hpp>
 #include <iostream>
+#include <thread>
 #include <chrono>
 using namespace std::chrono;
 
@@ -173,18 +174,22 @@ bool Computer::run()
     int nargs = 0;
     if (!bFirstTimeRun)
     {
+        // kbcode signals?
+        // modem message signals?
         if (!_signals.empty())
         {
             nargs = _signals.front().push(_state);
             _signals.pop();
         }
-        else if (_standby > now())
+        else if (_standby < now()) // return true without resume to return to the framer update
         {
+            return true;
         }
     }
     //sleep
     // else if timeout, nargs = 0
     // else don't resume
+    _standby = now();
     bool result = resume(nargs);
     if (bFirstTimeRun)
     {
@@ -196,7 +201,6 @@ bool Computer::run()
 bool Computer::resume(int nargs)
 {
     //lout << "lua env resume: " << nargs << endl;
-    _standby = 0;
     int status_id = lua_resume(_state, _machine, nargs);
     /*
         Types of results

@@ -1,4 +1,4 @@
-flags=-g --std=c++11 -Wl,--no-as-needed -Wall
+flags=-g --std=c++14 -Wl,--no-as-needed -Wall
 
 ifeq ($(prof),)
 includes=-I. -I/usr/include/lua5.2/
