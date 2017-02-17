@@ -186,10 +186,11 @@ bool Computer::run()
             return true;
         }
     }
-    //sleep
-    // else if timeout, nargs = 0
-    // else don't resume
-    _standby = now();
+    else
+    {
+        _standby = now();
+    }
+
     bool result = resume(nargs);
     if (bFirstTimeRun)
     {
