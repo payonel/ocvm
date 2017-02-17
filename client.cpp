@@ -6,7 +6,6 @@
 
 #include "config.h"
 #include "log.h"
-#include "luaenv.h"
 #include "utils.h"
 #include <lua.hpp>
 
@@ -49,7 +48,7 @@ Host* Client::host() const
     return _host;
 }
 
-bool Client::load(LuaEnv* lua)
+bool Client::load()
 {
     if (!_config->load(envPath(), "client"))
     {
@@ -65,7 +64,13 @@ bool Client::load(LuaEnv* lua)
         return false;
     lout << "components post initialized\n";
 
-    return loadLuaComponentApi(lua);
+    if (!loadLuaComponentApi())
+    {
+        lout << "failed to load lua component api\n";
+        return false;
+    }
+
+    return _computer->load(host()->machinePath());
 }
 
 bool Client::createComponents()
@@ -108,49 +113,34 @@ bool Client::createComponents()
 bool Client::postInit()
 {
     // find fs with no source content, that is the tmp fs
-    Component* tmpfs = nullptr;
-    Computer* pComputer = nullptr;
     for (auto* pc : components())
     {
-        if (!tmpfs)
+        Filesystem* fs = dynamic_cast<Filesystem*>(pc);
+        if (fs && fs->src() == "")
         {
-            Filesystem* fs = dynamic_cast<Filesystem*>(pc);
-            if (fs && fs->src() == "")
-            {
-                tmpfs = fs;
-            }
-        }
-        if (!pComputer)
-        {
-            pComputer = dynamic_cast<Computer*>(pc);
-        }
-        if (pComputer && tmpfs)
-        {
-            pComputer->setTmpAddress(tmpfs->address());
-            break;
+            _computer->setTmpAddress(fs->address());
+            return true;
         }
     }
-    return true;
+    lout << "missing tmpfs\n";
+    return false;
 }
 
-bool Client::loadLuaComponentApi(LuaEnv* lua)
+bool Client::loadLuaComponentApi()
 {
     // computer required
-    auto vec = components("computer", true);
-    if (vec.size() != 1)
+    if (!_computer)
     {
         lout << "emulation requires exactly one computer component\n";
         return false;
     }
-    auto* pc = vec.at(0);
 
-    lua->newlib(pc); // computer component is also a global api
-    lua->newlib(this);
-    lua->newlib(_globals);
-    lua->newlib(OSApi::get());
-    lua->newlib(GlobalMethods::get());
-    lua->newlib(SystemApi::get());
-    lua->newlib(UnicodeApi::get());
+    _computer->newlib(this);
+    _computer->newlib(_globals);
+    _computer->newlib(OSApi::get());
+    _computer->newlib(GlobalMethods::get());
+    _computer->newlib(SystemApi::get());
+    _computer->newlib(UnicodeApi::get());
     return true;
 }
 
@@ -278,3 +268,17 @@ const string& Client::envPath() const
     return _env_path;
 }
 
+void Client::computer(Computer* c)
+{
+    _computer = c;
+}
+
+Computer* Client::computer() const
+{
+    return _computer;
+}
+
+bool Client::run()
+{
+    return _computer->run();
+}

@@ -1,6 +1,5 @@
 #include "global_methods.h"
 #include "log.h"
-#include "luaenv.h"
 
 GlobalMethods::GlobalMethods() : LuaProxy("")
 {
@@ -32,7 +31,7 @@ int GlobalMethods::print(lua_State* lua)
 int GlobalMethods::error(lua_State* lua)
 {
     string msg = Value(lua, 1).toString();
-    string stack = LuaEnv::stack(lua);
+    string stack = Value::stack(lua);
     lout << "[--vm--] [ERROR] " << msg << endl;
     lout << stack << endl;
     luaL_error(lua, stack.c_str());

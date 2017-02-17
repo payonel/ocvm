@@ -8,6 +8,15 @@ class Computer : public Component
 {
 public:
     Computer();
+    ~Computer();
+
+    bool run();
+    bool load(const string& machinePath);
+    bool newlib(LuaProxy* proxy);
+    void close();
+    void setTmpAddress(const string& addr);
+
+    static int64_t now();
 
     int setArchitecture(lua_State* lua);
     int getArchitecture(lua_State* lua);
@@ -25,15 +34,17 @@ public:
     int totalMemory(lua_State* lua);
     int energy(lua_State* lua);
     int maxEnergy(lua_State* lua);
-
-    void setTmpAddress(const string& addr);
-    void injectCustomLua(lua_State* lua) override;
-    static int64_t now();
 protected:
     bool onInitialize(Value& config) override;
+    bool resume(int nargs);
 private:
+    void injectCustomLua();
+
     int64_t _start_time;
     string _tmp_address;
+    lua_State* _state = nullptr;
+    lua_State* _machine = nullptr;
+    double _standby = 0;
 
     queue<ValuePack> _signals;
 };

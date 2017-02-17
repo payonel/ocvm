@@ -6,9 +6,9 @@
 #include <vector>
 
 class Host;
-class LuaEnv;
-class Component;
 class Config;
+class Component;
+class Computer;
 class SandboxMethods;
 
 class Client : public LuaProxy
@@ -16,12 +16,15 @@ class Client : public LuaProxy
 public:
     Client(Host*, const string& env_path);
     ~Client();
-    bool load(LuaEnv*);
+    bool load();
     void close();
     vector<Component*> components(string filter = "", bool exact = false) const;
     Component* component(const string& address) const;
     const string& envPath() const;
     Host* host() const;
+    void computer(Computer*);
+    Computer* computer() const;
+    bool run();
 
     // global api that is actually computer specific
     // invoke by address
@@ -33,9 +36,10 @@ public:
 protected:
     bool createComponents();
     bool postInit();
-    bool loadLuaComponentApi(LuaEnv*);
+    bool loadLuaComponentApi();
 private:
     vector<Component*> _components;
+    Computer* _computer;
     Config* _config;
     string _env_path;
     Host* _host;

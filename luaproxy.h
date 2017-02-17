@@ -24,7 +24,6 @@ public:
     const string& name() const;
     vector<LuaMethod> methods() const;
     int invoke(const string& methodName, lua_State* lua);
-    virtual void injectCustomLua(lua_State* lua) {}
 protected:
     void name(const string& v);
 

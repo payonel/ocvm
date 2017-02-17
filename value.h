@@ -27,6 +27,7 @@ public:
     Value(lua_State*, int);
     Value();
 
+    static string stack(lua_State* state);
     static Value table();
     static const Value nil;
 

@@ -3,7 +3,6 @@
 #include "client.h"
 #include "framing/frame_factory.h"
 #include "framing/frame.h"
-#include "luaenv.h"
 #include "log.h"
 
 using std::cerr;
@@ -38,21 +37,14 @@ int main(int argc, char** argv)
     Client client(&host, client_env_path);
 
     // init lua environment
-    LuaEnv lenv;
-    if (!client.load(&lenv))
-    {
-        return 1;
-    }
-
-    // run lua machine
-    if (!lenv.load(host.machinePath()))
+    if (!client.load())
     {
         return 1;
     }
 
     while (framer->update())
     {
-        if (!lenv.run())
+        if (!client.run())
         {
             break;
         }

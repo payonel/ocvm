@@ -430,3 +430,11 @@ ValuePack ValuePack::pack(lua_State* lua)
     }
     return result;
 }
+
+string Value::stack(lua_State* state)
+{
+    luaL_traceback(state, state, NULL, 1);
+    string stacktrace = string(lua_tostring(state, -1));
+    lua_pop(state, 1);
+    return stacktrace;
+}
