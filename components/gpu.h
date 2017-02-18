@@ -24,6 +24,9 @@ public:
     int getForeground(lua_State* lua);
     int fill(lua_State* lua);
     int copy(lua_State* lua);
+    int getDepth(lua_State* lua);
+    int getViewport(lua_State* lua);
+    int getScreen(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     bool truncateWH(int x, int y, int* pWidth, int* pHeight) const;

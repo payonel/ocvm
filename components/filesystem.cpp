@@ -8,29 +8,33 @@ Filesystem::Filesystem()
 {
     add("open", &Filesystem::open);
     add("read", &Filesystem::read);
+    add("write", &Filesystem::write);
     add("close", &Filesystem::close);
     add("getLabel", &Filesystem::getLabel);
     add("list", &Filesystem::list);
     add("isDirectory", &Filesystem::isDirectory);
     add("exists", &Filesystem::exists);
+    add("isReadOnly", &Filesystem::isReadOnly);
 }
 
 bool Filesystem::onInitialize(Value& config)
 {
     if (!utils::exists(path()))
     {
-        Value& vloot = config.get(3);
-        if (vloot.type() == "string")
+        Value vloot = config.get(3).Or("");
+        if (vloot.type() != "string")
         {
-            string loot = vloot.toString();
-            if (!loot.empty())
+            lout << "invalid filesystem configuration: loot path not nil or string\n";
+            return false;
+        }
+        utils::mkdir(path());
+        string loot = vloot.toString();
+        if (!loot.empty())
+        {
+            if (!utils::copy(loot, path()))
             {
-                utils::mkdir(path());
-                if (!utils::copy(loot, path()))
-                {
-                    lout << "filesystem failed to initialized, the source loot does not exist\n";
-                    return false;
-                }
+                lout << "filesystem failed to initialized, the source loot does not exist\n";
+                return false;
             }
         }
     }
@@ -200,6 +204,28 @@ int Filesystem::read(lua_State* lua)
     return ValuePack::push(lua, buffer);
 }
 
+int Filesystem::write(lua_State* lua)
+{
+    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
+    string data = Value::check(lua, 2, "string").toString();
+
+    const auto& it = _handles.find(index);
+    if (it == _handles.end())
+    {
+        return ValuePack::push(lua, Value::nil, "bad file handle");
+    }
+
+    fstream* fs = it->second;
+    if (!fs->good())
+    {
+        return ValuePack::push(lua, Value::nil, "bad file handle");
+    }
+
+    (*fs) << data;
+
+    return ValuePack::push(lua, data.size());
+}
+
 int Filesystem::close(lua_State* lua)
 {
     int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
@@ -244,4 +270,9 @@ int Filesystem::isDirectory(lua_State* lua)
 int Filesystem::exists(lua_State* lua)
 {
     return ValuePack::push(lua, utils::exists(path() + clean(Value::check(lua, 1, "string").toString(), true, true)));
+}
+
+int Filesystem::isReadOnly(lua_State* lua)
+{
+    return ValuePack::push(lua, false);
 }

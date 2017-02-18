@@ -17,6 +17,9 @@ Gpu::Gpu()
     add("setForeground", &Gpu::setForeground);
     add("fill", &Gpu::fill);
     add("copy", &Gpu::copy);
+    add("getDepth", &Gpu::getDepth);
+    add("getViewport", &Gpu::getViewport);
+    add("getScreen", &Gpu::getScreen);
 }
 
 Gpu::~Gpu()
@@ -222,6 +225,23 @@ int Gpu::copy(lua_State* lua)
 
     lout << "TODO, stub gpu method\n";
     return ValuePack::push(lua, Value::nil, "not implemented");
+}
+
+int Gpu::getDepth(lua_State* lua)
+{
+    return ValuePack::push(lua, 8);
+}
+
+int Gpu::getViewport(lua_State* lua)
+{
+    return maxResolution(lua);
+}
+
+int Gpu::getScreen(lua_State* lua)
+{
+    if (!_screen)
+        return ValuePack::push(lua, Value::nil, "no screen");
+    return ValuePack::push(lua, _screen->address());
 }
 
 bool Gpu::truncateWH(int x, int y, int* pWidth, int* pHeight) const

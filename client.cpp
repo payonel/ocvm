@@ -113,15 +113,26 @@ bool Client::createComponents()
 bool Client::postInit()
 {
     // find fs with no source content, that is the tmp fs
+    Filesystem* tmpfs = nullptr;
     for (auto* pc : components())
     {
-        Filesystem* fs = dynamic_cast<Filesystem*>(pc);
-        if (fs && fs->src() == "")
+        if (!tmpfs)
         {
-            _computer->setTmpAddress(fs->address());
-            return true;
+            auto pfs = dynamic_cast<Filesystem*>(pc);
+            if (pfs && pfs->src() == "")
+            {
+                tmpfs = pfs;
+            }
         }
+
+        // _computer->pushSignal(ValuePack({"component_added", pc->address(), pc->type()}));
     }
+    if (tmpfs)
+    {
+        _computer->setTmpAddress(tmpfs->address());
+        return true;
+    }
+
     lout << "missing tmpfs\n";
     return false;
 }

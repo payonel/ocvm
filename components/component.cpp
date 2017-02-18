@@ -31,9 +31,6 @@ bool Component::initialize(Client* client, Value& config)
         _address =  vaddr.toString();
     }
 
-    add("address", &Component::get_address);
-    add("type", &Component::get_type);
-
     return onInitialize(config);
 }
 
@@ -80,14 +77,4 @@ string Component::make_address()
 Client* Component::client() const
 {
     return _client;
-}
-
-int Component::get_address(lua_State* lua)
-{
-    return ValuePack::push(lua, address());
-}
-
-int Component::get_type(lua_State* lua)
-{
-    return ValuePack::push(lua, type());
 }

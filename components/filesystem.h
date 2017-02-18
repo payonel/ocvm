@@ -17,11 +17,13 @@ public:
 
     int open(lua_State* lua);
     int read(lua_State* lua);
+    int write(lua_State* lua);
     int close(lua_State* lua);
     int getLabel(lua_State* lua);
     int list(lua_State* lua);
     int isDirectory(lua_State* lua);
     int exists(lua_State* lua);
+    int isReadOnly(lua_State* lua);
     
 protected:
     bool onInitialize(Value& config) override;

@@ -17,6 +17,8 @@ Computer::Computer()
 {
     _start_time = now();
 
+    add("address", &Computer::get_address);
+
     add("setArchitecture", &Computer::setArchitecture);
     add("getArchitecture", &Computer::getArchitecture);
     add("getArchitectures", &Computer::getArchitectures);
@@ -57,12 +59,18 @@ void Computer::setTmpAddress(const string& addr)
     _tmp_address = addr;
 }
 
-double Computer::trace(lua_State* coState)
+void Computer::pushSignal(const ValuePack& pack)
+{
+    //trace(nullptr, true);
+    _signals.push(pack);
+}
+
+double Computer::trace(lua_State* coState, bool bForce)
 {
     double thenow = now();
-    if (_nexttrace < thenow)
+    if (_nexttrace < thenow || bForce)
     {
-        _nexttrace = thenow + .1; // trace frequency
+        _nexttrace = thenow + .5; // trace frequency
         if (!coState)
         {
             lua_Debug ar;
@@ -153,7 +161,7 @@ int Computer::getProgramLocations(lua_State* lua)
 
 int Computer::pushSignal(lua_State* lua)
 {
-    _signals.push(ValuePack::pack(lua));
+    pushSignal(ValuePack::pack(lua));
     return 0;
 }
 
@@ -391,3 +399,7 @@ bool Computer::newlib(LuaProxy* proxy)
     return true;
 }
 
+int Computer::get_address(lua_State* lua)
+{
+    return ValuePack::push(lua, address());
+}

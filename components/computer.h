@@ -15,11 +15,11 @@ public:
     bool newlib(LuaProxy* proxy);
     void close();
     void setTmpAddress(const string& addr);
+    void pushSignal(const ValuePack& pack);
 
     int setArchitecture(lua_State* lua);
     int getArchitecture(lua_State* lua);
     int getArchitectures(lua_State* lua);
-    int address(lua_State* lua);
     int beep(lua_State* lua);
     int getDeviceInfo(lua_State* lua);
     int getProgramLocations(lua_State* lua);
@@ -36,7 +36,9 @@ public:
 protected:
     bool onInitialize(Value& config) override;
     bool resume(int nargs);
-    double trace(lua_State* coState = nullptr);
+    double trace(lua_State* coState = nullptr, bool bForce = false);
+
+    int get_address(lua_State* lua);
 private:
     void injectCustomLua();
 

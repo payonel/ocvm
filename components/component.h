@@ -28,7 +28,4 @@ private:
     string _address;
     int _slot;
     Client* _client;
-
-    int get_address(lua_State* lua);
-    int get_type(lua_State* lua);
 };
