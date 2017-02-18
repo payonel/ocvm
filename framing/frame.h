@@ -47,7 +47,7 @@ public:
     bool empty() const;
     tuple<int, int, string> pop();
 
-    bool setResolution(int width, int height, bool bQuiet = false);
+    virtual bool setResolution(int width, int height, bool bQuiet = false);
     tuple<int, int> getResolution() const;
     bool scrolling() const;
     void scrolling(bool enable);

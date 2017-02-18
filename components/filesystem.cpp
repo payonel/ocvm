@@ -19,19 +19,19 @@ Filesystem::Filesystem()
 
 bool Filesystem::onInitialize(Value& config)
 {
+    Value vloot = config.get(3).Or("");
+    if (vloot.type() != "string")
+    {
+        lout << "invalid filesystem configuration: loot path not nil or string\n";
+        return false;
+    }
+    _src = vloot.toString();
     if (!utils::exists(path()))
     {
-        Value vloot = config.get(3).Or("");
-        if (vloot.type() != "string")
-        {
-            lout << "invalid filesystem configuration: loot path not nil or string\n";
-            return false;
-        }
         utils::mkdir(path());
-        string loot = vloot.toString();
-        if (!loot.empty())
+        if (!_src.empty())
         {
-            if (!utils::copy(loot, path()))
+            if (!utils::copy(_src, path()))
             {
                 lout << "filesystem failed to initialized, the source loot does not exist\n";
                 return false;
