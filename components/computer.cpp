@@ -8,6 +8,11 @@
 #include <chrono>
 using namespace std::chrono;
 
+inline double now()
+{
+    return duration_cast<duration<double>>(system_clock::now().time_since_epoch()).count();
+}
+
 Computer::Computer()
 {
     _start_time = now();
@@ -47,23 +52,40 @@ bool Computer::onInitialize(Value& config)
     return _state != nullptr;
 }
 
-double Computer::now()
-{
-    return duration_cast<duration<double>>(system_clock::now().time_since_epoch()).count();
-}
-
 void Computer::setTmpAddress(const string& addr)
 {
     _tmp_address = addr;
 }
 
-double Computer::trace(lua_State* lua)
+double Computer::trace(lua_State* coState)
 {
     double thenow = now();
     if (_nexttrace < thenow)
     {
-        _nexttrace = thenow + 1;
-        //std::cerr << Value::stack(lua) << endl;
+        _nexttrace = thenow + .1; // trace frequency
+        if (!coState)
+        {
+            lua_Debug ar;
+            lua_getstack(_state, 1, &ar);
+            for (int n = 1; n < 10 && !coState; n++)
+            {
+                const char* cstrVarName = lua_getlocal(_state, &ar, n);
+                if (!cstrVarName)
+                {
+                    break; // could not find coState
+                }
+                string varname = cstrVarName;
+                if (varname == "co")
+                {
+                    coState = lua_tothread(_state, -1);
+                }
+                lua_pop(_state, 1);
+            }
+        }
+        if (coState)
+        {
+            //std::cerr << Value::stack(coState) << endl;
+        }
     }
     return thenow;
 }
@@ -201,25 +223,7 @@ bool Computer::run()
         }
         else if (_standby > now()) // return true without resume to return to the framer update
         {
-            lua_Debug ar;
-            lua_getstack(_state, 1, &ar);
-            for (int n = 1; n < 10; n++)
-            {
-                const char* cstrVarName = lua_getlocal(_state, &ar, n);
-                if (!cstrVarName)
-                {
-                    break;
-                }
-                string varname = cstrVarName;
-                if (varname == "co")
-                {
-                    trace(lua_tothread(_state, -1));
-                }
-                lua_pop(_state, 1);
-                if (varname == "co")
-                    break;
-            }
-
+            trace();
             return true;
         }
     }

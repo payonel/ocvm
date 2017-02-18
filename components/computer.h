@@ -16,8 +16,6 @@ public:
     void close();
     void setTmpAddress(const string& addr);
 
-    static double now();
-
     int setArchitecture(lua_State* lua);
     int getArchitecture(lua_State* lua);
     int getArchitectures(lua_State* lua);
@@ -38,7 +36,7 @@ public:
 protected:
     bool onInitialize(Value& config) override;
     bool resume(int nargs);
-    double trace(lua_State* lua);
+    double trace(lua_State* coState = nullptr);
 private:
     void injectCustomLua();
 
