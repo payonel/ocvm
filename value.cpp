@@ -441,6 +441,7 @@ string Value::stack(lua_State* state)
 
 int ValuePack::push(lua_State* lua) const
 {
+    lua_settop(lua, 0);
     for (const auto& v : *this)
     {
         v.push(lua);

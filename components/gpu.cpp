@@ -143,11 +143,12 @@ int Gpu::maxResolution(lua_State* lua)
 int Gpu::setBackground(lua_State* lua)
 {
     check(lua);
-    const Color& old = _screen->background();
+    Color old = _screen->background();
     int rgb = Value::check(lua, 1, "number").toNumber();
     bool p = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
     _screen->background({rgb, p});
     Value vp = old.paletted ? Value(true) : Value::nil;
+    lua_settop(lua, 0);
     return ValuePack::push(lua, old.rgb, vp);
 }
 
@@ -162,11 +163,12 @@ int Gpu::getBackground(lua_State* lua)
 int Gpu::setForeground(lua_State* lua)
 {
     check(lua);
-    const Color& old = _screen->foreground();
+    Color old = _screen->foreground();
     int rgb = Value::check(lua, 1, "number").toNumber();
     bool p = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
     _screen->foreground({rgb, p});
     Value vp = old.paletted ? Value(true) : Value::nil;
+    lua_settop(lua, 0);
     return ValuePack::push(lua, old.rgb, vp);
 }
 
