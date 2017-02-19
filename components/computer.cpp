@@ -278,30 +278,34 @@ bool Computer::resume(int nargs)
         int top = lua_gettop(_state);
         if (top > 0)
         {
-            Value result(_state, -1);
-            switch (result.type_id())
+            int type_id = lua_type(_state, 1);
+            switch (type_id)
             {
                 case LUA_TFUNCTION:
-                    lua_settop(_state, 1);
-                    lua_pcall(_state, 0, LUA_MULTRET, 0);
-                    // the returns, if any, are on the stack
-                    // should be given to the machine to resume
+                    lua_pcall(_state, top - 1, LUA_MULTRET, 0);
                     top = lua_gettop(_state);
                     return resume(top);
                 break;
                 case LUA_TNUMBER:
-                    _standby = std::max(0.0, result.toNumber()) + now();
+                    _standby = std::max(0.0, lua_tonumber(_state, 1)) + now();
                 break;
                 case LUA_TBOOLEAN:
+                    if (lua_toboolean(_state, 1)) // reboot
+                    {
+                    }
+                    else // shutdown
+                    {
+                    }
                     // shutdown or reboot
                     return false;
                 break;
                 default:
-                    lout << "unsupported yield: " << result.type() << endl;
+                    lout << "unsupported yield: " << lua_typename(_state, 1) << endl;
                     return false;
                 break;
             }
         }
+        lua_settop(_state, 0);
         return true;
     }
     else
