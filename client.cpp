@@ -212,7 +212,7 @@ int Client::component_list(lua_State* lua)
         result.set(pc->address(), pc->type());
     }
 
-    return ValuePack::push(lua, result);
+    return ValuePack::ret(lua, result);
 }
 
 int Client::component_invoke(lua_State* lua)
@@ -228,7 +228,7 @@ int Client::component_invoke(lua_State* lua)
     
     Component* pc = component(address);
     if (!pc)
-        return ValuePack::push(lua, Value::nil, "no such component " + address);
+        return ValuePack::ret(lua, Value::nil, "no such component " + address);
 
     int stacked = pc->invoke(methodName, lua);
     lua_pushboolean(lua, true);
@@ -242,7 +242,7 @@ int Client::component_methods(lua_State* lua)
 
     Component* pc = component(address);
     if (!pc)
-        return ValuePack::push(lua, Value::nil, "no such component");
+        return ValuePack::ret(lua, Value::nil, "no such component");
 
     Value mpack = Value::table();
     Value info = Value::table();
@@ -251,7 +251,7 @@ int Client::component_methods(lua_State* lua)
     {
         mpack.set(std::get<0>(luaMethod), info);
     }
-    return ValuePack::push(lua, mpack);
+    return ValuePack::ret(lua, mpack);
 }
 
 int Client::component_type(lua_State* lua)
@@ -259,9 +259,9 @@ int Client::component_type(lua_State* lua)
     string address = Value::check(lua, 1, "string").toString();
     Component* pc = component(address);
     if (!pc)
-        return ValuePack::push(lua, Value::nil, "no such component");
+        return ValuePack::ret(lua, Value::nil, "no such component");
 
-    return ValuePack::push(lua, pc->type());
+    return ValuePack::ret(lua, pc->type());
 }
 
 int Client::component_slot(lua_State* lua)
@@ -269,9 +269,9 @@ int Client::component_slot(lua_State* lua)
     string address = Value::check(lua, 1, "string").toString();
     Component* pc = component(address);
     if (!pc)
-        return ValuePack::push(lua, Value::nil, "no such component");
+        return ValuePack::ret(lua, Value::nil, "no such component");
 
-    return ValuePack::push(lua, pc->slot());
+    return ValuePack::ret(lua, pc->slot());
 }
 
 const string& Client::envPath() const

@@ -144,7 +144,7 @@ int Filesystem::open(lua_State* lua)
         ((mode & mode_map['a']) && (mode & mode_map['r'])))
     {
         lout << "bad file mode: " << mode_text << endl;
-        return ValuePack::push(lua, Value::nil, filepath);
+        return ValuePack::ret(lua, Value::nil, filepath);
     }
 
     fstream* pf = new fstream;
@@ -154,7 +154,7 @@ int Filesystem::open(lua_State* lua)
     if (!pf->is_open())
     {
         delete pf;
-        return ValuePack::push(lua, Value::nil, filepath);
+        return ValuePack::ret(lua, Value::nil, filepath);
     }
     // find next open handle index
     size_t index = 0;
@@ -169,7 +169,7 @@ int Filesystem::open(lua_State* lua)
     // OR the is sequentially full, but index is now beyond size
     // either way, index is available
     _handles[index] = pf;
-    return ValuePack::push(lua, index);
+    return ValuePack::ret(lua, index);
 }
 
 int Filesystem::read(lua_State* lua)
@@ -182,7 +182,7 @@ int Filesystem::read(lua_State* lua)
     const auto& it = _handles.find(index);
     if (it == _handles.end())
     {
-        return ValuePack::push(lua, Value::nil, "bad file handle");
+        return ValuePack::ret(lua, Value::nil, "bad file handle");
     }
     fstream* fs = it->second;
     if (!fs->good())
@@ -201,7 +201,7 @@ int Filesystem::read(lua_State* lua)
         buffer += c;
     }
 
-    return ValuePack::push(lua, buffer);
+    return ValuePack::ret(lua, buffer);
 }
 
 int Filesystem::write(lua_State* lua)
@@ -212,18 +212,18 @@ int Filesystem::write(lua_State* lua)
     const auto& it = _handles.find(index);
     if (it == _handles.end())
     {
-        return ValuePack::push(lua, Value::nil, "bad file handle");
+        return ValuePack::ret(lua, Value::nil, "bad file handle");
     }
 
     fstream* fs = it->second;
     if (!fs->good())
     {
-        return ValuePack::push(lua, Value::nil, "bad file handle");
+        return ValuePack::ret(lua, Value::nil, "bad file handle");
     }
 
     (*fs) << data;
 
-    return ValuePack::push(lua, data.size());
+    return ValuePack::ret(lua, data.size());
 }
 
 int Filesystem::close(lua_State* lua)
@@ -232,7 +232,7 @@ int Filesystem::close(lua_State* lua)
     const auto& it = _handles.find(index);
     if (it == _handles.end())
     {
-        return ValuePack::push(lua, Value::nil, "bad file handle");
+        return ValuePack::ret(lua, Value::nil, "bad file handle");
     }
     fstream* fs = it->second;
     fs->close();
@@ -243,7 +243,7 @@ int Filesystem::close(lua_State* lua)
 
 int Filesystem::getLabel(lua_State* lua)
 {
-    return ValuePack::push(lua, "label stub");
+    return ValuePack::ret(lua, "label stub");
 }
 
 int Filesystem::list(lua_State* lua)
@@ -258,21 +258,21 @@ int Filesystem::list(lua_State* lua)
         t.insert(relative_item);
     }
 
-    return ValuePack::push(lua, t);
+    return ValuePack::ret(lua, t);
 }
 
 int Filesystem::isDirectory(lua_State* lua)
 {
     string relpath = clean(Value::check(lua, 1, "string").toString(), true, true);
-    return ValuePack::push(lua, utils::isDirectory(path() + relpath));
+    return ValuePack::ret(lua, utils::isDirectory(path() + relpath));
 }
 
 int Filesystem::exists(lua_State* lua)
 {
-    return ValuePack::push(lua, utils::exists(path() + clean(Value::check(lua, 1, "string").toString(), true, true)));
+    return ValuePack::ret(lua, utils::exists(path() + clean(Value::check(lua, 1, "string").toString(), true, true)));
 }
 
 int Filesystem::isReadOnly(lua_State* lua)
 {
-    return ValuePack::push(lua, false);
+    return ValuePack::ret(lua, false);
 }

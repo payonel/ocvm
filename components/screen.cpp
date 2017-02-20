@@ -26,7 +26,7 @@ int Screen::getKeyboards(lua_State* lua)
     {
         list.insert(kb);
     }
-    return ValuePack::push(lua, list);
+    return ValuePack::ret(lua, list);
 }
 
 void Screen::resizeBuffer(int width, int height)

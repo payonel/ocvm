@@ -47,12 +47,12 @@ int Gpu::bind(lua_State* lua)
     Component* pc = client()->component(address);
     if (!pc)
     {
-        return ValuePack::push(lua, Value::nil, "invalid address");
+        return ValuePack::ret(lua, Value::nil, "invalid address");
     }
     Screen* screen = dynamic_cast<Screen*>(pc);
     if (!screen)
     {
-        return ValuePack::push(lua, Value::nil, "not a screen");
+        return ValuePack::ret(lua, Value::nil, "not a screen");
     }
     _screen = screen;
 
@@ -74,7 +74,7 @@ int Gpu::setResolution(lua_State* lua)
     }
 
     _screen->setResolution(width, height);
-    return ValuePack::push(lua, true);
+    return ValuePack::ret(lua, true);
 }
 
 // bool Gpu::set(int x, int y, const string& text)
@@ -112,7 +112,7 @@ int Gpu::set(lua_State* lua)
     int y = Value::check(lua, 2, "number").toNumber();
     string text = Value::check(lua, 3, "string").toString();
     _screen->set(x, y, text);
-    return ValuePack::push(lua, true);
+    return ValuePack::ret(lua, true);
 }
 
 int Gpu::get(lua_State* lua)
@@ -130,14 +130,14 @@ int Gpu::get(lua_State* lua)
     Value fgp = pc->fg.paletted ? Value(true) : Value::nil;
     Value bgp = pc->bg.paletted ? Value(true) : Value::nil;
 
-    return ValuePack::push(lua, pc->value, pc->fg.rgb, pc->bg.rgb, fgp, bgp);
+    return ValuePack::ret(lua, pc->value, pc->fg.rgb, pc->bg.rgb, fgp, bgp);
 }
 
 int Gpu::maxResolution(lua_State* lua)
 {
     check(lua);
     tuple<int, int> res = _screen->framer()->maxResolution();
-    return ValuePack::push(lua, std::get<0>(res), std::get<1>(res));
+    return ValuePack::ret(lua, std::get<0>(res), std::get<1>(res));
 }
 
 int Gpu::setBackground(lua_State* lua)
@@ -149,7 +149,7 @@ int Gpu::setBackground(lua_State* lua)
     _screen->background({rgb, p});
     Value vp = old.paletted ? Value(true) : Value::nil;
     lua_settop(lua, 0);
-    return ValuePack::push(lua, old.rgb, vp);
+    return ValuePack::ret(lua, old.rgb, vp);
 }
 
 int Gpu::getBackground(lua_State* lua)
@@ -157,7 +157,7 @@ int Gpu::getBackground(lua_State* lua)
     check(lua);
     const Color& old = _screen->background();
     Value vp = old.paletted ? Value(true) : Value::nil;
-    return ValuePack::push(lua, old.rgb, vp);
+    return ValuePack::ret(lua, old.rgb, vp);
 }
 
 int Gpu::setForeground(lua_State* lua)
@@ -169,7 +169,7 @@ int Gpu::setForeground(lua_State* lua)
     _screen->foreground({rgb, p});
     Value vp = old.paletted ? Value(true) : Value::nil;
     lua_settop(lua, 0);
-    return ValuePack::push(lua, old.rgb, vp);
+    return ValuePack::ret(lua, old.rgb, vp);
 }
 
 int Gpu::getForeground(lua_State* lua)
@@ -177,7 +177,7 @@ int Gpu::getForeground(lua_State* lua)
     check(lua);
     const Color& old = _screen->foreground();
     Value vp = old.paletted ? Value(true) : Value::nil;
-    return ValuePack::push(lua, old.rgb, vp);
+    return ValuePack::ret(lua, old.rgb, vp);
 }
 
 int Gpu::fill(lua_State* lua)
@@ -192,7 +192,7 @@ int Gpu::fill(lua_State* lua)
 
     if (UnicodeApi::len(text) != 1)
     {
-        return ValuePack::push(lua, Value::nil, "invalid fill value");
+        return ValuePack::ret(lua, Value::nil, "invalid fill value");
     }
 
     text.insert(0, width - 1, text.at(0));
@@ -202,7 +202,7 @@ int Gpu::fill(lua_State* lua)
         _screen->set(x, row, text);
     }
 
-    return ValuePack::push(lua, true);
+    return ValuePack::ret(lua, true);
 }
 
 int Gpu::copy(lua_State* lua)
@@ -220,7 +220,7 @@ int Gpu::copy(lua_State* lua)
     int real_height = std::get<1>(dim);
 
     if (tx > real_width || ty > real_height)
-        return ValuePack::push(lua, true);
+        return ValuePack::ret(lua, true);
 
     x = std::min(real_width, x);
     y = std::min(real_height, y);
@@ -240,7 +240,7 @@ int Gpu::copy(lua_State* lua)
     height = std::min(real_height - y + 1, height);
 
     if (width <= 0 || height <= 0)
-        return ValuePack::push(lua, true);
+        return ValuePack::ret(lua, true);
 
     vector<vector<const Cell*>> scans;
     for (int yoffset = 0; yoffset < height; yoffset++)
@@ -253,12 +253,12 @@ int Gpu::copy(lua_State* lua)
         _screen->set(tx, ty + yoffset, scans.at(yoffset));
     }
 
-    return ValuePack::push(lua, true);
+    return ValuePack::ret(lua, true);
 }
 
 int Gpu::getDepth(lua_State* lua)
 {
-    return ValuePack::push(lua, 8);
+    return ValuePack::ret(lua, 8);
 }
 
 int Gpu::getViewport(lua_State* lua)
@@ -269,5 +269,5 @@ int Gpu::getViewport(lua_State* lua)
 int Gpu::getScreen(lua_State* lua)
 {
     check(lua);
-    return ValuePack::push(lua, _screen->address());
+    return ValuePack::ret(lua, _screen->address());
 }

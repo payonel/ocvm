@@ -8,12 +8,12 @@ class UnicodeApi : public LuaProxy
 public:
     static UnicodeApi* get();
 
-    static string wtrunc(const string& text, int width);
+    static string wtrunc(const string& text, const size_t width);
     static bool isWide(const string& text);
     static string upper(const string& text);
-    static string tochar(int n);
-    static int wlen(const string& text);
-    static int len(const string& text);
+    static string tochar(const uint32_t n);
+    static size_t wlen(const string& text);
+    static size_t len(const string& text, size_t index = 0);
     static string sub(const string& text, int from, int to);
     static int charWidth(const string& text);
     static string reverse(const string& text);

@@ -100,7 +100,7 @@ double Computer::trace(lua_State* coState, bool bForce)
 
 int Computer::realTime(lua_State* lua)
 {
-    return ValuePack::push(lua, trace(lua));
+    return ValuePack::ret(lua, trace(lua));
 }
 
 void Computer::injectCustomLua()
@@ -177,32 +177,32 @@ int Computer::addUser(lua_State* lua)
 
 int Computer::isRobot(lua_State* lua)
 {
-    return ValuePack::push(lua, false);
+    return ValuePack::ret(lua, false);
 }
 
 int Computer::tmpAddress(lua_State* lua)
 {
-    return ValuePack::push(lua, _tmp_address);
+    return ValuePack::ret(lua, _tmp_address);
 }
 
 int Computer::freeMemory(lua_State* lua)
 {
-    return ValuePack::push(lua, std::numeric_limits<double>::max());
+    return ValuePack::ret(lua, std::numeric_limits<double>::max());
 }
 
 int Computer::totalMemory(lua_State* lua)
 {
-    return ValuePack::push(lua, std::numeric_limits<double>::max());
+    return ValuePack::ret(lua, std::numeric_limits<double>::max());
 }
 
 int Computer::energy(lua_State* lua)
 {
-    return ValuePack::push(lua, std::numeric_limits<double>::max());
+    return ValuePack::ret(lua, std::numeric_limits<double>::max());
 }
 
 int Computer::maxEnergy(lua_State* lua)
 {
-    return ValuePack::push(lua, std::numeric_limits<double>::max());
+    return ValuePack::ret(lua, std::numeric_limits<double>::max());
 }
 
 bool Computer::run()
@@ -405,5 +405,5 @@ bool Computer::newlib(LuaProxy* proxy)
 
 int Computer::get_address(lua_State* lua)
 {
-    return ValuePack::push(lua, address());
+    return ValuePack::ret(lua, address());
 }

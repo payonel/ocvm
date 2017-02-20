@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <lua.hpp>
 
 using std::string;
 using std::vector;
@@ -11,7 +12,6 @@ using std::map;
 using std::shared_ptr;
 using std::ostream;
 
-class lua_State;
 class Value
 {
 public:
@@ -84,6 +84,13 @@ struct ValuePack : public vector<Value>
     static ValuePack pack(lua_State* lua);
 
     int push(lua_State* lua) const;
+
+    template <typename ...Ts>
+    inline static int ret(lua_State* lua, const Ts&... args)
+    {
+        ::lua_settop(lua, 0);
+        return push(lua, args...);
+    }
 
     inline static int push(lua_State* lua, const char* arg)
     {
