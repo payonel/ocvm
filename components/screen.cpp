@@ -11,6 +11,7 @@
 Screen::Screen()
 {
     add("getKeyboards", &Screen::getKeyboards);
+    scrolling(false);
 }
 
 bool Screen::onInitialize(Value& config)

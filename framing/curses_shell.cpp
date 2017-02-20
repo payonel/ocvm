@@ -181,6 +181,7 @@ bool CursesShell::onAdd(Frame* pf)
 
 bool CursesShell::open()
 {
+    //setlocale(LC_CTYPE, "");
     initscr();
 
     // save current settings
