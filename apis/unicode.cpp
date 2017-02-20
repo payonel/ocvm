@@ -28,12 +28,12 @@ static inline bool tryGetNextIndex(const string& text, const size_t& start_index
 
     unsigned char c = text.at(start_index);
     size_t step = 0;
-    if (c < end_1_byte) step = 1;
-    else if (c < end_2_byte) step = 2;
-    else if (c < end_3_byte) step = 3;
-    else if (c < end_4_byte) step = 4;
-    else if (c < end_5_byte) step = 5;
-    else if (c < end_6_byte) step = 6;
+    if (c <= end_1_byte) step = 1;
+    else if (c <= set_2_bytes_bits) return false; // continuation bit, invalid point
+    else if (c <= set_3_bytes_bits) step = 2;
+    else if (c <= set_4_bytes_bits) step = 3;
+    else if (c <= set_5_bytes_bits) step = 4;
+    else if (c <= set_6_bytes_bits) step = 5;
     else return false; // unsupported char range
 
     *pNext = start_index + step;
@@ -205,12 +205,12 @@ string UnicodeApi::sub(const string& text, int from, int to)
     start_index = real_index;
     for (; requested_length > 0; requested_length--)
     {
-        real_index = next;
         if (!tryGetNextIndex(text, real_index, &next))
             return "";
+        real_index = next;
     }
 
-    return text.substr(start_index, real_index - start_index + 1);
+    return text.substr(start_index, real_index - start_index);
 }
 
 int UnicodeApi::charWidth(const string& text)
