@@ -27,7 +27,7 @@ public:
     virtual void onResolution(Frame*) = 0;
     virtual tuple<int, int> maxResolution() const = 0;
 protected:
-    virtual bool onAdd(Frame* pf) = 0;
+    virtual bool onAdd(Frame* pf) { return true; }
     vector<Frame*> _frames;
 };
 

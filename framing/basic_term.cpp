@@ -16,11 +16,6 @@ void BasicTerm::close()
 {
 }
 
-bool BasicTerm::onAdd(Frame* pf)
-{
-    return true;
-}
-
 void BasicTerm::onWrite(Frame* pWhichFrame)
 {
     while (!pWhichFrame->empty())
