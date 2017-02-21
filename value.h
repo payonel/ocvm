@@ -92,22 +92,51 @@ struct ValuePack : public vector<Value>
         return push(lua, args...);
     }
 
+    inline static int push(lua_State* lua, double arg)
+    {
+        lua_pushnumber(lua, arg);
+        return 1;
+    }
+
+    inline static int push(lua_State* lua, size_t arg)
+    {
+        lua_pushnumber(lua, arg);
+        return 1;
+    }
+
+    inline static int push(lua_State* lua, bool arg)
+    {
+        lua_pushboolean(lua, arg);
+        return 1;
+    }
+
+    inline static int push(lua_State* lua, int arg)
+    {
+        lua_pushnumber(lua, arg);
+        return 1;
+    }
+
+    inline static int push(lua_State* lua, const string& arg)
+    {
+        lua_pushstring(lua, arg.c_str());
+        return 1;
+    }
+
     inline static int push(lua_State* lua, const char* arg)
     {
-        Value(arg).push(lua);
+        lua_pushstring(lua, arg);
+        return 1;
+    }
+
+    inline static int push(lua_State* lua, const void* arg)
+    {
+        lua_pushlightuserdata(lua, const_cast<void*>(arg));
         return 1;
     }
 
     inline static int push(lua_State* lua, const Value& v)
     {
         v.push(lua);
-        return 1;
-    }
-
-    template <typename T>
-    inline static int push(lua_State* lua, const T& arg)
-    {
-        Value(arg).push(lua);
         return 1;
     }
 
