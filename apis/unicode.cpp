@@ -266,6 +266,7 @@ size_t UnicodeApi::len(const string& text, size_t index)
 
 string UnicodeApi::sub(const string& text, int from, int to)
 {
+    size_t string_len = text.size();
     size_t unicode_len = UnicodeApi::len(text);
 
     // respect 1-based lua
@@ -291,7 +292,7 @@ string UnicodeApi::sub(const string& text, int from, int to)
     size_t next = 0;
     string result = "";
 
-    for (; from > 0 && real_index < unicode_len; )
+    for (; from > 0 && real_index < string_len; )
     {
         if (!tryGetNextIndex(text, real_index, &next))
             return "";
