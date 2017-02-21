@@ -56,7 +56,12 @@ string Component::make_address()
     vector<int> sets {4, 2, 2, 2, 6};
     string result = "";
 
-    srand(time(nullptr));
+    static bool rand_initialized = false;
+    if (!rand_initialized)
+    {
+        srand(time(nullptr));
+        rand_initialized = true;
+    }
 
     for (auto len : sets)
     {
@@ -67,7 +72,10 @@ string Component::make_address()
             stringstream ss;
             ss << std::hex;
             ss << int(rand() % 256);
-            result += ss.str();
+            string pair = ss.str();
+            if (pair.size() == 1)
+                pair = "0" + pair;
+            result += pair;
         }
     }
 

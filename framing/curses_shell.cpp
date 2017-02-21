@@ -200,6 +200,26 @@ bool CursesShell::open()
     return true;
 }
 
+string crnl(const string& text)
+{
+    string aligned = "";
+
+    for (size_t start = 0; start < text.size(); )
+    {
+        size_t next_newline = text.find("\n", start);
+        if (next_newline == string::npos)
+        {
+            aligned += text.substr(start);
+            break;
+        }
+
+        aligned += text.substr(start, next_newline - start);
+        aligned += "\n\r";
+        start = next_newline + 1;
+    }
+    return aligned;
+}
+
 bool CursesShell::update()
 {
     for (const auto& pf : _frames)
@@ -212,6 +232,7 @@ bool CursesShell::update()
 
             if (pf->scrolling())
             {
+                text = crnl(text);
                 waddstr(state.window, text.c_str());
                 push_log_history(text);
             }

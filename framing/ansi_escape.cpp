@@ -1,6 +1,7 @@
 #include "ansi_escape.h"
 #include <iostream>
 #include <sstream>
+#include <fstream>
 using namespace std;
 
 #include <stdio.h>
@@ -79,6 +80,9 @@ bool AnsiEscapeTerm::update()
             if (pf->scrolling())
             {
                 // log to file
+                ofstream flog("log", fstream::app);
+                flog << text;
+                flog.close();
             }
             else
             {
@@ -112,7 +116,6 @@ bool AnsiEscapeTerm::update()
             {
                 pActiveFrame->mouse(btn, x, y);
             }
-            //cout << btn << ',' << x << ',' << y << ':';
         }
         else // assume char?
         {
