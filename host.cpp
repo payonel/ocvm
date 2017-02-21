@@ -61,9 +61,4 @@ Framer* Host::getFramer() const
 
 void Host::close()
 {
-    if (!_framer)
-        return;
-
-    delete _framer;
-    _framer = nullptr;
 }

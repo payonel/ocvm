@@ -1,6 +1,7 @@
 #include "computer.h"
 #include "log.h"
 #include "client.h"
+#include "filesystem.h"
 
 #include <lua.hpp>
 #include <iostream>
@@ -163,6 +164,22 @@ int Computer::pushSignal(lua_State* lua)
 {
     pushSignal(ValuePack::pack(lua));
     return 0;
+}
+
+bool Computer::postInit()
+{
+    for (auto* pc : client()->components("filesystem", true))
+    {
+        auto pfs = dynamic_cast<Filesystem*>(pc);
+        if (pfs && pfs->src() == "")
+        {
+            setTmpAddress(pc->address());
+            return true;
+        }
+    }
+
+    lout << "missing tmpfs\n";
+    return false;
 }
 
 int Computer::removeUser(lua_State* lua)

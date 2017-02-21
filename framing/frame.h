@@ -39,8 +39,8 @@ public:
     void framer(Framer* pfr);
     Framer* framer() const;
 
-    virtual void mouse(int x, int y) {}
-    virtual void keyboard(char c) {}
+    virtual void mouse(int btn, int x, int y) {}
+    virtual void keyboard(int c) {}
 
     virtual void write(const string& text);
     void move(int x, int y);

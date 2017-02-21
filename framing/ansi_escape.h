@@ -12,9 +12,12 @@ struct AnsiFrameState
 {
 };
 
+struct termios;
+
 class AnsiEscapeTerm : public Framer
 {
 public:
+    ~AnsiEscapeTerm();
     bool update() override;
     bool open() override;
     void close() override;
@@ -26,4 +29,5 @@ protected:
     void print(AnsiFrameState* pfState, int x, int y, const string& text);
 private:
     map<Frame*, AnsiFrameState> _states;
+    termios* _original;
 };

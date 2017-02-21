@@ -1,7 +1,6 @@
 #include "client.h"
 #include "host.h"
 #include "components/component.h"
-#include "components/filesystem.h"
 #include "components/computer.h"
 
 #include "config.h"
@@ -113,28 +112,18 @@ bool Client::createComponents()
 bool Client::postInit()
 {
     // find fs with no source content, that is the tmp fs
-    Filesystem* tmpfs = nullptr;
     for (auto* pc : components())
     {
-        if (!tmpfs)
+        if (!pc->postInit())
         {
-            auto pfs = dynamic_cast<Filesystem*>(pc);
-            if (pfs && pfs->src() == "")
-            {
-                tmpfs = pfs;
-            }
+            lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+            return false;
         }
-
+        // machine.lua handles component_added for us
         // _computer->pushSignal(ValuePack({"component_added", pc->address(), pc->type()}));
     }
-    if (tmpfs)
-    {
-        _computer->setTmpAddress(tmpfs->address());
-        return true;
-    }
 
-    lout << "missing tmpfs\n";
-    return false;
+    return true;
 }
 
 bool Client::loadLuaComponentApi()
@@ -292,4 +281,9 @@ Computer* Client::computer() const
 bool Client::run()
 {
     return _computer->run();
+}
+
+void Client::pushSignal(const ValuePack& pack)
+{
+    _computer->pushSignal(pack);
 }

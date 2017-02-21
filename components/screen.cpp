@@ -142,3 +142,20 @@ vector<const Cell*> Screen::scan(int x, int y, int width) const
 
     return result;
 }
+
+void Screen::mouse(int btn, int x, int y)
+{
+}
+
+void Screen::keyboard(int code)
+{
+    for (const auto& kbaddr : _keyboards)
+    {
+        client()->pushSignal({"key_down", kbaddr, code, 0});
+    }
+}
+
+void Screen::addKeyboard(const string& addr)
+{
+    _keyboards.push_back(addr);
+}

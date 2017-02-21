@@ -24,6 +24,7 @@ public:
     Host* host() const;
     void computer(Computer*);
     Computer* computer() const;
+    void pushSignal(const ValuePack& pack);
     bool run();
 
     // global api that is actually computer specific

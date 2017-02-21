@@ -16,6 +16,7 @@ public:
     void close();
     void setTmpAddress(const string& addr);
     void pushSignal(const ValuePack& pack);
+    bool postInit() override;
 
     int setArchitecture(lua_State* lua);
     int getArchitecture(lua_State* lua);

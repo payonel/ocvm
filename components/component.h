@@ -15,6 +15,7 @@ class Component : public LuaProxy
 public:
     Component();
     bool initialize(Client* client, Value& config);
+    virtual bool postInit() { return true; }
     virtual ~Component() {}
     string type() const;
     string address() const;

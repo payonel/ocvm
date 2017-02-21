@@ -1,4 +1,5 @@
 #include <string>
+#include <memory>
 #include "host.h"
 #include "client.h"
 #include "framing/frame_factory.h"
@@ -10,8 +11,8 @@ using std::cerr;
 int main(int argc, char** argv)
 {
     string client_env_path = argc > 1 ? argv[1] : "tmp";
-    string framer_type = argc > 2 ? argv[2] : "basic";
-    Framer* framer = FrameFactory::create(framer_type);
+    string framer_type = argc > 2 ? argv[2] : "ansi";
+    std::unique_ptr<Framer> framer(FrameFactory::create(framer_type));
 
     // create profile shell (houses screen component [list?])
     if (!framer)
@@ -22,7 +23,7 @@ int main(int argc, char** argv)
 
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
-    Host host(framer);
+    Host host(framer.get());
 
     if (!framer->open())  // open the ui
     {
@@ -49,8 +50,6 @@ int main(int argc, char** argv)
             break;
         }
     }
-
-    framer->close();
 
     return 0;
 }
