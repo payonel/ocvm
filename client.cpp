@@ -103,7 +103,11 @@ bool Client::createComponents()
         }
         else if (section == "system")
         {
-            SystemApi::get()->configure(section_data);
+            SystemApi::configure(section_data);
+        }
+        else if (section == "unicode")
+        {
+            UnicodeApi::configure(section_data);
         }
     }
     return true;

@@ -10,11 +10,11 @@ public:
     static int allowGC(lua_State* lua);
     static int allowBytecode(lua_State* lua);
 
-    void configure(const Value& settings);
+    static void configure(const Value& settings);
 private:
     SystemApi();
 
-    double _timeout = 5;
-    bool _gc = false;
-    bool _bytecode = false;
+    static double _timeout;
+    static bool _gc;
+    static bool _bytecode;
 };

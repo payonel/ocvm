@@ -1,4 +1,9 @@
 #include "unicode.h"
+#include "utils.h"
+#include "log.h"
+#include <sstream>
+#include <fstream>
+using namespace std;
 
 static const uint32_t end_1_byte = 0x00000080;
 static const uint32_t end_2_byte = 0x00000800;
@@ -20,6 +25,9 @@ static const unsigned char set_3_mask        = 0x0F; // 0000 1111
 static const unsigned char set_4_mask        = 0x07; // 0000 0111
 static const unsigned char set_5_mask        = 0x03; // 0000 0011
 static const unsigned char set_6_mask        = 0x01; // 0000 0001
+
+//static
+std::unordered_map<uint32_t, int> UnicodeApi::font_width;
 
 static inline bool tryGetNextIndex(const string& text, const size_t& start_index, size_t* pNext)
 {
@@ -60,6 +68,36 @@ UnicodeApi* UnicodeApi::get()
     return &it;
 }
 
+void UnicodeApi::configure(const Value& settings)
+{
+    font_width.clear();
+    string fonts_file = settings.get("fonts").Or("").toString();
+    if (utils::read(fonts_file))
+    {
+        ifstream file(fonts_file);
+
+        while (file)
+        {
+            uint32_t key;
+            file >> std::hex >> key;
+            char delimiter = file.get();
+
+            string bmp;
+            getline(file, bmp);
+
+            if (!file || delimiter != ':' || bmp.size() % 32 != 0)
+            {
+                lout << "unicode font load finished\n";
+                break;
+            }
+
+            font_width[key] = bmp.size() / 32;
+        }
+
+        file.close();
+    }
+}
+
 string UnicodeApi::wtrunc(const string& text, const size_t width)
 {
     size_t current_width = 0;
@@ -81,7 +119,7 @@ string UnicodeApi::wtrunc(const string& text, const size_t width)
 
 bool UnicodeApi::isWide(const string& text)
 {
-    return wlen(text) > 1;
+    return charWidth(text) > 1;
 }
 
 string UnicodeApi::upper(const string& text)
@@ -90,6 +128,64 @@ string UnicodeApi::upper(const string& text)
     for (const auto& c : text)
         r += ::toupper(c);
     return r;
+}
+
+uint32_t UnicodeApi::tocodepoint(const string& text, const size_t index)
+{
+    if (index >= text.size()) return 0;
+
+    unsigned char flags = text.at(index);
+    uint32_t codepoint = flags;
+
+    flags &= (((flags >> 1) & 0x40) | 0xBF);
+    flags &= (((flags >> 1) & 0x20) | 0xDF);
+    flags &= (((flags >> 1) & 0x10) | 0xEF);
+    flags &= (((flags >> 1) & 0x08) | 0xF7);
+    flags &= (((flags >> 1) & 0x04) | 0xFB);
+    flags &= (((flags >> 1) & 0x02) | 0xFD);
+    flags &= (((flags >> 1) & 0x01) | 0xFE);
+
+    switch (flags)
+    {
+        case 0xC0: // 2 bytes
+            codepoint =
+                ((set_2_mask & codepoint) << 6) |
+                (continuation_mask & text.at(index + 1));
+            break;
+        case 0xE0: // 3 bytes
+            codepoint =
+                ((set_3_mask & codepoint) << 12) |
+                ((continuation_mask & text.at(index + 1)) << 6) |
+                (continuation_mask & text.at(index + 2));
+            break;
+        case 0xF0: // 4 bytes
+            codepoint =
+                ((set_4_mask & codepoint) << 18) |
+                ((continuation_mask & text.at(index + 1)) << 12) |
+                ((continuation_mask & text.at(index + 2)) << 6) |
+                (continuation_mask & text.at(index + 3));
+            break;
+        case 0xF8: // 5 bytes
+            codepoint =
+                ((set_5_mask & codepoint) << 24) |
+                ((continuation_mask & text.at(index + 1)) << 18) |
+                ((continuation_mask & text.at(index + 2)) << 12) |
+                ((continuation_mask & text.at(index + 3)) << 6) |
+                (continuation_mask & text.at(index + 4));
+            break;
+        case 0xFC: // 6 bytes
+            codepoint =
+                ((set_6_mask & codepoint) << 30) |
+                ((continuation_mask & text.at(index + 1)) << 24) |
+                ((continuation_mask & text.at(index + 2)) << 18) |
+                ((continuation_mask & text.at(index + 3)) << 12) |
+                ((continuation_mask & text.at(index + 4)) << 6) |
+                (continuation_mask & text.at(index + 5));
+            break;
+        //default: // invalid, continuation bit, or ascii
+    }
+
+    return codepoint;
 }
 
 string UnicodeApi::tochar(const uint32_t codepoint)
@@ -216,10 +312,11 @@ string UnicodeApi::sub(const string& text, int from, int to)
 int UnicodeApi::charWidth(const string& text)
 {
     string single = UnicodeApi::sub(text, 1, 1);
-    size_t size = single.size();
-    if (size == 0) return 0;
-    if (size == 1) return 1;
-    return 2;
+    uint32_t codepoint = UnicodeApi::tocodepoint(single);
+    const auto& it = font_width.find(codepoint);
+    if (it == font_width.end())
+        return 1;
+    return it->second;
 }
 
 string UnicodeApi::reverse(const string& text)

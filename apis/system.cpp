@@ -1,6 +1,11 @@
 #include "system.h"
 #include "log.h"
 
+// statics
+double SystemApi::_timeout = 5;
+bool SystemApi::_gc = false;
+bool SystemApi::_bytecode = false;
+
 SystemApi::SystemApi() : LuaProxy("system")
 {
     cadd("allowGC", &SystemApi::allowGC);

@@ -1,7 +1,9 @@
 #pragma once
 #include "luaproxy.h"
 #include <string>
+#include <unordered_map>
 using std::string;
+using std::unordered_map;
 
 class UnicodeApi : public LuaProxy
 {
@@ -12,6 +14,7 @@ public:
     static bool isWide(const string& text);
     static string upper(const string& text);
     static string tochar(const uint32_t n);
+    static uint32_t tocodepoint(const string& text, const size_t index = 0);
     static size_t wlen(const string& text);
     static size_t len(const string& text, size_t index = 0);
     static string sub(const string& text, int from, int to);
@@ -29,6 +32,9 @@ public:
     static int charWidth(lua_State* lua);
     static int reverse(lua_State* lua);
     static int lower(lua_State* lua);
+
+    static void configure(const Value& settings);
 private:
     UnicodeApi();
+    static std::unordered_map<uint32_t, int> font_width;
 };

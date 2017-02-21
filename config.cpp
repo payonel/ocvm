@@ -12,12 +12,12 @@ extern "C"
     static int l_cpp_store(lua_State* lua)
     {
         const void* raw = lua_topointer(lua, 1);
-        Config* self = const_cast<Config*>(static_cast<const Config*>(raw));
+        Value* pdata = const_cast<Value*>(static_cast<const Value*>(raw));
         string key = Value::check(lua, 2, "string").toString();
         Value value(lua, 3);
-        self->set(key, value);
+        pdata->set(key, value);
 
-        lout << self->name() << " config loading [" << key << "]: " << value.serialize() << "\n";
+        lout << "config loading [" << key << "]: " << value.serialize() << "\n";
         return 0;
     }
 }
@@ -28,7 +28,7 @@ Config::Config() : _data(Value::table())
 bool Config::load(const string& path, const string& name)
 {
     // clear out previous values (if any)
-    _data = Value::table();
+    _data = Value::nil;
     _path = path;
     _name = name;
 
@@ -50,17 +50,18 @@ bool Config::load(const string& path, const string& name)
 
     string loader =
     "for k,v in pairs(" + table + ") do\n"
-    "   cpp_store(_this, k, v)\n"
+    "   cpp_store(_data, k, v)\n"
     "end";
 
     lua_State* lua = luaL_newstate();
     if (luaL_loadstring(lua, loader.c_str()) == 0)
     {
+        Value tmpData = Value::table();
         luaL_openlibs(lua);
         lua_pushcfunction(lua, l_cpp_store);
         lua_setglobal(lua, "cpp_store");
-        lua_pushlightuserdata(lua, this);
-        lua_setglobal(lua, "_this");
+        lua_pushlightuserdata(lua, &tmpData);
+        lua_setglobal(lua, "_data");
         int result_status = lua_pcall(lua, 0, LUA_MULTRET, 0);
         if (result_status != LUA_OK)
         {
@@ -68,6 +69,7 @@ bool Config::load(const string& path, const string& name)
             lout << lua_tostring(lua, -1) << endl;
             return false;
         }
+        _data = tmpData;
     }
     else
     {
@@ -110,8 +112,11 @@ bool Config::set(const string& key, const Value& value, bool bCreateOnly)
 
 bool Config::save() const
 {
-    lout << "saving " << _name << ": config\n";
-    return utils::write(_data.serialize(2), savePath());
+    if (_data)
+    {
+        lout << "saving " << _name << ": config\n";
+        return utils::write(_data.serialize(2), savePath());
+    }
     return true;
 }
 

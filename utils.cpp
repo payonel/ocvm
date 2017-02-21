@@ -20,16 +20,7 @@ bool utils::read(const string& path, string* pOutData)
     // read without p is just open test
     if (pOutData)
     {
-        pOutData->clear();
-
-        char ch;
-        while (true)
-        {
-            ch = file.get();
-            if (!file)
-                break;
-            (*pOutData) += ch;
-        }
+        *pOutData = std::move(static_cast<stringstream const&>(stringstream() << file.rdbuf()).str());
     }
 
     file.close();
