@@ -190,16 +190,18 @@ int Gpu::fill(lua_State* lua)
     int height = Value::check(lua, 4, "number").toNumber();
     string text = Value::check(lua, 5, "string").toString();
 
-    if (UnicodeApi::len(text) != 1)
+    string value = UnicodeApi::sub(text, 1, 1);
+    if (value != text || value.empty())
     {
         return ValuePack::ret(lua, Value::nil, "invalid fill value");
     }
 
-    text.insert(0, width - 1, text.at(0));
-
     for (int row = y; row <= height; row++)
     {
-        _screen->set(x, row, text);
+        for (int col = x; col <= width; col++)
+        {
+            _screen->set(col, row, text);
+        }
     }
 
     return ValuePack::ret(lua, true);

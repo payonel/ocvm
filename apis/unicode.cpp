@@ -3,6 +3,7 @@
 #include "log.h"
 #include <sstream>
 #include <fstream>
+#include <limits>
 using namespace std;
 
 static const uint32_t end_1_byte = 0x00000080;
@@ -28,25 +29,6 @@ static const unsigned char set_6_mask        = 0x01; // 0000 0001
 
 //static
 std::unordered_map<uint32_t, int> UnicodeApi::font_width;
-
-static inline bool tryGetNextIndex(const string& text, const size_t& start_index, size_t* pNext)
-{
-    if (start_index >= text.size())
-        return false;
-
-    unsigned char c = text.at(start_index);
-    size_t step = 0;
-    if (c <= end_1_byte) step = 1;
-    else if (c <= set_2_bytes_bits) return false; // continuation bit, invalid point
-    else if (c <= set_3_bytes_bits) step = 2;
-    else if (c <= set_4_bytes_bits) step = 3;
-    else if (c <= set_5_bytes_bits) step = 4;
-    else if (c <= set_6_bytes_bits) step = 5;
-    else return false; // unsupported char range
-
-    *pNext = start_index + step;
-    return true;
-}
 
 UnicodeApi::UnicodeApi() : LuaProxy("unicode")
 {
@@ -101,20 +83,18 @@ void UnicodeApi::configure(const Value& settings)
 string UnicodeApi::wtrunc(const string& text, const size_t width)
 {
     size_t current_width = 0;
-    size_t start = 0;
-    size_t next;
-    while (tryGetNextIndex(text, start, &next))
+    string result;
+    for (const auto& sub : subs(text))
     {
-        current_width += charWidth(text.substr(start, next - start));
+        current_width += charWidth(sub);
         if (current_width >= width)
         {
-            text.substr(0, start);
             break;
         }
-        start = next;
+        result += sub;
     }
 
-    return text;
+    return result;
 }
 
 bool UnicodeApi::isWide(const string& text)
@@ -132,7 +112,9 @@ string UnicodeApi::upper(const string& text)
 
 uint32_t UnicodeApi::tocodepoint(const string& text, const size_t index)
 {
-    if (index >= text.size()) return 0;
+    size_t end = text.size();
+    if (index >= end) return 0;
+    size_t open = end - index;
 
     unsigned char flags = text.at(index);
     uint32_t codepoint = flags;
@@ -148,25 +130,25 @@ uint32_t UnicodeApi::tocodepoint(const string& text, const size_t index)
     switch (flags)
     {
         case 0xC0: // 2 bytes
-            codepoint =
+            codepoint = (open < 2) ? 0 : 
                 ((set_2_mask & codepoint) << 6) |
                 (continuation_mask & text.at(index + 1));
             break;
         case 0xE0: // 3 bytes
-            codepoint =
+            codepoint = (open < 3) ? 0 : 
                 ((set_3_mask & codepoint) << 12) |
                 ((continuation_mask & text.at(index + 1)) << 6) |
                 (continuation_mask & text.at(index + 2));
             break;
         case 0xF0: // 4 bytes
-            codepoint =
+            codepoint = (open < 4) ? 0 : 
                 ((set_4_mask & codepoint) << 18) |
                 ((continuation_mask & text.at(index + 1)) << 12) |
                 ((continuation_mask & text.at(index + 2)) << 6) |
                 (continuation_mask & text.at(index + 3));
             break;
         case 0xF8: // 5 bytes
-            codepoint =
+            codepoint = (open < 5) ? 0 : 
                 ((set_5_mask & codepoint) << 24) |
                 ((continuation_mask & text.at(index + 1)) << 18) |
                 ((continuation_mask & text.at(index + 2)) << 12) |
@@ -174,7 +156,7 @@ uint32_t UnicodeApi::tocodepoint(const string& text, const size_t index)
                 (continuation_mask & text.at(index + 4));
             break;
         case 0xFC: // 6 bytes
-            codepoint =
+            codepoint = (open < 6) ? 0 : 
                 ((set_6_mask & codepoint) << 30) |
                 ((continuation_mask & text.at(index + 1)) << 24) |
                 ((continuation_mask & text.at(index + 2)) << 18) |
@@ -238,76 +220,62 @@ string UnicodeApi::tochar(const uint32_t codepoint)
 
 size_t UnicodeApi::wlen(const string& text)
 {
-    size_t result = 0;
-    size_t start = 0;
-    size_t next;
-    while (tryGetNextIndex(text, start, &next))
+    size_t width = 0;
+    for (const auto& sub : subs(text))
     {
-        result += charWidth(text.substr(start, next - start));
-        start = next;
+        width += charWidth(sub);
     }
 
-    return result;
+    return width;
 }
 
 size_t UnicodeApi::len(const string& text, size_t index)
 {
-    size_t result = 0;
-    size_t last = 0;
-    size_t next;
-    while (tryGetNextIndex(text, last, &next))
+    size_t length = 0;
+    auto iterator = subs(text);
+    for (auto it = iterator.begin(); it != iterator.end(); ++it)
     {
-        last = next;
-        result++;
+        length++;
     }
 
-    return result;
+    return length;
 }
 
 string UnicodeApi::sub(const string& text, int from, int to)
 {
-    size_t string_len = text.size();
-    size_t unicode_len = UnicodeApi::len(text);
-
-    // respect 1-based lua
-    if (from < 0)
-        from = std::max(1, (int)unicode_len + from + 1);
-    if (to < 0)
-        to = std::max(1, (int)unicode_len + to + 1);
-
-    if (from > to || to == 0 || from > (int)unicode_len)
-    {
+    if (from == 0)
+        from = 1;
+    if (to == 0)
         return "";
+
+    size_t early_break = (from>0 && to>0) ? (size_t)std::max(from, to) : std::numeric_limits<size_t>::max();
+
+    auto iterator = subs(text);
+    vector<string> parts;
+    for (const auto& sub : subs(text))
+    {
+        parts.push_back(sub);
+        if (parts.size() > early_break)
+            break;
     }
+    int numParts = parts.size();
+    if (numParts == 0)
+        return "";
 
-    to = std::min(to, (int)unicode_len);
-
-    // indexes are in lua form, now convert
+    if (from < 0)
+        from = std::min(numParts, std::max(1, from + numParts + 1));
+    if (to < 0)
+        to = std::min(numParts, std::max(1, to + numParts + 1));
+    
+    // switch to zero-based index
     from--;
-    size_t requested_length = to - from;
-
-    size_t start_index;
-
-    size_t real_index = 0;
-    size_t next = 0;
-    string result = "";
-
-    for (; from > 0 && real_index < string_len; )
+    string result;
+    for (int i = from; i < to; i++)
     {
-        if (!tryGetNextIndex(text, real_index, &next))
-            return "";
-        real_index = next;
-        from--;
-    }
-    start_index = real_index;
-    for (; requested_length > 0; requested_length--)
-    {
-        if (!tryGetNextIndex(text, real_index, &next))
-            return "";
-        real_index = next;
+        result += parts.at(i);
     }
 
-    return text.substr(start_index, real_index - start_index);
+    return result;
 }
 
 int UnicodeApi::charWidth(const string& text)
@@ -396,5 +364,55 @@ int UnicodeApi::reverse(lua_State* lua)
 int UnicodeApi::lower(lua_State* lua)
 {
     return ValuePack::ret(lua, lower(Value::check(lua, 1, "string").toString()));
+}
+
+UnicodeIterator UnicodeApi::subs(const string& src)
+{
+    return UnicodeIterator{src};
+}
+
+bool UnicodeIterator::UnicodeIt::operator != (const UnicodeIterator::UnicodeIt& other) const
+{
+    return start != other.start;
+}
+
+void UnicodeIterator::UnicodeIt::operator++()
+{
+    start = next();
+}
+
+size_t UnicodeIterator::UnicodeIt::next() const
+{
+    const auto& src = parent.source;
+    size_t length = src.size();
+    if (start >= length)
+        return length;
+
+    unsigned char c = src.at(start);
+    size_t step = 0;
+    if (c <= end_1_byte) step = 1;
+    else if (c <= set_2_bytes_bits) return length; // continuation bit, invalid point
+    else if (c <= set_3_bytes_bits) step = 2;
+    else if (c <= set_4_bytes_bits) step = 3;
+    else if (c <= set_5_bytes_bits) step = 4;
+    else if (c <= set_6_bytes_bits) step = 5;
+    else return length; // unsupported char range
+
+    return std::min(start + step, length);
+}
+
+string UnicodeIterator::UnicodeIt::operator*() const
+{
+    return parent.source.substr(start, next() - start);
+}
+
+UnicodeIterator::UnicodeIt UnicodeIterator::begin()
+{
+    return {*this, 0};
+}
+
+UnicodeIterator::UnicodeIt UnicodeIterator::end()
+{
+    return {*this, source.size()};
 }
 

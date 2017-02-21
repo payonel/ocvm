@@ -93,10 +93,10 @@ void Screen::set(int x, int y, const Cell& cell)
 
 void Screen::set(int x, int y, const string& text)
 {
-    int len = UnicodeApi::len(text);
-    for (int i = 1; i <= len; i++)
+    int i = 0;
+    for (const auto& sub : UnicodeApi::subs(text))
     {
-        set(x + i - 1, y, {UnicodeApi::sub(text, i, i), _fg, _bg});
+        set(x + i++, y, {sub, _fg, _bg});
     }
 }
 

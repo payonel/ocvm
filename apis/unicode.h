@@ -5,10 +5,30 @@
 using std::string;
 using std::unordered_map;
 
+class UnicodeIterator
+{
+public:
+    struct UnicodeIt
+    {
+        bool operator != (const UnicodeIt& other) const;
+        void operator++();
+        string operator*() const;
+        size_t next() const;
+
+        UnicodeIterator& parent;
+        size_t start;
+    };
+
+    UnicodeIt begin();
+    UnicodeIt end();
+    string source;
+};
+
 class UnicodeApi : public LuaProxy
 {
 public:
     static UnicodeApi* get();
+    static UnicodeIterator subs(const string& src);
 
     static string wtrunc(const string& text, const size_t width);
     static bool isWide(const string& text);
