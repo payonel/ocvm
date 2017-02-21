@@ -69,6 +69,7 @@ AnsiEscapeTerm::~AnsiEscapeTerm()
 bool AnsiEscapeTerm::update()
 {
     Frame* pActiveFrame = nullptr;
+    ofstream flog("log", fstream::app);
     for (const auto& pf : _frames)
     {
         auto& state = _states[pf];
@@ -80,9 +81,7 @@ bool AnsiEscapeTerm::update()
             if (pf->scrolling())
             {
                 // log to file
-                ofstream flog("log", fstream::app);
                 flog << text;
-                flog.close();
             }
             else
             {
@@ -96,6 +95,7 @@ bool AnsiEscapeTerm::update()
             pActiveFrame = pf;
     }
     refresh();
+    flog.close();
 
     if (kbhit())
     {

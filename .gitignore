@@ -2,3 +2,4 @@ bin/**
 tmp
 ocvm**
 system/**
+/log
