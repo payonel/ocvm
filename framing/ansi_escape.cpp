@@ -19,6 +19,7 @@ static const string clear_term = esc + "2J";
 static const string clean_line = esc + "K";
 static const string save_pos   = esc + "s";
 static const string restore_pos= esc + "u";
+static const string color_reset= esc + "0m";
 
 bool kbhit()
 {
@@ -27,6 +28,32 @@ bool kbhit()
     FD_ZERO(&fds);
     FD_SET(0, &fds);
     return select(1, &fds, NULL, NULL, &tv);
+}
+
+static string set_color(const Color& fg, const Color& bg, int depth)
+{
+    stringstream ss;
+    if (depth == 8)
+    {
+    }
+    else if (depth == 256)
+    {
+    }
+    else // 24 bit rgb
+    {
+        ss << esc;
+        int r = (fg.rgb >> 16) & 0xff;
+        int g = (fg.rgb >>  8) & 0xff;
+        int b = (fg.rgb >>  0) & 0xff;
+        ss << "38;2;" << r << ";" << g << ";" << b << "m";
+
+        ss << esc;
+        r = (bg.rgb >> 16) & 0xff;
+        g = (bg.rgb >>  8) & 0xff;
+        b = (bg.rgb >>  0) & 0xff;
+        ss << "48;2;" << r << ";" << g << ";" << b << "m";
+    }
+    return ss.str();
 }
 
 int getch()
@@ -55,10 +82,12 @@ void refresh()
     cout << flush;
 }
 
-void AnsiEscapeTerm::print(AnsiFrameState* pf, int x, int y, const string& text)
+static void print(AnsiFrameState* pf, int x, int y, const Cell& cell)
 {
     cout << set_pos(x, y);
-    cout << text;
+    cout << set_color(cell.fg, cell.bg, 16777216);
+    cout << cell.value;
+    cout << color_reset;
     cout << flush;
 }
 
@@ -177,7 +206,7 @@ void AnsiEscapeTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
     else
     {
         auto& state = _states[pf];
-        print(&state, x, y, cell.value);
+        print(&state, x, y, cell);
     }
 }
 

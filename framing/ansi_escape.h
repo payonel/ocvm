@@ -26,7 +26,6 @@ public:
 protected:
     void onWrite(Frame* pf, int x, int y, const Cell& cell) override;
     bool onAdd(Frame* pf) override;
-    void print(AnsiFrameState* pfState, int x, int y, const string& text);
 private:
     map<Frame*, AnsiFrameState> _states;
     termios* _original;
