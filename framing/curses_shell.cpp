@@ -118,6 +118,7 @@ void CursesShell::onResolution(Frame* pWhichFrame)
             }
             
             height = maxHeight;
+            width = maxWidth;
         }
         
         if (remake || noDim)
@@ -236,22 +237,33 @@ bool CursesShell::open()
 
 bool CursesShell::update()
 {
+    Frame* pActiveFrame = nullptr;
     for (const auto& pf : _frames)
     {
         auto& state = _states[pf];
         wrefresh(state.window);
+        if (!pf->scrolling())
+        {
+            pActiveFrame = pf;
+        }
     }
 
     // wrefresh(stdscr);
     refresh();
-    //int ch = getch();
-    //lout << "getch: " << ch << "\n";
+    timeout(50);
+    int ch = getch();
+    if (ch != -1)
+        lout << "getch: " << ch << "\n";
 
-    //if (ch == 3) // ^c
-    //{
-    //    lout << "shell closing\n";
-    //    return false;
-    //}
+    if (ch == 3) // ^c
+    {
+       lout << "shell closing\n";
+       return false;
+    }
+    else if (pActiveFrame)
+    {
+        pActiveFrame->keyboard(ch);
+    }
 
     return true;
 }
