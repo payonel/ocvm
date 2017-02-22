@@ -299,7 +299,7 @@ bool Computer::resume(int nargs)
             switch (type_id)
             {
                 case LUA_TFUNCTION:
-                    lua_pcall(_state, top - 1, LUA_MULTRET, 0);
+                    lua_pcall(_state, -1, LUA_MULTRET, 0);
                     top = lua_gettop(_state);
                     return resume(top);
                 break;

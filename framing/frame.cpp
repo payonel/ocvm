@@ -102,10 +102,11 @@ const Cell* Frame::get(int x, int y) const
     auto dim = getResolution();
     int width = std::get<0>(dim);
     int height = std::get<1>(dim);
-    if (x < 0 || x >= width || y < 0 || y >= height || _cells == nullptr)
+    // positions are 1-based
+    if (x < 1 || x > width || y < 1 || y > height || _cells == nullptr)
         return nullptr;
 
-    return &_cells[y*width + x];
+    return &_cells[(y-1)*width + (x-1)];
 }
 
 void Frame::set(int x, int y, const Cell& cell)
@@ -113,10 +114,11 @@ void Frame::set(int x, int y, const Cell& cell)
     auto dim = getResolution();
     int width = std::get<0>(dim);
     int height = std::get<1>(dim);
-    if (x < 0 || x >= width || y < 0 || y >= height || _cells == nullptr)
+    // positions are 1-based
+    if (x < 1 || x > width || y < 1 || y > height || _cells == nullptr)
         return;
 
-    _cells[y*width + x] = cell;
+    _cells[(y-1)*width + (x-1)] = cell;
     if (_framer)
         _framer->invalidate(this, x, y);
 }

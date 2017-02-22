@@ -59,6 +59,7 @@ void AnsiEscapeTerm::print(AnsiFrameState* pf, int x, int y, const string& text)
 {
     cout << set_pos(x, y);
     cout << text;
+    cout << flush;
 }
 
 AnsiEscapeTerm::~AnsiEscapeTerm()
@@ -176,7 +177,7 @@ void AnsiEscapeTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
     else
     {
         auto& state = _states[pf];
-        print(&state, x + 1, y + 1, cell.value);
+        print(&state, x, y, cell.value);
     }
 }
 

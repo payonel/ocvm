@@ -86,7 +86,7 @@ int Gpu::set(lua_State* lua)
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
     string text = Value::check(lua, 3, "string").toString();
-    _screen->set(x - 1, y - 1, text);
+    _screen->set(x, y, text);
     return ValuePack::ret(lua, true);
 }
 
@@ -95,7 +95,7 @@ int Gpu::get(lua_State* lua)
     check(lua);
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
-    const Cell* pc = _screen->get(x - 1, y - 1);
+    const Cell* pc = _screen->get(x, y);
     if (!pc)
     {
         luaL_error(lua, "index out of bounds");
@@ -177,7 +177,7 @@ int Gpu::fill(lua_State* lua)
     {
         for (int col = x; col <= width; col++)
         {
-            _screen->set(col - 1, row - 1, fill_cell);
+            _screen->set(col, row, fill_cell);
         }
     }
 
@@ -224,12 +224,12 @@ int Gpu::copy(lua_State* lua)
     vector<vector<const Cell*>> scans;
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        scans.push_back(_screen->scan(x - 1, y + yoffset - 1, width));
+        scans.push_back(_screen->scan(x, y + yoffset, width));
     }
 
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        _screen->set(tx - 1, ty + yoffset - 1, scans.at(yoffset));
+        _screen->set(tx, ty + yoffset, scans.at(yoffset));
     }
 
     return ValuePack::ret(lua, true);
