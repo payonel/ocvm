@@ -33,7 +33,7 @@ Logger::Logger(int priority) :
 Logger& operator<< (Logger& logger, const string& text)
 {
     Frame* pf = Logger::getFrame();
-    pf->set(0, 0, {text, pf->foreground(), pf->background()});
+    pf->set(1, 1, {text, pf->foreground(), pf->background()});
     return logger;
 }
 
