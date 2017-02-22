@@ -2,7 +2,9 @@
 #include "client.h"
 #include "log.h"
 #include "utils.h"
+#include <fstream>
 using std::streamsize;
+using std::ifstream;
 
 Filesystem::Filesystem()
 {
@@ -175,19 +177,13 @@ int Filesystem::open(lua_State* lua)
 
 int Filesystem::read(lua_State* lua)
 {
-    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
+    fstream* fs = get_handle(lua);
+    if (fs == nullptr) return 2;
+    if (fs->eof()) return 0;
+
     double dsize = Value::check(lua, 2, "number").toNumber();
     static const streamsize max_read = (1024*1024*1024);
     streamsize size = (dsize > (double)max_read) ? max_read : static_cast<streamsize>(dsize);
-
-    const auto& it = _handles.find(index);
-    if (it == _handles.end())
-    {
-        return ValuePack::ret(lua, Value::nil, "bad file handle");
-    }
-    fstream* fs = it->second;
-    if (!fs->good())
-        return 0;
 
     string buffer;
 
@@ -207,20 +203,10 @@ int Filesystem::read(lua_State* lua)
 
 int Filesystem::write(lua_State* lua)
 {
-    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
+    fstream* fs = get_handle(lua);
+    if (fs == nullptr) return 2;
+
     string data = Value::check(lua, 2, "string").toString();
-
-    const auto& it = _handles.find(index);
-    if (it == _handles.end())
-    {
-        return ValuePack::ret(lua, Value::nil, "bad file handle");
-    }
-
-    fstream* fs = it->second;
-    if (!fs->good())
-    {
-        return ValuePack::ret(lua, Value::nil, "bad file handle");
-    }
 
     (*fs) << data;
 
@@ -229,15 +215,12 @@ int Filesystem::write(lua_State* lua)
 
 int Filesystem::close(lua_State* lua)
 {
-    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
-    const auto& it = _handles.find(index);
-    if (it == _handles.end())
-    {
-        return ValuePack::ret(lua, Value::nil, "bad file handle");
-    }
-    fstream* fs = it->second;
+    int index;
+    fstream* fs = get_handle(lua, &index);
+    if (fs == nullptr) return 2;
+    
     fs->close();
-    _handles.erase(it);
+    _handles.erase(index);
 
     return 0;
 }
@@ -280,18 +263,11 @@ int Filesystem::isReadOnly(lua_State* lua)
 
 int Filesystem::seek(lua_State* lua)
 {
-    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
+    fstream* fs = get_handle(lua);
+    if (fs == nullptr) return 2;
+
     string whence = Value::check(lua, 2, "string").toString();    
     size_t to = (size_t)Value::check(lua, 3, "number", "nil").Or(0).toNumber();
-
-    const auto& it = _handles.find(index);
-    if (it == _handles.end())
-    {
-        return ValuePack::ret(lua, Value::nil, "bad file handle");
-    }
-    fstream* fs = it->second;
-    if (!fs->good())
-        return 0;
 
     std::ios_base::seekdir way;
     if (whence == "cur")
@@ -314,4 +290,32 @@ int Filesystem::seek(lua_State* lua)
 
     fs->seekg(static_cast<fstream::pos_type>(to), way);
     return ValuePack::ret(lua, static_cast<double>(fs->tellg()));
+}
+
+int Filesystem::size(lua_State* lua)
+{
+    fstream* fs = get_handle(lua);
+    if (fs == nullptr) return 2;
+    
+    auto prev = fs->tellg();
+    fs->seekg(0, std::ios_base::end);
+    auto size = fs->tellg();
+    fs->seekg(prev, std::ios_base::beg);
+
+    return ValuePack::ret(lua, static_cast<size_t>(size));
+}
+
+fstream* Filesystem::get_handle(lua_State* lua, int* pIndex)
+{
+    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
+    const auto& it = _handles.find(index);
+    fstream* fs = it->second;
+    if (it == _handles.end() || (!fs->eof() && fs->fail()))
+    {
+        ValuePack::ret(lua, Value::nil, "bad file handle");
+        return nullptr;
+    }
+    if (pIndex)
+        *pIndex = index;
+    return fs;
 }
