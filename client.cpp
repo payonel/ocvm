@@ -20,13 +20,13 @@
 using std::make_tuple;
 
 Client::Client(Host* host, const string& env_path) : 
-    LuaProxy("component"), 
+    LuaProxy("component"),
+    _computer(nullptr),
+    _config(nullptr),
     _env_path(env_path),
-    _host(host)
+    _host(host),
+    _globals(nullptr)
 {
-    _config = new Config();
-    _globals = new SandboxMethods(this);
-
     add("list", &Client::component_list);
     add("invoke", &Client::component_invoke);
     add("methods", &Client::component_methods);
@@ -49,6 +49,15 @@ Host* Client::host() const
 
 bool Client::load()
 {
+    if (_config || _globals)
+    {
+        lout << "Client is either already loaded or did not close properly";
+        return false;
+    }
+
+    _config = new Config();
+    _globals = new SandboxMethods(this);
+
     if (!_config->load(envPath(), "client"))
     {
         lout << "failed to load client config\n";
@@ -159,6 +168,9 @@ void Client::close()
 
     for (auto pc : _components)
         delete pc;
+        
+    delete _globals;
+    _globals = nullptr;
 
     _components.clear();
 }
@@ -282,7 +294,7 @@ Computer* Client::computer() const
     return _computer;
 }
 
-bool Client::run()
+RunState Client::run()
 {
     return _computer->run();
 }

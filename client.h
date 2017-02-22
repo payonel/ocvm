@@ -10,6 +10,7 @@ class Config;
 class Component;
 class Computer;
 class SandboxMethods;
+enum class RunState;
 
 class Client : public LuaProxy
 {
@@ -25,7 +26,7 @@ public:
     void computer(Computer*);
     Computer* computer() const;
     void pushSignal(const ValuePack& pack);
-    bool run();
+    RunState run();
 
     // global api that is actually computer specific
     // invoke by address

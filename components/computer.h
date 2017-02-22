@@ -4,13 +4,20 @@
 #include <queue>
 using std::queue;
 
+enum class RunState
+{
+    Run,
+    Reboot,
+    Halt
+};
+
 class Computer : public Component
 {
 public:
     Computer();
     ~Computer();
 
-    bool run();
+    RunState run();
     bool load(const string& machinePath);
     bool newlib(LuaProxy* proxy);
     void close();
@@ -36,7 +43,7 @@ public:
     int realTime(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
-    bool resume(int nargs);
+    RunState resume(int nargs);
     double trace(lua_State* coState = nullptr, bool bForce = false);
 
     int get_address(lua_State* lua);

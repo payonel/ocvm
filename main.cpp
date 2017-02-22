@@ -5,6 +5,7 @@
 #include "framing/frame_factory.h"
 #include "framing/frame.h"
 #include "log.h"
+#include "components/computer.h"
 
 using std::cerr;
 
@@ -45,7 +46,17 @@ int main(int argc, char** argv)
 
     while (framer->update())
     {
-        if (!client.run())
+        auto run = client.run();
+        if (run == RunState::Reboot)
+        {
+            client.close();
+            if (!client.load())
+            {
+                lout << "reboot failed\n";
+                break;
+            }
+        }
+        else if (run == RunState::Halt)
         {
             break;
         }

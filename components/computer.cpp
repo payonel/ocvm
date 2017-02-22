@@ -239,7 +239,7 @@ int Computer::maxEnergy(lua_State* lua)
     return ValuePack::ret(lua, std::numeric_limits<double>::max());
 }
 
-bool Computer::run()
+RunState Computer::run()
 {
     /*
         Types of runs
@@ -266,11 +266,11 @@ bool Computer::run()
         else if (_standby > now()) // return true without resume to return to the framer update
         {
             trace();
-            return true;
+            return RunState::Run;
         }
     }
 
-    bool result = resume(nargs);
+    RunState result = resume(nargs);
     if (bFirstTimeRun)
     {
         // create memory baseline
@@ -278,7 +278,7 @@ bool Computer::run()
     return result;
 }
 
-bool Computer::resume(int nargs)
+RunState Computer::resume(int nargs)
 {
     //lout << "lua env resume: " << nargs << endl;
     int status_id = lua_resume(_state, _machine, nargs);
@@ -304,7 +304,7 @@ bool Computer::resume(int nargs)
         }
         else
             lout << "lua env SHUTDOWN\n";
-        return false;
+        return RunState::Halt;
     }
     else if (status_id == LUA_YIELD)
     {
@@ -326,31 +326,32 @@ bool Computer::resume(int nargs)
                 case LUA_TBOOLEAN:
                     if (lua_toboolean(_state, 1)) // reboot
                     {
+                        return RunState::Reboot;
                     }
                     else // shutdown
                     {
+                        return RunState::Halt;
                     }
                     // shutdown or reboot
-                    return false;
                 break;
                 default:
                     lout << "unsupported yield: " << lua_typename(_state, 1) << endl;
-                    return false;
+                    return RunState::Halt;
                 break;
             }
         }
         lua_settop(_state, 0);
-        return true;
+        return RunState::Run;
     }
     else
     {
         lout << "host crash: ";
         lout << lua_tostring(_state, -1) << "\n";
         lout << "machine status: " << Value(_state).serialize() << endl;
-        return false;
+        return RunState::Halt;
     }
 
-    return true;
+    return RunState::Run;
 }
 
 bool Computer::load(const string& machinePath)
