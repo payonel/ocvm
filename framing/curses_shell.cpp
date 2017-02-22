@@ -39,6 +39,26 @@ void dump_log_history()
     _rolling_buffer.clear();
 }
 
+string crnl(const string& text)
+{
+    string aligned = "";
+
+    for (size_t start = 0; start < text.size(); )
+    {
+        size_t next_newline = text.find("\n", start);
+        if (next_newline == string::npos)
+        {
+            aligned += text.substr(start);
+            break;
+        }
+
+        aligned += text.substr(start, next_newline - start);
+        aligned += "\n\r";
+        start = next_newline + 1;
+    }
+    return aligned;
+}
+
 CursesShell::CursesShell()
 {
 }
@@ -48,8 +68,22 @@ CursesShell::~CursesShell()
     close();
 }
 
-void CursesShell::onWrite(Frame* pWhichFrame)
+void CursesShell::onWrite(Frame* pf, int x, int y, const Cell& cell)
 {
+    const auto& it = _states.find(pf);
+    if (it == _states.end())
+        return; // ignore, invalid frame
+    auto& state = it->second;
+    string text = cell.value;
+    if (pf->scrolling())
+    {
+        waddstr(state.window, crnl(text).c_str());
+        push_log_history(text);
+    }
+    else
+    {
+        mvwprintw(state.window, y, x, text.c_str());
+    }
 }
 
 void CursesShell::onResolution(Frame* pWhichFrame)
@@ -200,49 +234,11 @@ bool CursesShell::open()
     return true;
 }
 
-string crnl(const string& text)
-{
-    string aligned = "";
-
-    for (size_t start = 0; start < text.size(); )
-    {
-        size_t next_newline = text.find("\n", start);
-        if (next_newline == string::npos)
-        {
-            aligned += text.substr(start);
-            break;
-        }
-
-        aligned += text.substr(start, next_newline - start);
-        aligned += "\n\r";
-        start = next_newline + 1;
-    }
-    return aligned;
-}
-
 bool CursesShell::update()
 {
     for (const auto& pf : _frames)
     {
         auto& state = _states[pf];
-        while (!pf->empty())
-        {
-            auto buffer = pf->pop();
-            string text = std::get<2>(buffer);
-
-            if (pf->scrolling())
-            {
-                text = crnl(text);
-                waddstr(state.window, text.c_str());
-                push_log_history(text);
-            }
-            else
-            {
-                int x = std::get<0>(buffer);
-                int y = std::get<1>(buffer);
-                mvwprintw(state.window, y, x, text.c_str());
-            }
-        }
         wrefresh(state.window);
     }
 

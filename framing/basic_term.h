@@ -8,8 +8,8 @@ public:
     bool update() override;
     bool open() override;
     void close() override;
-    void onWrite(Frame* pWhichFrame) override;
     void onResolution(Frame* pWhichFrame) override;
     tuple<int, int> maxResolution() const override;
 protected:
+    void onWrite(Frame* pf, int x, int y, const Cell& cell) override;
 };

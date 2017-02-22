@@ -27,7 +27,7 @@ public:
     tuple<int, int> maxResolution() const override;
 protected:
     bool onAdd(Frame* pf);
-    void onWrite(Frame* pWhichFrame) override;
+    void onWrite(Frame* pf, int x, int y, const Cell& cell) override;
     void onResolution(Frame* pWhichFrame) override;
 private:
     // termios* _original;

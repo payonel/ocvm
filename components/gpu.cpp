@@ -44,6 +44,9 @@ bool Gpu::onInitialize(Value& config)
 int Gpu::bind(lua_State* lua)
 {
     string address = Value::check(lua, 1, "string").toString();
+    if (_screen && _screen->address() == address)
+        return 0; // already set
+
     Component* pc = client()->component(address);
     if (!pc)
     {
@@ -77,41 +80,13 @@ int Gpu::setResolution(lua_State* lua)
     return ValuePack::ret(lua, true);
 }
 
-// bool Gpu::set(int x, int y, const string& text)
-// {
-//     if (!_screen)
-//     {
-//         return false;
-//     }
-
-//     auto rez = _screen->getResolution();
-//     int width_available = std::get<0>(rez) - x + 1;
-
-//     string fit = UnicodeApi::sub(text, 1, width_available);
-//     while (_buffer.size() < static_cast<size_t>(y))
-//         _buffer.push_back("");
-
-//     string line = _buffer.at(y - 1);
-//     string newline = UnicodeApi::sub(line, 1, x - 1);
-//     auto missing = std::max(static_cast<size_t>(0), x - UnicodeApi::wlen(newline) - 1);
-//     newline.insert(0, missing, ' ');
-//     newline = newline + fit;
-//     newline += UnicodeApi::sub(line, UnicodeApi::wlen(newline) + 1, string::npos);
-//     _buffer.at(y - 1) = newline;
-
-//     _screen->move(x, y);
-//     _screen->write(fit);
-
-//     return true;
-// }
-
 int Gpu::set(lua_State* lua)
 {
     check(lua);
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
     string text = Value::check(lua, 3, "string").toString();
-    _screen->set(x, y, text);
+    _screen->set(x - 1, y - 1, text);
     return ValuePack::ret(lua, true);
 }
 
@@ -120,7 +95,7 @@ int Gpu::get(lua_State* lua)
     check(lua);
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
-    const Cell* pc = _screen->get(x, y);
+    const Cell* pc = _screen->get(x - 1, y - 1);
     if (!pc)
     {
         luaL_error(lua, "index out of bounds");
@@ -196,11 +171,13 @@ int Gpu::fill(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "invalid fill value");
     }
 
+    Cell fill_cell { text, _screen->foreground(), _screen->background() };
+
     for (int row = y; row <= height; row++)
     {
         for (int col = x; col <= width; col++)
         {
-            _screen->set(col, row, text);
+            _screen->set(col - 1, row - 1, fill_cell);
         }
     }
 
@@ -247,12 +224,12 @@ int Gpu::copy(lua_State* lua)
     vector<vector<const Cell*>> scans;
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        scans.push_back(_screen->scan(x, y + yoffset, width));
+        scans.push_back(_screen->scan(x - 1, y + yoffset - 1, width));
     }
 
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        _screen->set(tx, ty + yoffset, scans.at(yoffset));
+        _screen->set(tx - 1, ty + yoffset - 1, scans.at(yoffset));
     }
 
     return ValuePack::ret(lua, true);

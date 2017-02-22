@@ -21,7 +21,7 @@ public:
 
     UnicodeIt begin();
     UnicodeIt end();
-    string source;
+    const string& source;
 };
 
 class UnicodeApi : public LuaProxy

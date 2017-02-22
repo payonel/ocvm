@@ -13,6 +13,7 @@ public:
     LogFrame()
     {
         scrolling(true);
+        setResolution(1, 1);
     }
     ~LogFrame()
     {
@@ -31,7 +32,8 @@ Logger::Logger(int priority) :
 
 Logger& operator<< (Logger& logger, const string& text)
 {
-    Logger::getFrame()->write(text);
+    Frame* pf = Logger::getFrame();
+    pf->set(0, 0, {text, pf->foreground(), pf->background()});
     return logger;
 }
 

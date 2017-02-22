@@ -11,6 +11,19 @@ using std::vector;
 using std::string;
 using std::queue;
 
+struct Color
+{
+    int rgb;
+    bool paletted;
+};
+
+struct Cell
+{
+    string value; // must be a string for multibyte chars
+    Color fg;
+    Color bg;
+};
+
 class Frame;
 
 class Framer
@@ -23,10 +36,11 @@ public:
     virtual bool open() = 0;
     virtual void close() = 0;
     virtual bool update() = 0;
-    virtual void onWrite(Frame*) = 0;
+    void invalidate(Frame* pf, int x = 0, int y = 0);
     virtual void onResolution(Frame*) = 0;
     virtual tuple<int, int> maxResolution() const = 0;
 protected:
+    virtual void onWrite(Frame* pf, int x, int y, const Cell& cell) = 0;
     virtual bool onAdd(Frame* pf) { return true; }
     vector<Frame*> _frames;
 };
@@ -39,31 +53,35 @@ public:
     void framer(Framer* pfr);
     Framer* framer() const;
 
+    void foreground(const Color& color);
+    const Color& foreground() const;
+    void background(const Color& color);
+    const Color& background() const;
+    vector<const Cell*> scan(int x, int y, int width) const;
+    const Cell* get(int x, int y) const;
+    void set(int x, int y, const Cell& cell);
+    void set(int x, int y, const string& text);
+    void set(int x, int y, const vector<const Cell*>& scanned);
+
     virtual void mouse(int btn, int x, int y) {}
     virtual void keyboard(int c) {}
-
-    virtual void write(const string& text);
-    void move(int x, int y);
-    bool empty() const;
-    tuple<int, int, string> pop();
 
     virtual bool setResolution(int width, int height, bool bQuiet = false);
     tuple<int, int> getResolution() const;
     bool scrolling() const;
     void scrolling(bool enable);
-
-    int x() const;
-    int y() const;
+protected:
+    void resizeBuffer(int width, int height);
 private:
     Framer* _framer;
-    queue<tuple<int, int, string>> _buffer;
 
     int _width;
     int _height;
 
-    int _x;
-    int _y; // not used if scrolling
-
     bool _scrolling;
+
+    Cell* _cells = nullptr;
+    Color _bg;
+    Color _fg;
 };
 

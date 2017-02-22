@@ -16,13 +16,9 @@ void BasicTerm::close()
 {
 }
 
-void BasicTerm::onWrite(Frame* pWhichFrame)
+void BasicTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
 {
-    while (!pWhichFrame->empty())
-    {
-        cout << std::get<2>(pWhichFrame->pop());
-    }
-    cout << flush;
+    cout << cell.value << flush;
 }
 
 void BasicTerm::onResolution(Frame* pWhichFrame)
@@ -31,5 +27,5 @@ void BasicTerm::onResolution(Frame* pWhichFrame)
 
 tuple<int, int> BasicTerm::maxResolution() const
 {
-    return std::make_tuple(100, 100);
+    return std::make_tuple(40, 10);
 }

@@ -69,33 +69,15 @@ AnsiEscapeTerm::~AnsiEscapeTerm()
 bool AnsiEscapeTerm::update()
 {
     Frame* pActiveFrame = nullptr;
-    ofstream flog("log", fstream::app);
     for (const auto& pf : _frames)
     {
-        auto& state = _states[pf];
-        while (!pf->empty())
-        {
-            auto buffer = pf->pop();
-            string text = std::get<2>(buffer);
-
-            if (pf->scrolling())
-            {
-                // log to file
-                flog << text;
-            }
-            else
-            {
-                int x = std::get<0>(buffer) + 1;
-                int y = std::get<1>(buffer) + 1;
-                print(&state, x, y, text);
-            }
-        }
         if (!pf->scrolling())
-        // if (pf->isActive()) ?
+        {
             pActiveFrame = pf;
+            break;
+        }
     }
     refresh();
-    flog.close();
 
     if (kbhit())
     {
@@ -183,8 +165,19 @@ bool AnsiEscapeTerm::onAdd(Frame* pf)
     return true;
 }
 
-void AnsiEscapeTerm::onWrite(Frame* pWhichFrame)
+void AnsiEscapeTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
 {
+    if (pf->scrolling())
+    {
+        ofstream flog("log", fstream::app);
+        flog << cell.value;
+        flog.close();
+    }
+    else
+    {
+        auto& state = _states[pf];
+        print(&state, x + 1, y + 1, cell.value);
+    }
 }
 
 void AnsiEscapeTerm::onResolution(Frame* pWhichFrame)

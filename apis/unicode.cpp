@@ -250,7 +250,6 @@ string UnicodeApi::sub(const string& text, int from, int to)
 
     size_t early_break = (from>0 && to>0) ? (size_t)std::max(from, to) : std::numeric_limits<size_t>::max();
 
-    auto iterator = subs(text);
     vector<string> parts;
     for (const auto& sub : subs(text))
     {
