@@ -2,10 +2,12 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <lua.hpp>
 #include "value.h"
 
 using std::tuple;
+using std::unordered_map;
 
 class LuaProxy;
 typedef int (LuaProxy::*ProxyMethod)(lua_State* lua);
@@ -35,7 +37,7 @@ protected:
     }
     void cadd(const string& methodName, lua_CFunction cfunction);
 private:
-    map<string, ProxyMethod> _methods;
-    map<string, lua_CFunction> _cmethods; // for statics - faster dispatch
+    unordered_map<string, ProxyMethod> _methods;
+    unordered_map<string, lua_CFunction> _cmethods; // for statics - faster dispatch
     string _name;
 };
