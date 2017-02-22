@@ -26,6 +26,7 @@ public:
     int isReadOnly(lua_State* lua);
     int seek(lua_State* lua);
     int size(lua_State* lua);
+    int lastModified(lua_State* lua);
     
 protected:
     bool onInitialize(Value& config) override;

@@ -18,6 +18,8 @@ Filesystem::Filesystem()
     add("exists", &Filesystem::exists);
     add("isReadOnly", &Filesystem::isReadOnly);
     add("seek", &Filesystem::seek);
+    add("size", &Filesystem::size);
+    add("lastModified" ,&Filesystem::lastModified);
 }
 
 bool Filesystem::onInitialize(Value& config)
@@ -294,15 +296,14 @@ int Filesystem::seek(lua_State* lua)
 
 int Filesystem::size(lua_State* lua)
 {
-    fstream* fs = get_handle(lua);
-    if (fs == nullptr) return 2;
-    
-    auto prev = fs->tellg();
-    fs->seekg(0, std::ios_base::end);
-    auto size = fs->tellg();
-    fs->seekg(prev, std::ios_base::beg);
+    string filepath = Value::check(lua, 1, "string").toString();
+    return ValuePack::ret(lua, utils::size(path() + clean(filepath, true, false)));
+}
 
-    return ValuePack::ret(lua, static_cast<size_t>(size));
+int Filesystem::lastModified(lua_State* lua)
+{
+    string filepath = Value::check(lua, 1, "string").toString();
+    return ValuePack::ret(lua, utils::lastModified(path() + clean(filepath, true, false)));
 }
 
 fstream* Filesystem::get_handle(lua_State* lua, int* pIndex)

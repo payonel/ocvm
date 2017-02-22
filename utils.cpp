@@ -122,3 +122,49 @@ bool utils::isDirectory(const string& path)
 
     return false;
 }
+
+size_t utils::size(const string& path)
+{
+    try
+    {
+        if (utils::isDirectory(path))
+            return 0;
+        else
+            return fs::file_size(path);
+    }
+    catch (std::exception& se)
+    {
+        lout << se.what() << std::endl;
+        std::cerr << se.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::exception_ptr p = std::current_exception();
+        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
+    }
+
+    return 0;
+}
+
+uint64_t utils::lastModified(const string& filepath)
+{
+    try
+    {
+        auto ftime = fs::last_write_time(filepath);
+        std::time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
+        return static_cast<uint64_t>(cftime);
+    }
+    catch (std::exception& se)
+    {
+        lout << se.what() << std::endl;
+        std::cerr << se.what() << std::endl;
+    }
+    catch (...)
+    {
+        std::exception_ptr p = std::current_exception();
+        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
+    }
+
+    return 0;
+}
+
