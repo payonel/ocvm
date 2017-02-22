@@ -184,13 +184,15 @@ Value& Value::get(int key)
     return _ntable[key];
 }
 
-void Value::set(const string& key, const Value& value)
+Value& Value::set(const string& key, const Value& value)
 {
     _stable[key] = value;
+    return *this;
 }
-void Value::set(int key, const Value& value)
+Value& Value::set(int key, const Value& value)
 {
     _ntable[key] = value;
+    return *this;
 }
 bool Value::contains(int key) const
 {
@@ -208,10 +210,11 @@ vector<string> Value::keys() const
     return result;
 }
 
-void Value::insert(const Value& value)
+Value& Value::insert(const Value& value)
 {
     int length = len();
     set(length + 1, value);
+    return *this;
 }
 
 int Value::len() const

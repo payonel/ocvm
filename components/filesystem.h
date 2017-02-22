@@ -24,6 +24,7 @@ public:
     int isDirectory(lua_State* lua);
     int exists(lua_State* lua);
     int isReadOnly(lua_State* lua);
+    int seek(lua_State* lua);
     
 protected:
     bool onInitialize(Value& config) override;

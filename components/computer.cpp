@@ -156,8 +156,25 @@ int Computer::getDeviceInfo(lua_State* lua)
 
 int Computer::getProgramLocations(lua_State* lua)
 {
-    luaL_error(lua, "getProgramLocations not implemented");
-    return 0;
+    return ValuePack::ret(lua, Value::table()
+        .insert(Value::table().insert("build").insert("builder").set("n", 2))
+        .insert(Value::table().insert("dig").insert("dig").set("n", 2))
+        .insert(Value::table().insert("base64").insert("data").set("n", 2))
+        .insert(Value::table().insert("deflate").insert("data").set("n", 2))
+        .insert(Value::table().insert("gpg").insert("data").set("n", 2))
+        .insert(Value::table().insert("inflate").insert("data").set("n", 2))
+        .insert(Value::table().insert("md5sum").insert("data").set("n", 2))
+        .insert(Value::table().insert("sha256sum").insert("data").set("n", 2))
+        .insert(Value::table().insert("refuel").insert("generator").set("n", 2))
+        .insert(Value::table().insert("irc").insert("irc").set("n", 2))
+        .insert(Value::table().insert("maze").insert("maze").set("n", 2))
+        .insert(Value::table().insert("arp").insert("network").set("n", 2))
+        .insert(Value::table().insert("ifconfig").insert("network").set("n", 2))
+        .insert(Value::table().insert("ping").insert("network").set("n", 2))
+        .insert(Value::table().insert("route").insert("network").set("n", 2))
+        .insert(Value::table().insert("opl-flash").insert("openloader").set("n", 2))
+        .insert(Value::table().insert("oppm").insert("oppm").set("n", 2))
+    );
 }
 
 int Computer::pushSignal(lua_State* lua)

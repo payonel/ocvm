@@ -35,7 +35,7 @@ public:
 
     void push(lua_State* lua) const;
 
-    void insert(const Value& value);
+    Value& insert(const Value& value);
     int len() const;
     string type() const;
     int type_id() const;
@@ -55,8 +55,8 @@ public:
     Value& get(const string& key);
     const Value& get(int index) const;
     Value& get(int index);
-    void set(const string& key, const Value& value);
-    void set(int key, const Value& value);
+    Value& set(const string& key, const Value& value);
+    Value& set(int key, const Value& value);
     bool contains(int key) const;
     bool contains(const string& key) const;
 

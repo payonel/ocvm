@@ -15,6 +15,7 @@ Filesystem::Filesystem()
     add("isDirectory", &Filesystem::isDirectory);
     add("exists", &Filesystem::exists);
     add("isReadOnly", &Filesystem::isReadOnly);
+    add("seek", &Filesystem::seek);
 }
 
 bool Filesystem::onInitialize(Value& config)
@@ -275,4 +276,42 @@ int Filesystem::exists(lua_State* lua)
 int Filesystem::isReadOnly(lua_State* lua)
 {
     return ValuePack::ret(lua, false);
+}
+
+int Filesystem::seek(lua_State* lua)
+{
+    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
+    string whence = Value::check(lua, 2, "string").toString();    
+    size_t to = (size_t)Value::check(lua, 3, "number", "nil").Or(0).toNumber();
+
+    const auto& it = _handles.find(index);
+    if (it == _handles.end())
+    {
+        return ValuePack::ret(lua, Value::nil, "bad file handle");
+    }
+    fstream* fs = it->second;
+    if (!fs->good())
+        return 0;
+
+    std::ios_base::seekdir way;
+    if (whence == "cur")
+    {
+        way = std::ios_base::cur;
+    }
+    else if (whence == "set")
+    {
+        way = std::ios_base::beg;
+    }
+    else if (whence == "end")
+    {
+        way = std::ios_base::end;
+    }
+    else
+    {
+        luaL_error(lua, "bad seek way");
+        return 0;
+    }
+
+    fs->seekg(static_cast<fstream::pos_type>(to), way);
+    return ValuePack::ret(lua, static_cast<double>(fs->tellg()));
 }
