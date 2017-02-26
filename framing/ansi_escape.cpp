@@ -1,4 +1,5 @@
 #include "ansi_escape.h"
+#include "log.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -8,7 +9,10 @@ using namespace std;
 #include <unistd.h>
 #include <termios.h>
 
-static const string esc = "\033[";
+#include "input_drv.h"
+
+static const char ESC = 0x1B;
+static const string esc = string{ESC} + "[";
 static const string cursor_on  = esc + "?25h";
 static const string cursor_off = esc + "?25l";
 static const string track_on   = esc + "?1002h";
@@ -21,13 +25,21 @@ static const string save_pos   = esc + "s";
 static const string restore_pos= esc + "u";
 static const string color_reset= esc + "0m";
 
-bool kbhit()
+static void dump_stdin()
 {
     struct timeval tv { 0L, 0L };
     fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(0, &fds);
-    return select(1, &fds, NULL, NULL, &tv);
+    unsigned char c;
+
+    while (true)
+    {
+        FD_ZERO(&fds);
+        FD_SET(0, &fds);
+        if (!select(1, &fds, NULL, NULL, &tv))
+            break;
+
+        read(0, &c, sizeof(c));
+    }
 }
 
 static string set_color(const Color& fg, const Color& bg, int depth)
@@ -54,20 +66,6 @@ static string set_color(const Color& fg, const Color& bg, int depth)
         ss << "48;2;" << r << ";" << g << ";" << b << "m";
     }
     return ss.str();
-}
-
-int getch()
-{
-    int r;
-    unsigned char c;
-    if ((r = read(0, &c, sizeof(c))) < 0)
-    {
-        return r;
-    }
-    else
-    {
-        return c;
-    }
 }
 
 string set_pos(int x, int y)
@@ -107,42 +105,35 @@ bool AnsiEscapeTerm::update()
             break;
         }
     }
+
     refresh();
 
-    if (kbhit())
+    KeyEvent ke;
+    if (InputDriver::pop(&ke))
     {
-        int ch = getch();
-        if (ch == 3)
+        if (ke.bPressed && ke.keysym == 'c' && ke.bControl && ke.bAlt)
         {
             cerr << "shell abort\n";
             return false;
         }
-        else if (ch == '\x1B')
-        {
-            cin.get();
-            cin.get(); // throw away? what are these
-            int btn = cin.get() - 32;
-            int x = cin.get() - 32;
-            int y = cin.get() - 32;
-            if (pActiveFrame)
-            {
-                pActiveFrame->mouse(btn, x, y);
-            }
-        }
-        else // assume char?
+        else // assume char? 
         {
             if (pActiveFrame)
             {
-                pActiveFrame->keyboard(ch);
+                pActiveFrame->keyboard(ke.bPressed, ke.keysym, ke.keycode);
             }
         }
     }
+
+    dump_stdin();
 
     return true;
 }
 
 bool AnsiEscapeTerm::open()
 {
+    InputDriver::start();
+
     if (_original)
     {
         cerr << "terminal is already open\n";
@@ -172,6 +163,9 @@ bool AnsiEscapeTerm::open()
 
 void AnsiEscapeTerm::close()
 {
+    InputDriver::stop();
+    dump_stdin();
+
     // disable mouse tracking
     cout << mouse_off;
     cout << cursor_on;

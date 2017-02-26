@@ -1,14 +1,18 @@
+MAKEFLAGS+="-j 4"
 flags=-g --std=c++14 -Wl,--no-as-needed -Wall
 
 ifeq ($(prof),)
-includes=-I. -I/usr/include/lua5.2/
-libs=-llua5.2-c++ -lstdc++ -lncurses -lstdc++fs
+libs=-llua5.2-c++
+includes=-I/usr/include/lua5.2/
 else
 $(info profile build)
-libs=-L../gperftools-2.5/.libs/ -ldl -lprofiler ../lua-5.3.4/src/liblua.a -lstdc++ -lncurses -lstdc++fs
-includes=-I. -I../lua-5.3.4/src
+libs=-L../gperftools-2.5/.libs/ -ldl -lprofiler ../lua-5.3.4/src/liblua.a
+includes=-I../lua-5.3.4/src
 bin=-profiled
 endif
+
+includes+=-I.
+libs+=-lstdc++ -lncurses -lstdc++fs -lX11 -pthread
 
 files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp) $(wildcard framing/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)

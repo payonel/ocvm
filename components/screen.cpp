@@ -34,11 +34,11 @@ void Screen::mouse(int btn, int x, int y)
 {
 }
 
-void Screen::keyboard(int code)
+void Screen::keyboard(bool bPressed, uint keysym, uint keycode)
 {
     for (const auto& kbaddr : _keyboards)
     {
-        client()->pushSignal({"key_down", kbaddr, code, 0});
+        client()->pushSignal({bPressed ? "key_down" : "key_up", kbaddr, keysym, keycode});
     }
 }
 
