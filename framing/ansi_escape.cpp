@@ -8,6 +8,7 @@ using namespace std;
 #include <stdio.h>
 #include <unistd.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 
 #include "input_drv.h"
 
@@ -210,5 +211,22 @@ void AnsiEscapeTerm::onResolution(Frame* pWhichFrame)
 
 tuple<int, int> AnsiEscapeTerm::maxResolution() const
 {
-    return std::make_tuple(80, 25);
+    // TODO: handle SIGWINCH for resize
+    // see signals.h
+    int cols = 80;
+    int lines = 24;
+
+#ifdef TIOCGSIZE
+    struct ttysize ts;
+    ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
+    cols = ts.ts_cols;
+    lines = ts.ts_lines;
+#elif defined(TIOCGWINSZ)
+    struct winsize ts;
+    ioctl(STDIN_FILENO, TIOCGWINSZ, &ts);
+    cols = ts.ws_col;
+    lines = ts.ws_row;
+#endif /* TIOCGSIZE */
+
+    return std::make_tuple(cols, lines);
 }

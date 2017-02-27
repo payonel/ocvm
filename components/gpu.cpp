@@ -201,38 +201,53 @@ int Gpu::copy(lua_State* lua)
     int tx = x + dx;
     int ty = y + dy;
 
+    if (width <= 0 || height <= 0)
+        return ValuePack::ret(lua, true);
+
     if (tx > real_width || ty > real_height)
         return ValuePack::ret(lua, true);
 
-    x = std::min(real_width, x);
-    y = std::min(real_height, y);
+    if ((tx + width) < 1 || (ty + height) < 1)
+        return ValuePack::ret(lua, true);
 
-    if (x < 1)
-    {
-        width += x - 1;
-        x = 1;
-    }
-    if (y < 1)
-    {
-        height += y - 1;
-        y = 1;
-    }
-    
-    width = std::min(real_width - x + 1, width);
-    height = std::min(real_height - y + 1, height);
+    if (x > real_width || y > real_height)
+        return ValuePack::ret(lua, true);
 
-    if (width <= 0 || height <= 0)
+    if ((x + width) < 1 || (y + height) < 1)
         return ValuePack::ret(lua, true);
 
     vector<vector<const Cell*>> scans;
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        scans.push_back(_screen->scan(x, y + yoffset, width));
+        auto given_scan = _screen->scan(x, y + yoffset, width);
+        vector<const Cell*> next;
+        for (const auto* pc : given_scan)
+        {
+            if (pc)
+            {
+                Cell* pnew = new Cell;
+                *pnew = *pc; // copy
+                next.push_back(pnew);
+            }
+            else
+            {
+                next.push_back(nullptr);
+            }
+        }
+        scans.push_back(next);
     }
 
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
         _screen->set(tx, ty + yoffset, scans.at(yoffset));
+    }
+
+    for (const auto& scan : scans)
+    {
+        for (const auto& pc : scan)
+        {
+            delete pc;
+        }
     }
 
     return ValuePack::ret(lua, true);

@@ -225,7 +225,7 @@ int Client::component_invoke(lua_State* lua)
     // for logging, this is called via LuaProxy because all method calls are dispatched there first
     // LuaProxy::invoke has already logged much about this call, but is waiting to log the result
     // but, logging from here on out will look like a return value, so we add some indentation here
-    lout << "-> ";
+    // lout << "-> ";
     string address = Value::check(lua, 1, "string").toString();
     lua_remove(lua, 1);
     string methodName = Value::check(lua, 1, "string").toString();

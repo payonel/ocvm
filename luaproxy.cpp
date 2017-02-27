@@ -69,13 +69,10 @@ void LuaProxy::cadd(const string& methodName, lua_CFunction cfunction)
 
 int LuaProxy::invoke(const string& methodName, lua_State* lua)
 {
-    bool verbose = !(_name == "computer" && (methodName == "realTime" || methodName == "uptime"));
-    if (verbose)
-        lout << "LuaProxy." << _name << "." << methodName << endl;
     const auto& mit = _methods.find(methodName);
     if (mit == _methods.end())
     {
-        lout << "no such method\n";
+        lout << "no such method " << methodName << "\n";
         luaL_error(lua, "no such method: %s", methodName.c_str());
     }
 

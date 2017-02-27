@@ -229,7 +229,7 @@ size_t UnicodeApi::wlen(const string& text)
     return width;
 }
 
-size_t UnicodeApi::len(const string& text, size_t index)
+size_t UnicodeApi::len(const string& text)
 {
     size_t length = 0;
     auto iterator = subs(text);
@@ -262,9 +262,14 @@ string UnicodeApi::sub(const string& text, int from, int to)
         return "";
 
     if (from < 0)
-        from = std::min(numParts, std::max(1, from + numParts + 1));
+        from = std::max(1, from + numParts + 1);
+
+    if (from > numParts)
+        return "";
+
     if (to < 0)
-        to = std::min(numParts, std::max(1, to + numParts + 1));
+        to += numParts + 1;
+    to = std::min(numParts, to);
     
     // switch to zero-based index
     from--;
