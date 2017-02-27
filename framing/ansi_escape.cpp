@@ -85,7 +85,7 @@ static void print(AnsiFrameState* pf, int x, int y, const Cell& cell)
     cout << set_pos(x, y);
     cout << set_color(cell.fg, cell.bg, 16777216);
     cout << cell.value;
-    cout << color_reset;
+    // cout << color_reset;
     cout << flush;
 }
 

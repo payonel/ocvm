@@ -9,6 +9,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include <map>
 using namespace std;
 
 class _KeyboardDriver
@@ -19,6 +20,32 @@ public:
         _running(false),
         _continue(false)
     {
+        // [9, 96] = x-8
+        for (uint src = 9; src <= 96; src++)
+        {
+            _codes[src] = src - 8;
+        }
+        // [133, 137] = x+86
+        for (uint src = 133; src <= 137; src++)
+        {
+            _codes[src] = src + 86;
+        }
+
+        _codes[105] = 157;
+        _codes[108] = 184;
+
+        _codes[127] = 197;
+
+        _codes[110] = 199;
+        _codes[111] = 200;
+        _codes[112] = 201;
+        _codes[113] = 203;
+        _codes[114] = 205;
+        _codes[115] = 207;
+        _codes[116] = 208;
+        _codes[117] = 209;
+        _codes[118] = 210;
+        _codes[119] = 211;
     }
 
     ~_KeyboardDriver()
@@ -122,11 +149,11 @@ protected:
 
             buf[0] = 0;
             KeySym ks;
-            XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
+            int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
 
             ke.text = buf;
-            ke.keysym = keysymMap(ks);
-            ke.keycode = event.xkey.keycode;
+            ke.keysym = map_sym(ks, len);
+            ke.keycode = map_code(event.xkey.keycode);
 
             ke.bShift = (event.xkey.state & 0x1);
             ke.bControl = (event.xkey.state & 0x4);
@@ -148,15 +175,30 @@ private:
     volatile bool _continue;
     queue<KeyEvent> _events;
 
-    unsigned int keysymMap(KeySym& ks)
+    map<uint, uint> _codes;
+
+    uint map_code(const uint& code)
     {
-        if (ks & 0xFF00)
+        const auto& it = _codes.find(code);
+        if (it != _codes.end())
         {
-            return ks & 0xFF;
+            return it->second;
         }
 
-        return ks;
+        return code;
     }
+
+    uint map_sym(const KeySym& sym, int sequence_length)
+    {
+        if (sequence_length == 0)
+            return 0;
+
+        if (sym & 0xFF00)
+            return sym & 0x7F;
+
+        return sym;
+    }
+
 
 } kb_drv;
 

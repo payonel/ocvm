@@ -173,11 +173,11 @@ int Gpu::fill(lua_State* lua)
 
     Cell fill_cell { text, _screen->foreground(), _screen->background() };
 
-    for (int row = y; row <= height; row++)
+    for (int row = 0; row < height; row++)
     {
-        for (int col = x; col <= width; col++)
+        for (int col = 0; col < width; col++)
         {
-            _screen->set(col, row, fill_cell);
+            _screen->set(x + col, y + row, fill_cell);
         }
     }
 
@@ -191,12 +191,15 @@ int Gpu::copy(lua_State* lua)
     int y = Value::check(lua, 2, "number").toNumber();
     int width = Value::check(lua, 3, "number").toNumber();
     int height = Value::check(lua, 4, "number").toNumber();
-    int tx = Value::check(lua, 5, "number").toNumber();
-    int ty = Value::check(lua, 6, "number").toNumber();
+    int dx = Value::check(lua, 5, "number").toNumber();
+    int dy = Value::check(lua, 6, "number").toNumber();
 
     auto dim = _screen->getResolution();
     int real_width = std::get<0>(dim);
     int real_height = std::get<1>(dim);
+
+    int tx = x + dx;
+    int ty = y + dy;
 
     if (tx > real_width || ty > real_height)
         return ValuePack::ret(lua, true);
