@@ -21,20 +21,16 @@ deps = $(objs:%.o=%.d)
 ocvm$(bin): $(objs)
 	g++ $(flags) $(objs) $(libs) -o ocvm$(bin)
 
-$(objs): | bin bin/components bin/apis bin/framing
-
-bin:
-bin/components:
-bin/apis:
-bin/framing:
-	mkdir -p bin/apis
-	mkdir -p bin/components
-	mkdir -p bin/framing
-
 -include $(deps)
 bin/%$(bin).o : %.cpp
+	@mkdir -p $@D
 	g++ $(flags) $(includes) -MMD -c $< -o $@
 
 .PHONY : clean
-clean :
-	rm -fr bin ocvm ocvm-profiled
+clean:
+	@echo rm -rf bin ocvm ocvm-profiled
+
+ifneq ($(filter clean,$(MAKECMDGOALS)),)
+	$(shell rm -rf bin ocvm ocvm-profiled)
+endif
+

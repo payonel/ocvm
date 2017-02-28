@@ -95,14 +95,14 @@ public:
         return true;
     }
 protected:
-    bool is_physical_release(Display* display, XEvent* pev)
+    bool is_physical_release(XEvent* pev)
     {
         if (pev && pev->type == KeyRelease)
         {
-            if (XEventsQueued(display, QueuedAfterFlush))
+            if (XEventsQueued(_display, QueuedAfterFlush))
             {
                 XEvent pending;
-                XPeekEvent(display, &pending);
+                XPeekEvent(_display, &pending);
                 if (
                     pending.type == KeyPress &&
                     pending.xkey.time == pev->xkey.time &&
@@ -116,36 +116,90 @@ protected:
         return true;
     }
 
+    void open_display()
+    {
+        _display = XOpenDisplay(nullptr);
+    }
+
+    void close_display()
+    {
+        XCloseDisplay(_display);
+    }
+
+    void goto_parent()
+    {
+        int revert_to;
+        Window w;
+        XGetInputFocus(_display, &w, &revert_to);
+        while (true)
+        {
+            Window root;
+            Window parent;
+            Window* children = nullptr;
+            uint numChildren = 0;
+            XQueryTree(_display, w, &root, &parent, &children, &numChildren);
+            XFree(children);
+
+            if (parent == root)
+            {
+                _root = root;
+                break;
+            }
+
+            w = parent;
+        }
+
+        _active_window = w;
+    }
+
+    void select_input_tree(long event_mask, Window w = None)
+    {
+        if (w == None)
+        {
+            w = _active_window;
+        }
+        XSelectInput(_display, w, event_mask);
+
+        Window _r, _p;
+        Window* children = nullptr;
+        uint numChildren = 0;
+        XQueryTree(_display, w, &_r, &_p, &children, &numChildren);
+        for (uint child = 0; child < numChildren; child++)
+        {
+            select_input_tree(event_mask, children[child]);
+        }
+        XFree(children);
+    }
 
     void proc()
     {
-        Display *display = XOpenDisplay(nullptr);
-        Window active_window;
-        int revert_to;
-
-        XGetInputFocus(display, &active_window, &revert_to);
-        XSelectInput(display, active_window, KeyPressMask | KeyReleaseMask);
+        open_display();
+        goto_parent();
+        select_input_tree(KeyPressMask | KeyReleaseMask);
         char buf[32] {};
 
         while (true)
         {
             XEvent event {};
-            XNextEvent(display, &event);
+            while (!XEventsQueued(_display, QueuedAfterFlush) && _continue)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            if (!_continue)
+                break;
+            XNextEvent(_display, &event);
             KeyEvent ke;
 
             if (event.type == KeyPress)
                 ke.bPressed = true;
             else if (event.type == KeyRelease)
             {
-                if (!is_physical_release(display, &event))
+                if (!is_physical_release(&event))
                     continue;
                 ke.bPressed = false;
             }
             else
                 continue;
-
-            if (!_continue)
-                break;
 
             buf[0] = 0;
             KeySym ks;
@@ -165,7 +219,8 @@ protected:
             }
         }
 
-        XCloseDisplay(display);
+        select_input_tree(0);
+        close_display();
     }
 
 private:
@@ -176,6 +231,10 @@ private:
     queue<KeyEvent> _events;
 
     map<uint, uint> _codes;
+
+    Display* _display;
+    Window _active_window;
+    Window _root;
 
     uint map_code(const uint& code)
     {

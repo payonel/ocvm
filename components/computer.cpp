@@ -36,6 +36,7 @@ Computer::Computer()
     add("energy", &Computer::energy);
     add("maxEnergy", &Computer::maxEnergy);
     add("realTime", &Computer::realTime);
+    add("uptime", &Computer::uptime);
 }
 
 Computer::~Computer()
@@ -93,7 +94,7 @@ double Computer::trace(lua_State* coState, bool bForce)
         }
         if (coState)
         {
-            //std::cerr << Value::stack(coState) << endl;
+            // lout << Value::stack(coState) << endl;
         }
     }
     return thenow;
@@ -102,6 +103,11 @@ double Computer::trace(lua_State* coState, bool bForce)
 int Computer::realTime(lua_State* lua)
 {
     return ValuePack::ret(lua, trace(lua));
+}
+
+int Computer::uptime(lua_State* lua)
+{
+    return ValuePack::ret(lua, trace() - _start_time);
 }
 
 void Computer::injectCustomLua()
@@ -115,11 +121,11 @@ void Computer::injectCustomLua()
     //luaL_loadstring(_state, code.c_str()); // +1
     //lua_setfield(_state, -2, "realTime"); // -1
 
-    lua_getglobal(_state, "os"); // +1
-    lua_pushstring(_state, "clock"); //+1
-    lua_gettable(_state, -2); // push clock on stack, pop key name, +1-1
-    lua_remove(_state, -2); // pop os, -1
-    lua_setfield(_state, -2, "uptime"); // computer.uptime = os.clock, pops clock, -1
+    // lua_getglobal(_state, "os"); // +1
+    // lua_pushstring(_state, "clock"); //+1
+    // lua_gettable(_state, -2); // push clock on stack, pop key name, +1-1
+    // lua_remove(_state, -2); // pop os, -1   
+    // lua_setfield(_state, -2, "uptime"); // computer.uptime = os.clock, pops clock, -1
 
     lua_pop(_state, 1); // -1
 }
@@ -266,6 +272,8 @@ RunState Computer::run()
         else if (_standby > now()) // return true without resume to return to the framer update
         {
             trace();
+            // std::this_thread::yield();
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
             return RunState::Run;
         }
     }

@@ -41,6 +41,7 @@ public:
     int energy(lua_State* lua);
     int maxEnergy(lua_State* lua);
     int realTime(lua_State* lua);
+    int uptime(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     RunState resume(int nargs);
