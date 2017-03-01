@@ -25,7 +25,7 @@ Gpu::Gpu()
 
 Gpu::~Gpu()
 {
-    // std::cerr << _buffer.size() << std::endl;
+    // lout << _buffer.size() << std::endl;
 }
 
 void Gpu::check(lua_State* lua) const

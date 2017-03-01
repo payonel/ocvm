@@ -41,13 +41,11 @@ bool utils::copy(const string& src, const string& dst)
     catch (std::exception& se)
     {
         lout << se.what() << std::endl;
-        std::cerr << se.what() << std::endl;
         return false;
     }
     catch (...)
     {
         std::exception_ptr p = std::current_exception();
-        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
         return false;
     }
 
@@ -92,12 +90,10 @@ vector<string> utils::list(const string& path)
     catch (std::exception& se)
     {
         lout << se.what() << std::endl;
-        std::cerr << se.what() << std::endl;
     }
     catch (...)
     {
         std::exception_ptr p = std::current_exception();
-        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
     }
 
     return result;
@@ -112,12 +108,10 @@ bool utils::isDirectory(const string& path)
     catch (std::exception& se)
     {
         lout << se.what() << std::endl;
-        std::cerr << se.what() << std::endl;
     }
     catch (...)
     {
         std::exception_ptr p = std::current_exception();
-        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
     }
 
     return false;
@@ -135,12 +129,10 @@ size_t utils::size(const string& path)
     catch (std::exception& se)
     {
         lout << se.what() << std::endl;
-        std::cerr << se.what() << std::endl;
     }
     catch (...)
     {
         std::exception_ptr p = std::current_exception();
-        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
     }
 
     return 0;
@@ -157,12 +149,10 @@ uint64_t utils::lastModified(const string& filepath)
     catch (std::exception& se)
     {
         lout << se.what() << std::endl;
-        std::cerr << se.what() << std::endl;
     }
     catch (...)
     {
         std::exception_ptr p = std::current_exception();
-        std::cerr <<(p ? p.__cxa_exception_type()->name() : "null") << std::endl;
     }
 
     return 0;

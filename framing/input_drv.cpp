@@ -1,4 +1,5 @@
 #include "input_drv.h"
+#include "log.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -208,6 +209,8 @@ protected:
             ke.text = buf;
             ke.keysym = map_sym(ks, len);
             ke.keycode = map_code(event.xkey.keycode);
+
+            lout << ke.bPressed << '\t' << ks << '\t' << event.xkey.keycode << endl;
 
             ke.bShift = (event.xkey.state & 0x1);
             ke.bControl = (event.xkey.state & 0x4);

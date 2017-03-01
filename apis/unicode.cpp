@@ -32,16 +32,16 @@ std::unordered_map<uint32_t, int> UnicodeApi::font_width;
 
 UnicodeApi::UnicodeApi() : LuaProxy("unicode")
 {
-    cadd("wtrunc", &UnicodeApi::wtrunc);
-    cadd("isWide", &UnicodeApi::isWide);
-    cadd("upper", &UnicodeApi::upper);
-    cadd("char", &UnicodeApi::tochar);
-    cadd("wlen", &UnicodeApi::wlen);
-    cadd("len", &UnicodeApi::len);
-    cadd("sub", &UnicodeApi::sub);
-    cadd("charWidth", &UnicodeApi::charWidth);
-    cadd("reverse", &UnicodeApi::reverse);
-    cadd("lower", &UnicodeApi::lower);
+    add("wtrunc", &UnicodeApi::wtrunc);
+    add("isWide", &UnicodeApi::isWide);
+    add("upper", &UnicodeApi::upper);
+    add("char", &UnicodeApi::tochar);
+    add("wlen", &UnicodeApi::wlen);
+    add("len", &UnicodeApi::len);
+    add("sub", &UnicodeApi::sub);
+    add("charWidth", &UnicodeApi::charWidth);
+    add("reverse", &UnicodeApi::reverse);
+    add("lower", &UnicodeApi::lower);
 }
 
 UnicodeApi* UnicodeApi::get()

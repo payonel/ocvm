@@ -21,6 +21,26 @@ void LuaProxy::name(const string& v)
     _name = v;
 }
 
+static string handle_exception(std::exception& exp)
+{
+    return exp.what();
+}
+
+static string handle_exception(std::exception_ptr&& p)
+{
+    try
+    {
+        if (p)
+            std::rethrow_exception(p);
+    }
+    catch (std::exception& exp)
+    {
+        return handle_exception(exp);
+    }
+
+    return "unknown exception";
+}
+
 int lua_proxy_static_caller(lua_State* lua)
 {
     lua_pushstring(lua, "instance");//+1
@@ -40,7 +60,18 @@ int lua_proxy_static_caller(lua_State* lua)
     lua_pop(lua, 1);//-1
 
     LuaProxy* p = reinterpret_cast<LuaProxy*>(_this);
-    return p->invoke(methodName, lua);
+    string exception_message;
+    try
+    {
+        return p->invoke(methodName, lua);
+    }
+    catch (...)
+    {
+        exception_message = handle_exception(std::current_exception());
+    }
+
+    luaL_error(lua, exception_message.c_str());
+    return 0;
 }
 
 vector<LuaMethod> LuaProxy::methods() const
