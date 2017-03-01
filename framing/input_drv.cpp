@@ -1,5 +1,4 @@
 #include "input_drv.h"
-#include "log.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -10,16 +9,21 @@
 #include <queue>
 #include <thread>
 #include <mutex>
-#include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <bitset>
+#include <iostream>
 using namespace std;
+
+static inline unsigned char bit(char* keys, int index)
+{
+    return ((keys[index/8]) & (1<<(index%8)));
+}
 
 class _KeyboardDriver
 {
 public:
-    _KeyboardDriver() :
-        _pthread(nullptr),
-        _running(false),
-        _continue(false)
+    _KeyboardDriver()
     {
         // [9, 96] = x-8
         for (uint src = 9; src <= 96; src++)
@@ -96,35 +100,23 @@ public:
         return true;
     }
 protected:
-    bool is_physical_release(XEvent* pev)
-    {
-        if (pev && pev->type == KeyRelease)
-        {
-            if (XEventsQueued(_display, QueuedAfterFlush))
-            {
-                XEvent pending;
-                XPeekEvent(_display, &pending);
-                if (
-                    pending.type == KeyPress &&
-                    pending.xkey.time == pev->xkey.time &&
-                    pending.xkey.keycode == pev->xkey.keycode)
-                {
-                    // ignore
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     void open_display()
     {
         _display = XOpenDisplay(nullptr);
+        _window_stack.clear();
+
+        _key_template = XKeyEvent();
+        _key_template.display = _display;
+        _key_template.time = CurrentTime;
+        _key_template.send_event = true;
+        _key_template.same_screen = true;
+        _key_template.state = 0x0;
     }
 
     void close_display()
     {
         XCloseDisplay(_display);
+        _window_stack.clear();
     }
 
     void goto_parent()
@@ -143,23 +135,23 @@ protected:
 
             if (parent == root)
             {
-                _root = root;
                 break;
             }
 
             w = parent;
         }
 
-        _active_window = w;
+        _key_template.window = w;
+        _top = w;
     }
 
-    void select_input_tree(long event_mask, Window w = None)
+    void monitor_tree(Window w = None)
     {
         if (w == None)
         {
-            w = _active_window;
+            w = _top;
         }
-        XSelectInput(_display, w, event_mask);
+        _window_stack.insert(w);
 
         Window _r, _p;
         Window* children = nullptr;
@@ -167,77 +159,120 @@ protected:
         XQueryTree(_display, w, &_r, &_p, &children, &numChildren);
         for (uint child = 0; child < numChildren; child++)
         {
-            select_input_tree(event_mask, children[child]);
+            monitor_tree(children[child]);
         }
         XFree(children);
+    }
+
+    bool is_in_focus()
+    {
+        Window w;
+        int revert;
+        XGetInputFocus(_display, &w, &revert);
+        return _window_stack.find(w) != _window_stack.end();
+    }
+
+    bool infer_next_event(XEvent* pev)
+    {
+        char keymap[32] {};
+        XQueryKeymap(_display, keymap);
+        // only scan for first change
+        for (int i = 0; i < 32; i++)
+        {
+            // this should get optimized out
+            const char& stored = _keymap[i];
+            const char& current = keymap[i];
+            unsigned char xored = stored ^ current;
+            unsigned char first_bit = xored & (xored - 1);
+            first_bit = ~first_bit & xored;
+            uint code = i * 8;
+
+            switch (first_bit)
+            {
+                case 0x80: code += 1;
+                case 0x40: code += 1;
+                case 0x20: code += 1;
+                case 0x10: code += 1;
+                case 0x8:  code += 1;
+                case 0x4:  code += 1;
+                case 0x2:  code += 1;
+                case 0x1:  //code += 1;
+                    break;
+                default: continue;
+            }
+
+            _keymap[i] ^= first_bit;
+
+            pev->xkey = _key_template;
+
+            bool pressed = (current & first_bit);
+            pev->type = pressed ? KeyPress : KeyRelease;
+
+            pev->xkey.keycode = code;
+            return true;
+        }
+
+        return false;
     }
 
     void proc()
     {
         open_display();
         goto_parent();
-        select_input_tree(KeyPressMask | KeyReleaseMask);
+        monitor_tree();
         char buf[32] {};
 
-        while (true)
+        while (_continue)
         {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             XEvent event {};
-            while (!XEventsQueued(_display, QueuedAfterFlush) && _continue)
+            if (is_in_focus() && infer_next_event(&event))
             {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-            if (!_continue)
-                break;
-            XNextEvent(_display, &event);
-            KeyEvent ke;
-
-            if (event.type == KeyPress)
-                ke.bPressed = true;
-            else if (event.type == KeyRelease)
-            {
-                if (!is_physical_release(&event))
+                KeyEvent ke;
+                if (event.type == KeyPress)
+                    ke.bPressed = true;
+                else if (event.type == KeyRelease)
+                {
+                    ke.bPressed = false;
+                }
+                else
                     continue;
-                ke.bPressed = false;
-            }
-            else
-                continue;
 
-            buf[0] = 0;
-            KeySym ks;
-            int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
+                buf[0] = 0;
+                KeySym ks;
+                int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
 
-            ke.text = buf;
-            ke.keysym = map_sym(ks, len);
-            ke.keycode = map_code(event.xkey.keycode);
+                // cout << ke.bPressed << '\t' << ks << '\t' << event.xkey.keycode;
+                // cout << "\t(raw)\n";
 
-            lout << ke.bPressed << '\t' << ks << '\t' << event.xkey.keycode << endl;
+                ke.text = buf;
+                ke.keysym = map_sym(ks, len);
+                ke.keycode = map_code(event.xkey.keycode);
 
-            ke.bShift = (event.xkey.state & 0x1);
-            ke.bControl = (event.xkey.state & 0x4);
-            ke.bAlt = (event.xkey.state & 0x8);
-
-            {
-                unique_lock<mutex> lk(_m);
-                _events.push(ke);
+                {
+                    unique_lock<mutex> lk(_m);
+                    _events.push(ke);
+                }
             }
         }
 
-        select_input_tree(0);
         close_display();
     }
 
 private:
-    thread* _pthread;
     mutex _m;
-    bool _running;
-    volatile bool _continue;
     queue<KeyEvent> _events;
+    unordered_map<uint, uint> _codes;
+    unordered_set<Window> _window_stack;
 
-    map<uint, uint> _codes;
+    thread* _pthread {};
+    bool _running {};
+    volatile bool _continue {};
 
-    Display* _display;
-    Window _active_window;
-    Window _root;
+    Display* _display {};
+    Window _top {};
+    char _keymap[32] {};
+    XKeyEvent _key_template;
 
     uint map_code(const uint& code)
     {

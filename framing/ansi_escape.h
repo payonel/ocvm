@@ -28,5 +28,5 @@ protected:
     bool onAdd(Frame* pf) override;
 private:
     map<Frame*, AnsiFrameState> _states;
-    termios* _original;
+    termios* _original {};
 };
