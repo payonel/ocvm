@@ -5,7 +5,7 @@
             "type": "cppdbg",
             "request": "attach",
             "name": "Attach to PID",
-            "processId": "${command.pickProcess}",
+            "processId": "${command:pickProcess}",
             "program": "${workspaceRoot}/ocvm",
             "linux": {
                 "MIMode": "gdb",
