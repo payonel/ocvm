@@ -117,12 +117,22 @@ bool utils::isDirectory(const string& path)
     return false;
 }
 
-size_t utils::size(const string& path)
+size_t utils::size(const string& path, bool recursive)
 {
     try
     {
         if (utils::isDirectory(path))
-            return 0;
+        {
+            size_t total = 0;
+            if (recursive)
+            {
+                for (const auto& item : list(path))
+                {
+                    total += size(item, true);
+                }
+            }
+            return total;
+        }
         else
             return fs::file_size(path);
     }

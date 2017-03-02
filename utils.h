@@ -17,7 +17,7 @@ namespace utils
     vector<string> list(const string& path);
     bool isDirectory(const string& path);
 
-    size_t size(const string& path);
+    size_t size(const string& path, bool recursive = false);
     uint64_t lastModified(const string& path);
 };
 

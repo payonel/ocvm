@@ -104,13 +104,31 @@ protected:
     {
         _display = XOpenDisplay(nullptr);
         _window_stack.clear();
+        _modifiers.clear();
+
+        XModifierKeymap* mapping = XGetModifierMapping(_display);
+
+        int width = mapping->max_keypermod;
+        auto& map = mapping->modifiermap;
+        for (int mod_index = ShiftMapIndex; mod_index <= Mod5MapIndex; mod_index++)
+        {
+            for (int i = 0; i < width; i++)
+            {
+                uint code = map[mod_index*width + i];
+                if (code)
+                {
+                    _modifiers[code] = make_tuple(mod_index, i);
+                }
+            }
+        }
+
+        XFreeModifiermap(mapping);
 
         _key_template = XKeyEvent();
         _key_template.display = _display;
         _key_template.time = CurrentTime;
         _key_template.send_event = true;
         _key_template.same_screen = true;
-        _key_template.state = 0x0;
     }
 
     void close_display()
@@ -208,6 +226,24 @@ protected:
             bool pressed = (current & first_bit);
             pev->type = pressed ? KeyPress : KeyRelease;
 
+            // cout << "computed code: " << i << ' ' << (i*8) << ' ' << hex << (int)first_bit << ' ' << dec << code << endl;
+            const auto& modifier_set_iterator = _modifiers.find(code);
+            if (modifier_set_iterator != _modifiers.end())
+            {
+                const auto& mod_key_tuple = modifier_set_iterator->second;
+
+                uint mod_index = std::get<0>(mod_key_tuple); // shift(0), lock(1), ctrl(2), etc
+                uint nth_code = std::get<1>(mod_key_tuple); // the nth code in the group
+
+                bitset<8> mod_bits = _mod_groups[mod_index];
+                mod_bits.set(nth_code, pressed);
+                _mod_groups[mod_index] = static_cast<unsigned char>(mod_bits.to_ulong());
+
+                bitset<8> state_bits = _modifier_state;
+                state_bits.set(mod_index, mod_bits.any());
+                _modifier_state = static_cast<unsigned char>(state_bits.to_ulong());
+            }
+            pev->xkey.state = _modifier_state;
             pev->xkey.keycode = code;
             return true;
         }
@@ -249,6 +285,10 @@ protected:
                 ke.keysym = map_sym(ks, len);
                 ke.keycode = map_code(event.xkey.keycode);
 
+                ke.bShift = (event.xkey.state & 0x1);
+                ke.bControl = (event.xkey.state & 0x4);
+                ke.bAlt = (event.xkey.state & 0x8);
+
                 {
                     unique_lock<mutex> lk(_m);
                     _events.push(ke);
@@ -264,6 +304,8 @@ private:
     queue<KeyEvent> _events;
     unordered_map<uint, uint> _codes;
     unordered_set<Window> _window_stack;
+    unordered_map<uint, tuple<uint, uint>> _modifiers;
+    unsigned char _mod_groups[8] {}; // 8 mod keys, 8 possible locations of those keys
 
     thread* _pthread {};
     bool _running {};
@@ -272,6 +314,7 @@ private:
     Display* _display {};
     Window _top {};
     char _keymap[32] {};
+    unsigned char _modifier_state {};
     XKeyEvent _key_template;
 
     uint map_code(const uint& code)

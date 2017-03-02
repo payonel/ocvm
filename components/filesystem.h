@@ -27,7 +27,8 @@ public:
     int seek(lua_State* lua);
     int size(lua_State* lua);
     int lastModified(lua_State* lua);
-    
+    int spaceUsed(lua_State* lua);
+    int spaceTotal(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     static string clean(string arg, bool bAbs, bool removeEnd);

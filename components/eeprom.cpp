@@ -11,6 +11,9 @@ Eeprom::Eeprom()
     add("get", &Eeprom::get);
     add("getData", &Eeprom::getData);
     add("setData", &Eeprom::setData);
+    add("getSize", &Eeprom::getSize);
+    add("getDataSize", &Eeprom::getDataSize);
+    add("getLabel", &Eeprom::getLabel);
 }
 
 bool Eeprom::onInitialize(Value& config)
@@ -45,6 +48,21 @@ int Eeprom::get(lua_State* lua)
 int Eeprom::getData(lua_State* lua)
 {
     return ValuePack::ret(lua, this->load(dataPath()));
+}
+
+int Eeprom::getSize(lua_State* lua)
+{
+    return ValuePack::ret(lua, _bios_size_limit);
+}
+
+int Eeprom::getDataSize(lua_State* lua)
+{
+    return ValuePack::ret(lua, _data_size_limit);
+}
+
+int Eeprom::getLabel(lua_State* lua)
+{
+    return ValuePack::ret(lua, "EEPROM");
 }
 
 int Eeprom::setData(lua_State* lua)

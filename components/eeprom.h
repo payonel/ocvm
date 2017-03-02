@@ -10,6 +10,9 @@ public:
     int get(lua_State* lua);
     int getData(lua_State* lua);
     int setData(lua_State* lua);
+    int getSize(lua_State* lua);
+    int getDataSize(lua_State* lua);
+    int getLabel(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     string biosPath() const;

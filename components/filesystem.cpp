@@ -3,8 +3,8 @@
 #include "log.h"
 #include "utils.h"
 #include <fstream>
-using std::streamsize;
-using std::ifstream;
+#include <limits>
+using namespace std;
 
 Filesystem::Filesystem()
 {
@@ -20,6 +20,8 @@ Filesystem::Filesystem()
     add("seek", &Filesystem::seek);
     add("size", &Filesystem::size);
     add("lastModified" ,&Filesystem::lastModified);
+    add("spaceUsed" ,&Filesystem::spaceUsed);
+    add("spaceTotal" ,&Filesystem::spaceTotal);
 }
 
 bool Filesystem::onInitialize(Value& config)
@@ -319,4 +321,14 @@ fstream* Filesystem::get_handle(lua_State* lua, int* pIndex)
     if (pIndex)
         *pIndex = index;
     return fs;
+}
+
+int Filesystem::spaceUsed(lua_State* lua)
+{
+    return ValuePack::ret(lua, utils::size(path(), true));
+}
+
+int Filesystem::spaceTotal(lua_State* lua)
+{
+    return ValuePack::ret(lua, numeric_limits<double>::max());
 }

@@ -112,7 +112,7 @@ bool AnsiEscapeTerm::update()
     KeyEvent ke;
     if (InputDriver::pop(&ke))
     {
-        if (ke.bPressed && ke.keysym == 'c' && ke.bControl && ke.bAlt)
+        if (ke.keycode == 1)
         {
             cerr << "shell abort\n";
             return false;
