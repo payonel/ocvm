@@ -4,20 +4,13 @@
 #include <queue>
 using std::queue;
 
-enum class RunState
-{
-    Run,
-    Reboot,
-    Halt
-};
-
 class Computer : public Component
 {
 public:
     Computer();
     ~Computer();
 
-    RunState run();
+    RunState update() override;
     bool load(const string& machinePath);
     bool newlib(LuaProxy* proxy);
     void close();

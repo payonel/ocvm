@@ -34,14 +34,6 @@ void Screen::mouse(int btn, int x, int y)
 {
 }
 
-void Screen::keyboard(bool bPressed, uint keysym, uint keycode)
-{
-    for (const auto& kbaddr : _keyboards)
-    {
-        client()->pushSignal({bPressed ? "key_down" : "key_up", kbaddr, keysym, keycode});
-    }
-}
-
 void Screen::addKeyboard(const string& addr)
 {
     _keyboards.push_back(addr);

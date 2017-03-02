@@ -245,7 +245,7 @@ int Computer::maxEnergy(lua_State* lua)
     return ValuePack::ret(lua, std::numeric_limits<double>::max());
 }
 
-RunState Computer::run()
+RunState Computer::update()
 {
     /*
         Types of runs
@@ -274,7 +274,7 @@ RunState Computer::run()
             trace();
             // std::this_thread::yield();
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            return RunState::Run;
+            return RunState::Continue;
         }
     }
 
@@ -349,7 +349,6 @@ RunState Computer::resume(int nargs)
             }
         }
         lua_settop(_state, 0);
-        return RunState::Run;
     }
     else
     {
@@ -359,7 +358,7 @@ RunState Computer::resume(int nargs)
         return RunState::Halt;
     }
 
-    return RunState::Run;
+    return RunState::Continue;
 }
 
 bool Computer::load(const string& machinePath)

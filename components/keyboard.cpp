@@ -3,13 +3,29 @@
 #include "client.h"
 #include "log.h"
 
+#include "drivers/input_drv.h"
+#include "drivers/kb_scanner.h"
+
 Keyboard::Keyboard()
 {
+}
+
+Keyboard::~Keyboard()
+{
+    if (_driver)
+        _driver->stop();
+
+    delete _driver;
+    _driver = nullptr;
 }
 
 bool Keyboard::onInitialize(Value& config)
 {
     _preferredScreen = config.get(3).Or("").toString();
+
+    _driver = new KeyboardScanner;
+    _driver->start();
+
     return true;
 }
 
@@ -24,6 +40,26 @@ bool Keyboard::postInit()
             return true;
         }
     }
+
     lout << "warning: kb had no screen to join\n";
     return true;
+}
+
+RunState Keyboard::update()
+{
+    KeyEvent ke;
+    if (_driver->pop(&ke))
+    {
+        if (ke.keycode == 1)
+        {
+            lout << "shell abort";
+            return RunState::Halt;
+        }
+        else
+        {
+            client()->pushSignal({ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode});
+        }
+    }
+
+    return RunState::Continue;
 }

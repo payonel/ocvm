@@ -9,7 +9,6 @@ public:
     Screen();
     int getKeyboards(lua_State*);
 
-    void keyboard(bool bPressed, uint keysym, uint keycode) override;
     void mouse(int btn, int x, int y) override;
 
     void addKeyboard(const string& addr);

@@ -10,8 +10,6 @@ using namespace std;
 #include <termios.h>
 #include <sys/ioctl.h>
 
-#include "input_drv.h"
-
 static const char ESC = 0x1B;
 static const string esc = string{ESC} + "[";
 static const string cursor_on  = esc + "?25h";
@@ -97,34 +95,7 @@ AnsiEscapeTerm::~AnsiEscapeTerm()
 
 bool AnsiEscapeTerm::update()
 {
-    Frame* pActiveFrame = nullptr;
-    for (const auto& pf : _frames)
-    {
-        if (!pf->scrolling())
-        {
-            pActiveFrame = pf;
-            break;
-        }
-    }
-
     refresh();
-
-    KeyEvent ke;
-    if (InputDriver::pop(&ke))
-    {
-        if (ke.keycode == 1)
-        {
-            cerr << "shell abort\n";
-            return false;
-        }
-        else // assume char? 
-        {
-            if (pActiveFrame)
-            {
-                pActiveFrame->keyboard(ke.bPressed, ke.keysym, ke.keycode);
-            }
-        }
-    }
 
     dump_stdin();
 
@@ -133,8 +104,6 @@ bool AnsiEscapeTerm::update()
 
 bool AnsiEscapeTerm::open()
 {
-    InputDriver::start();
-
     if (_original)
     {
         cerr << "terminal is already open\n";
@@ -164,7 +133,6 @@ bool AnsiEscapeTerm::open()
 
 void AnsiEscapeTerm::close()
 {
-    InputDriver::stop();
     dump_stdin();
 
     // disable mouse tracking

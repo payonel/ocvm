@@ -296,7 +296,16 @@ Computer* Client::computer() const
 
 RunState Client::run()
 {
-    return _computer->run();
+    for (auto& pc : _components)
+    {
+        auto state = pc->update();
+        if (state != RunState::Continue)
+        {
+            return state;
+        }
+    }
+
+    return RunState::Continue;
 }
 
 void Client::pushSignal(const ValuePack& pack)

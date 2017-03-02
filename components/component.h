@@ -10,6 +10,13 @@ typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);
 
 class Client;
 
+enum class RunState
+{
+    Continue,
+    Reboot,
+    Halt
+};
+
 class Component : public LuaProxy
 {
 public:
@@ -20,6 +27,8 @@ public:
     string type() const;
     string address() const;
     int slot() const;
+
+    virtual RunState update() { return RunState::Continue; }
 
     static string make_address();
 protected:
