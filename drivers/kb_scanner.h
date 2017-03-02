@@ -1,6 +1,6 @@
 #pragma once
 
-#include "input_drv.h"
+#include "kb_drv.h"
 
 class KeyboardScannerPrivate;
 class KeyboardScanner : public KeyboardDriver

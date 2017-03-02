@@ -3,7 +3,7 @@
 #include "client.h"
 #include "log.h"
 
-#include "drivers/input_drv.h"
+#include "drivers/kb_drv.h"
 #include "drivers/kb_scanner.h"
 
 Keyboard::Keyboard()
