@@ -1,5 +1,4 @@
 #include "curses_shell.h"
-#include "frame.h"
 #include "log.h"
 #include <curses.h>
 

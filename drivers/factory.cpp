@@ -1,10 +1,10 @@
-#include "frame_factory.h"
-
 #include "basic_term.h"
 #include "curses_shell.h"
 #include "ansi_escape.h"
 
-Framer* FrameFactory::create(const string& framerTypeName)
+#include "kb_scanner.h"
+
+Framer* Factory::create_framer(const string& framerTypeName)
 {
     if (framerTypeName == "basic")
     {
@@ -21,3 +21,14 @@ Framer* FrameFactory::create(const string& framerTypeName)
 
     return nullptr;
 }
+
+KeyboardDriver* Factory::create_kb(const string& kbTypeName)
+{
+    if (kbTypeName == "scanner")
+    {
+        return new KeyboardScanner;
+    }
+
+    return nullptr;
+}
+

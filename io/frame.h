@@ -85,3 +85,8 @@ private:
     Color _fg;
 };
 
+namespace Factory
+{
+    Framer* create_framer(const string& framerTypeName);
+};
+

@@ -2,8 +2,7 @@
 #include <memory>
 #include "host.h"
 #include "client.h"
-#include "framing/frame_factory.h"
-#include "framing/frame.h"
+#include "io/frame.h"
 #include "log.h"
 #include "components/computer.h"
 
@@ -13,7 +12,7 @@ int main(int argc, char** argv)
 {
     string client_env_path = argc > 1 ? argv[1] : "tmp";
     string framer_type = argc > 2 ? argv[2] : "ansi";
-    std::unique_ptr<Framer> framer(FrameFactory::create(framer_type));
+    std::unique_ptr<Framer> framer(Factory::create_framer(framer_type));
 
     // create profile shell (houses screen component [list?])
     if (!framer)

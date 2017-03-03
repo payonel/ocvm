@@ -1,7 +1,7 @@
 #pragma once
 #include "component.h"
 #include "value.h"
-#include "framing/frame.h"
+#include "io/frame.h"
 
 class Screen : public Component, public Frame
 {

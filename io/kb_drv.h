@@ -49,3 +49,9 @@ private:
     thread* _pthread {};
     bool _running {};
 };
+
+namespace Factory
+{
+    KeyboardDriver* create_kb(const string& kbTypeName);
+};
+

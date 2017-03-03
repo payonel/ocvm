@@ -5,7 +5,6 @@
 
 #include "client.h"
 #include "host.h"
-#include "framing/frame.h"
 #include "apis/unicode.h"
 
 Screen::Screen()

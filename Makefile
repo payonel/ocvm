@@ -14,7 +14,7 @@ endif
 includes+=-I.
 libs+=-lstdc++ -lncurses -lstdc++fs -lX11 -pthread
 
-files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp) $(wildcard framing/*.cpp) $(wildcard drivers/*.cpp)
+files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp) $(wildcard io/*.cpp) $(wildcard drivers/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 

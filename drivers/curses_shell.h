@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <map>
-#include "frame.h"
+#include "io/frame.h"
 
 using std::map;
 
