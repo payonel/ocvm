@@ -151,10 +151,7 @@ void AnsiEscapeTerm::close()
 
 bool AnsiEscapeTerm::onAdd(Frame* pf)
 {
-    // WINDOW* pwin = newwin(0, 0, 0, 0);
-    // scrollok(pwin, pf->scrolling());
-    _states[pf] = {}; // full screen window
-    // onResolution(pf);
+    _states[pf] = {};
     return true;
 }
 

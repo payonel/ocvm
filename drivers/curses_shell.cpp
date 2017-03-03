@@ -261,7 +261,7 @@ bool CursesShell::update()
     }
     else if (pActiveFrame)
     {
-        pActiveFrame->keyboard(true, ch, 0);
+        // pActiveFrame->keyboard(true, ch, 0);
     }
 
     return true;

@@ -9,8 +9,6 @@ public:
     Screen();
     int getKeyboards(lua_State*);
 
-    void mouse(int btn, int x, int y) override;
-
     void addKeyboard(const string& addr);
 protected:
     bool onInitialize(Value& config) override;

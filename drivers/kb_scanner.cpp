@@ -206,32 +206,33 @@ KeyboardScanner::~KeyboardScanner()
     _priv = nullptr;
 }
 
-void KeyboardScanner::proc()
+void KeyboardScanner::onStart()
 {
     _priv->open_display();
     _priv->goto_parent();
     _priv->monitor_tree();
-    char buf[32] {};
+}
 
-    while (_continue)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        XEvent event {};
-        if (_priv->run_once(&event))
-        {
-            if (event.type != KeyPress && event.type != KeyRelease)
-            {
-                continue;
-            }
-
-            buf[0] = 0;
-            KeySym ks;
-            int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
-            buf[len] = 0;
-
-            enqueue(event.type == KeyPress, buf, ks, len, event.xkey.keycode, event.xkey.state);
-        }
-    }
-
+void KeyboardScanner::onStop()
+{
     _priv->close_display();
+}
+
+void KeyboardScanner::runOnce()
+{
+    XEvent event {};
+    if (_priv->run_once(&event))
+    {
+        if (event.type != KeyPress && event.type != KeyRelease)
+        {
+            return;
+        }
+
+        char buf[32] {};
+        KeySym ks;
+        int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
+        buf[len] = 0;
+
+        enqueue(event.type == KeyPress, buf, ks, len, event.xkey.keycode, event.xkey.state);
+    }
 }

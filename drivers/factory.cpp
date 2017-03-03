@@ -4,6 +4,8 @@
 
 #include "kb_scanner.h"
 
+#include "mouse_raw.h"
+
 Framer* Factory::create_framer(const string& framerTypeName)
 {
     if (framerTypeName == "basic")
@@ -32,3 +34,7 @@ KeyboardDriver* Factory::create_kb(const string& kbTypeName)
     return nullptr;
 }
 
+MouseDriver* Factory::create_mouse(const string& mouseTypeName)
+{
+    return nullptr;
+}

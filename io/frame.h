@@ -63,10 +63,7 @@ public:
     void set(int x, int y, const string& text);
     void set(int x, int y, const vector<const Cell*>& scanned);
 
-    virtual void mouse(int btn, int x, int y) {}
-    virtual void keyboard(bool bPressed, uint keysym, uint keycode) {}
-
-    virtual bool setResolution(int width, int height, bool bQuiet = false);
+    bool setResolution(int width, int height, bool bQuiet = false);
     tuple<int, int> getResolution() const;
     bool scrolling() const;
     void scrolling(bool enable);

@@ -1,4 +1,5 @@
 #include "kb_drv.h"
+#include "input_drv.cpp"
 
 #include <iostream>
 using namespace std;
@@ -33,53 +34,6 @@ KeyboardDriver::KeyboardDriver()
     _codes[119] = 211;
 }
 
-KeyboardDriver::~KeyboardDriver()
-{
-    stop();
-}
-
-void KeyboardDriver::stop()
-{
-    _continue = false;
-    if (isRunning())
-    {
-        _pthread->join();
-    }
-    _running = false;
-
-    delete _pthread;
-    _pthread = nullptr;
-}
-
-bool KeyboardDriver::start()
-{
-    if (isRunning())
-        return false;
-
-    _running = true;
-    _continue = true;
-    decltype(_events) empty_queue;
-    std::swap(_events, empty_queue);
-    _pthread = new thread(&KeyboardDriver::proc, this);
-
-    return true;
-}
-
-bool KeyboardDriver::isRunning()
-{
-    return _pthread && _running;
-}
-
-bool KeyboardDriver::pop(KeyEvent* pke)
-{
-    if (_events.size() == 0)
-        return false;
-    unique_lock<mutex> lk(_m);
-    *pke = _events.front();
-    _events.pop();
-    return true;
-}
-
 void KeyboardDriver::enqueue(bool bPressed, const string& text, uint keysym, uint sequence_length, uint keycode, uint state)
 {
     KeyEvent ke;
@@ -92,10 +46,7 @@ void KeyboardDriver::enqueue(bool bPressed, const string& text, uint keysym, uin
     ke.bControl = (state & 0x4);
     ke.bAlt = (state & 0x8);
 
-    {
-        unique_lock<mutex> lk(_m);
-        _events.push(ke);
-    }
+    push(ke);
 }
 
 uint KeyboardDriver::map_code(const uint& code)

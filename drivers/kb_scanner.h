@@ -8,7 +8,11 @@ class KeyboardScanner : public KeyboardDriver
 public:
     KeyboardScanner();
     ~KeyboardScanner();
-    void proc() override;
+
+protected:
+    void runOnce() override;
+    void onStart() override;
+    void onStop() override;
 
 private:
     KeyboardScannerPrivate* _priv;

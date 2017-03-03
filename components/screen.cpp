@@ -29,10 +29,6 @@ int Screen::getKeyboards(lua_State* lua)
     return ValuePack::ret(lua, list);
 }
 
-void Screen::mouse(int btn, int x, int y)
-{
-}
-
 void Screen::addKeyboard(const string& addr)
 {
     _keyboards.push_back(addr);
