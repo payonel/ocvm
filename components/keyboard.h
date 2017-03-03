@@ -15,5 +15,5 @@ protected:
     bool onInitialize(Value& config) override;
 private:
     string _preferredScreen;
-    KeyboardDriver* _driver {};
+    KeyboardDriver* _driver = nullptr;
 };

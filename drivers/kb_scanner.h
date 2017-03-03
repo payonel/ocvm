@@ -10,7 +10,7 @@ public:
     ~KeyboardScanner();
 
 protected:
-    void runOnce() override;
+    bool runOnce() override;
     void onStart() override;
     void onStop() override;
 

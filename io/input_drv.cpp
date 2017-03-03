@@ -85,7 +85,8 @@ void InputDriver<TEventType>::proc()
     while (_continue)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        this->runOnce();
+        if (!this->runOnce())
+            break;
     }
     this->onStop();
 }

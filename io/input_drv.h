@@ -23,9 +23,9 @@ protected:
     void push(const TEventType& e);
 
     virtual void onStart();
-    virtual void runOnce() = 0;
+    virtual bool runOnce() = 0;
     virtual void onStop();
-    
+
 private:
     void proc();
     volatile bool _continue = false;

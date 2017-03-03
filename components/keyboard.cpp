@@ -23,7 +23,8 @@ bool Keyboard::onInitialize(Value& config)
     _preferredScreen = config.get(3).Or("").toString();
 
     _driver = Factory::create_kb("scanner");
-    _driver->start();
+    if (_driver)
+        _driver->start();
 
     return true;
 }

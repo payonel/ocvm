@@ -202,6 +202,7 @@ KeyboardScanner::KeyboardScanner() :
 
 KeyboardScanner::~KeyboardScanner()
 {
+    stop();
     delete _priv;
     _priv = nullptr;
 }
@@ -218,14 +219,14 @@ void KeyboardScanner::onStop()
     _priv->close_display();
 }
 
-void KeyboardScanner::runOnce()
+bool KeyboardScanner::runOnce()
 {
     XEvent event {};
     if (_priv->run_once(&event))
     {
         if (event.type != KeyPress && event.type != KeyRelease)
         {
-            return;
+            return true;
         }
 
         char buf[32] {};
@@ -235,4 +236,5 @@ void KeyboardScanner::runOnce()
 
         enqueue(event.type == KeyPress, buf, ks, len, event.xkey.keycode, event.xkey.state);
     }
+    return true;
 }

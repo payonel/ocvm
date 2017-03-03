@@ -2,7 +2,7 @@
 
 #include "io/mouse_drv.h"
 
-class MouseLocalRawTtyDriverPrivate;
+struct MouseLocalRawTtyDriverPrivate;
 class MouseLocalRawTtyDriver : public MouseDriver
 {
 public:
@@ -10,8 +10,10 @@ public:
     ~MouseLocalRawTtyDriver();
 
 protected:
-    void proc() override;
-    
+    void onStart() override;
+    bool runOnce() override;
+    void onStop() override;
+
 private:
     MouseLocalRawTtyDriverPrivate* _priv;
 };

@@ -7,16 +7,34 @@
 #include "host.h"
 #include "apis/unicode.h"
 
+#include "io/mouse_drv.h"
+
 Screen::Screen()
 {
     add("getKeyboards", &Screen::getKeyboards);
     scrolling(false);
 }
 
+Screen::~Screen()
+{
+    if (_mouse)
+        _mouse->stop();
+
+    delete _mouse;
+    _mouse = nullptr;
+}
+
 bool Screen::onInitialize(Value& config)
 {
     // we now have a client and can add ourselves to the framer
-    return client()->host()->getFramer()->add(this, 0);
+    if (!client()->host()->getFramer()->add(this, 0))
+        return false;
+
+    _mouse = Factory::create_mouse("raw");
+    if (_mouse)
+        _mouse->start();
+
+    return true;
 }
 
 int Screen::getKeyboards(lua_State* lua)
