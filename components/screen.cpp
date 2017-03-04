@@ -7,20 +7,19 @@
 #include "host.h"
 #include "apis/unicode.h"
 
-#include "io/mouse_drv.h"
+#include "io/mouse_input.h"
 #include "log.h"
 
 Screen::Screen()
 {
     add("getKeyboards", &Screen::getKeyboards);
     scrolling(false);
+
+    _mouse = new MouseInput;
 }
 
 Screen::~Screen()
 {
-    if (_mouse)
-        _mouse->stop();
-
     delete _mouse;
     _mouse = nullptr;
 }
@@ -31,16 +30,12 @@ bool Screen::onInitialize(Value& config)
     if (!client()->host()->getFramer()->add(this, 0))
         return false;
 
-    _mouse = Factory::create_mouse("raw");
-    if (_mouse)
-        _mouse->start();
-
-    return true;
+    return _mouse->open(Factory::create_mouse("raw"));
 }
 
 RunState Screen::update()
 {
-    unique_ptr<InputEvent> pe(_mouse->pop());
+    unique_ptr<MouseEvent> pe(_mouse->pop());
     if (pe)
     {
         MouseEvent& me = *static_cast<MouseEvent*>(pe.get());

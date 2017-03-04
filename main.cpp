@@ -11,7 +11,7 @@ using std::cerr;
 int main(int argc, char** argv)
 {
     string client_env_path = argc > 1 ? argv[1] : "tmp";
-    string framer_type = argc > 2 ? argv[2] : "ansi";
+    string framer_type = argc > 2 ? argv[2] : "curses";
     std::unique_ptr<Framer> framer(Factory::create_framer(framer_type));
 
     // create profile shell (houses screen component [list?])
@@ -49,7 +49,10 @@ int main(int argc, char** argv)
         if (run == RunState::Reboot)
         {
             client.close();
-            if (!client.load())
+            framer->close();
+            if (!framer->open() ||
+                !framer->add(Logger::getFrame()) ||
+                !client.load())
             {
                 lout << "reboot failed\n";
                 break;

@@ -38,7 +38,7 @@ bool AnsiEscapeTerm::update()
     return true;
 }
 
-bool AnsiEscapeTerm::open()
+bool AnsiEscapeTerm::onOpen()
 {
     //switch to alternative buffer screen
     // cout << esc << "47h";
@@ -48,7 +48,7 @@ bool AnsiEscapeTerm::open()
     return true;
 }
 
-void AnsiEscapeTerm::close()
+void AnsiEscapeTerm::onClose()
 {
     cout << Ansi::cursor_on;
     _states.clear();

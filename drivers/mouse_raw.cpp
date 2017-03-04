@@ -8,64 +8,83 @@ using namespace std;
 #include <termios.h>
 #include <sys/ioctl.h>
 
+#include "worker.h"
 #include "ansi.h"
 
-struct MouseLocalRawTtyDriverPrivate
+class MouseLocalRawTtyDriverPrivate : public Worker
 {
+public:
+    MouseLocalRawTtyDriverPrivate(MouseLocalRawTtyDriver* driver) :
+        _driver(driver)
+    {
+    }
+private:
+    void onStart() override
+    {
+        //save current settings
+        _original = new termios;
+        ::tcgetattr(STDIN_FILENO, _original);
+
+        //put in raw mod
+        termios raw;
+        ::cfmakeraw(&raw);
+        ::tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+
+        //enable mouse tracking
+        cout << Ansi::mouse_on;
+    }
+
+    bool runOnce() override
+    {
+        struct timeval tv { 0L, 0L };
+        fd_set fds;
+        unsigned char c;
+
+        FD_ZERO(&fds);
+        FD_SET(0, &fds);
+        if (select(1, &fds, NULL, NULL, &tv))
+        {
+            read(0, &c, sizeof(c));
+            _driver->enqueue();
+        }
+
+        return true;
+    }
+
+    void onStop() override
+    {
+        // disable mouse tracking
+        cout << Ansi::mouse_off;
+        if (_original)
+        {
+            ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
+        }
+        delete _original;
+        _original = nullptr;
+    }
+    
     termios* _original {};
+    MouseLocalRawTtyDriver* _driver;
 };
 
 MouseLocalRawTtyDriver::MouseLocalRawTtyDriver()
 {
-    _priv = new MouseLocalRawTtyDriverPrivate;
+    _priv = new MouseLocalRawTtyDriverPrivate(this);
 }
 
 MouseLocalRawTtyDriver::~MouseLocalRawTtyDriver()
 {
-    stop();
+    _priv->stop();
     delete _priv;
     _priv = nullptr;
 }
 
-void MouseLocalRawTtyDriver::onStart()
+bool MouseLocalRawTtyDriver::onStart()
 {
-    //save current settings
-    _priv->_original = new termios;
-    ::tcgetattr(STDIN_FILENO, _priv->_original);
-
-    //put in raw mod
-    termios raw;
-    ::cfmakeraw(&raw);
-    ::tcsetattr(STDIN_FILENO, TCSANOW, &raw);
-
-    //enable mouse tracking
-    cout << Ansi::mouse_on;
-}
-
-bool MouseLocalRawTtyDriver::runOnce()
-{
-    struct timeval tv { 0L, 0L };
-    fd_set fds;
-    unsigned char c;
-
-    FD_ZERO(&fds);
-    FD_SET(0, &fds);
-    if (select(1, &fds, NULL, NULL, &tv))
-    {
-        read(0, &c, sizeof(c));
-    }
-
-    return true;
+    return _priv->start();
 }
 
 void MouseLocalRawTtyDriver::onStop()
 {
-    // disable mouse tracking
-    cout << Ansi::mouse_off;
-    if (_priv->_original)
-    {
-        ::tcsetattr(STDIN_FILENO, TCSANOW, _priv->_original);
-    }
-    delete _priv->_original;
-    _priv->_original = nullptr;
+    _priv->stop();
 }

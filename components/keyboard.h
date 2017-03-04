@@ -2,7 +2,7 @@
 #include "component.h"
 #include "value.h"
 
-class KeyboardDriver;
+class KeyboardInput;
 
 class Keyboard : public Component
 {
@@ -15,5 +15,5 @@ protected:
     bool onInitialize(Value& config) override;
 private:
     string _preferredScreen;
-    KeyboardDriver* _driver = nullptr;
+    KeyboardInput* _keyboard = nullptr;
 };

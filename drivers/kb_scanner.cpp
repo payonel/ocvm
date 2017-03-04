@@ -1,4 +1,5 @@
 #include "kb_scanner.h"
+#include "worker.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -7,7 +8,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#include <mutex>
 #include <unordered_map>
 #include <unordered_set>
 #include <bitset>
@@ -19,9 +19,13 @@ static inline unsigned char bit(char* keys, int index)
     return ((keys[index/8]) & (1<<(index%8)));
 }
 
-class KeyboardScannerPrivate
+class KeyboardScannerPrivate : public Worker
 {
 public:
+    KeyboardScannerPrivate(KeyboardScanner* driver) :
+        _driver(driver)
+    {}
+
     void open_display()
     {
         _display = XOpenDisplay(nullptr);
@@ -173,14 +177,40 @@ public:
         return false;
     }
 
-    bool run_once(XEvent* pev)
+    bool runOnce() override
     {
-        if (is_in_focus() && infer_next_event(pev))
-        {
+        if (!is_in_focus())
             return true;
+
+        XEvent event {};
+        if (infer_next_event(&event))
+        {
+            if (event.type != KeyPress && event.type != KeyRelease)
+            {
+                return true;
+            }
+
+            char buf[32] {};
+            KeySym ks;
+            int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
+            buf[len] = 0;
+
+            _driver->enqueue(event.type == KeyPress, buf, ks, len, event.xkey.keycode, event.xkey.state);
         }
 
-        return false;
+        return true;
+    }
+
+    void onStart() override
+    {
+        open_display();
+        goto_parent();
+        monitor_tree();
+    }
+
+    void onStop() override
+    {
+        close_display();
     }
 
 private:
@@ -193,10 +223,11 @@ private:
     char _keymap[32] {};
     unsigned char _modifier_state {};
     XKeyEvent _key_template;
+    KeyboardScanner* _driver;
 };
 
 KeyboardScanner::KeyboardScanner() :
-    _priv(new KeyboardScannerPrivate)
+    _priv(new KeyboardScannerPrivate(this))
 {
 }
 
@@ -207,34 +238,14 @@ KeyboardScanner::~KeyboardScanner()
     _priv = nullptr;
 }
 
-void KeyboardScanner::onStart()
+bool KeyboardScanner::onStart()
 {
-    _priv->open_display();
-    _priv->goto_parent();
-    _priv->monitor_tree();
+    _priv->start();
+    return true;
 }
 
 void KeyboardScanner::onStop()
 {
-    _priv->close_display();
+    _priv->stop();
 }
 
-bool KeyboardScanner::runOnce()
-{
-    XEvent event {};
-    if (_priv->run_once(&event))
-    {
-        if (event.type != KeyPress && event.type != KeyRelease)
-        {
-            return true;
-        }
-
-        char buf[32] {};
-        KeySym ks;
-        int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
-        buf[len] = 0;
-
-        enqueue(event.type == KeyPress, buf, ks, len, event.xkey.keycode, event.xkey.state);
-    }
-    return true;
-}

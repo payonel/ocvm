@@ -20,12 +20,12 @@ public:
     CursesShell();
     ~CursesShell();
     bool update() override;
-    bool open() override;
-    void close() override;
 
     Frame* getFrame(int x, int y) const;
     tuple<int, int> maxResolution() const override;
 protected:
+    bool onOpen() override;
+    void onClose() override;
     bool onAdd(Frame* pf);
     void onWrite(Frame* pf, int x, int y, const Cell& cell) override;
     void onResolution(Frame* pWhichFrame) override;

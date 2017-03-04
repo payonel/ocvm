@@ -7,12 +7,12 @@ bool BasicTerm::update()
     return true;// cin.get() != 'q';
 }
 
-bool BasicTerm::open()
+bool BasicTerm::onOpen()
 {
     return true;
 }
 
-void BasicTerm::close()
+void BasicTerm::onClose()
 {
 }
 

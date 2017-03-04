@@ -71,6 +71,17 @@ void Framer::invalidate(Frame* pf, int x, int y)
     }
 }
 
+bool Framer::open()
+{
+    return onOpen();
+}
+
+void Framer::close()
+{
+    onClose();
+    _frames.clear();
+}
+
 tuple<int, int> Frame::getResolution() const
 {
     return std::make_tuple(_width, _height);

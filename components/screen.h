@@ -3,7 +3,7 @@
 #include "value.h"
 #include "io/frame.h"
 
-class MouseDriver;
+class MouseInput;
 
 class Screen : public Component, public Frame
 {
@@ -18,5 +18,5 @@ protected:
     bool onInitialize(Value& config) override;
 private:
     vector<string> _keyboards;
-    MouseDriver* _mouse = nullptr;
+    MouseInput* _mouse = nullptr;
 };

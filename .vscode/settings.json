@@ -24,7 +24,9 @@
         "thread": "cpp",
         "string": "cpp",
         "chrono": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "mutex": "cpp",
+        "unordered_map": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

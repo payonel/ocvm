@@ -1,17 +1,16 @@
 #pragma once
 
-#include "io/kb_drv.h"
+#include "kb_drv.h"
 
 class KeyboardScannerPrivate;
-class KeyboardScanner : public KeyboardDriver
+class KeyboardScanner : public KeyboardDriverImpl
 {
 public:
     KeyboardScanner();
     ~KeyboardScanner();
 
 protected:
-    bool runOnce() override;
-    void onStart() override;
+    bool onStart() override;
     void onStop() override;
 
 private:

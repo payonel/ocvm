@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-KeyboardDriver::KeyboardDriver()
+KeyboardDriverImpl::KeyboardDriverImpl()
 {
     // [9, 96] = x-8
     for (uint src = 9; src <= 96; src++)
@@ -33,7 +33,7 @@ KeyboardDriver::KeyboardDriver()
     _codes[119] = 211;
 }
 
-void KeyboardDriver::enqueue(bool bPressed, const string& text, uint keysym, uint sequence_length, uint keycode, uint state)
+void KeyboardDriverImpl::enqueue(bool bPressed, const string& text, uint keysym, uint sequence_length, uint keycode, uint state)
 {
     KeyEvent* pkey = new KeyEvent;
     pkey->bPressed = bPressed;
@@ -44,10 +44,10 @@ void KeyboardDriver::enqueue(bool bPressed, const string& text, uint keysym, uin
     pkey->bControl = (state & 0x4);
     pkey->bAlt = (state & 0x8);
 
-    push(std::move(unique_ptr<InputEvent>(pkey)));
+    _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }
 
-uint KeyboardDriver::map_code(const uint& code)
+uint KeyboardDriverImpl::map_code(const uint& code)
 {
     const auto& it = _codes.find(code);
     if (it != _codes.end())
@@ -58,7 +58,7 @@ uint KeyboardDriver::map_code(const uint& code)
     return code;
 }
 
-uint KeyboardDriver::map_sym(const uint& keysym, int sequence_length)
+uint KeyboardDriverImpl::map_sym(const uint& keysym, int sequence_length)
 {
     if (sequence_length == 0)
         return 0;

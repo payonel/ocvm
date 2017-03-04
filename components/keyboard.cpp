@@ -3,30 +3,23 @@
 #include "client.h"
 #include "log.h"
 
-#include "io/kb_drv.h"
+#include "io/kb_input.h"
 
 Keyboard::Keyboard()
 {
+    _keyboard = new KeyboardInput;
 }
 
 Keyboard::~Keyboard()
 {
-    if (_driver)
-        _driver->stop();
-
-    delete _driver;
-    _driver = nullptr;
+    delete _keyboard;
+    _keyboard = nullptr;
 }
 
 bool Keyboard::onInitialize(Value& config)
 {
     _preferredScreen = config.get(3).Or("").toString();
-
-    _driver = Factory::create_kb("scanner");
-    if (_driver)
-        _driver->start();
-
-    return true;
+    return _keyboard->open(Factory::create_kb("scanner"));
 }
 
 bool Keyboard::postInit()
@@ -47,18 +40,17 @@ bool Keyboard::postInit()
 
 RunState Keyboard::update()
 {
-    unique_ptr<InputEvent> pe(_driver->pop());
-    if (pe)
+    unique_ptr<KeyEvent> pke(_keyboard->pop());
+    if (pke)
     {
-        KeyEvent& ke = *static_cast<KeyEvent*>(pe.get());
-        if (ke.keycode == 1)
+        if (pke->keycode == 1)
         {
             lout << "shell abort";
             return RunState::Halt;
         }
         else
         {
-            client()->pushSignal({ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode});
+            client()->pushSignal({pke->bPressed ? "key_down" : "key_up", address(), pke->keysym, pke->keycode});
         }
     }
 

@@ -4,12 +4,10 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
-#include <queue>
 
 using std::tuple;
 using std::vector;
 using std::string;
-using std::queue;
 
 struct Color
 {
@@ -33,13 +31,15 @@ public:
     virtual ~Framer();
     bool add(Frame* pf, size_t index = static_cast<size_t>(-1));
 
-    virtual bool open() = 0;
-    virtual void close() = 0;
+    bool open();
+    void close();
     virtual bool update() = 0;
     void invalidate(Frame* pf, int x = 0, int y = 0);
     virtual void onResolution(Frame*) = 0;
     virtual tuple<int, int> maxResolution() const = 0;
 protected:
+    virtual bool onOpen() { return true; }
+    virtual void onClose() { }
     virtual void onWrite(Frame* pf, int x, int y, const Cell& cell) = 0;
     virtual bool onAdd(Frame* pf) { return true; }
     vector<Frame*> _frames;

@@ -213,7 +213,7 @@ bool CursesShell::onAdd(Frame* pf)
     return true;
 }
 
-bool CursesShell::open()
+bool CursesShell::onOpen()
 {
     //setlocale(LC_CTYPE, "");
     initscr();
@@ -236,38 +236,18 @@ bool CursesShell::open()
 
 bool CursesShell::update()
 {
-    Frame* pActiveFrame = nullptr;
     for (const auto& pf : _frames)
     {
         auto& state = _states[pf];
         wrefresh(state.window);
-        if (!pf->scrolling())
-        {
-            pActiveFrame = pf;
-        }
     }
 
-    // wrefresh(stdscr);
     refresh();
-    timeout(50);
-    int ch = getch();
-    if (ch != -1)
-        lout << "getch: " << ch << "\n";
-
-    if (ch == 3) // ^c
-    {
-       lout << "shell closing\n";
-       return false;
-    }
-    else if (pActiveFrame)
-    {
-        // pActiveFrame->keyboard(true, ch, 0);
-    }
 
     return true;
 }
 
-void CursesShell::close()
+void CursesShell::onClose()
 {
     for (auto& pair : _states)
     {

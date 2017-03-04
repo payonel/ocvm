@@ -1,17 +1,20 @@
 #pragma once
 
-#include "io/mouse_drv.h"
+#include "mouse_drv.h"
 
-struct MouseLocalRawTtyDriverPrivate;
-class MouseLocalRawTtyDriver : public MouseDriver
+struct MouseWorkEvent : public MouseEvent
+{
+};
+
+class MouseLocalRawTtyDriverPrivate;
+class MouseLocalRawTtyDriver : public MouseDriverImpl
 {
 public:
     MouseLocalRawTtyDriver();
     ~MouseLocalRawTtyDriver();
 
 protected:
-    void onStart() override;
-    bool runOnce() override;
+    bool onStart() override;
     void onStop() override;
 
 private:
