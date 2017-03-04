@@ -1,5 +1,4 @@
 #include "kb_drv.h"
-#include "input_drv.cpp"
 
 #include <iostream>
 using namespace std;
@@ -36,17 +35,16 @@ KeyboardDriver::KeyboardDriver()
 
 void KeyboardDriver::enqueue(bool bPressed, const string& text, uint keysym, uint sequence_length, uint keycode, uint state)
 {
-    KeyEvent ke;
-    ke.bPressed = bPressed;
-    ke.text = text;
-    ke.keysym = map_sym(keysym, sequence_length);
-    ke.keycode = map_code(keycode);
+    KeyEvent* pkey = new KeyEvent;
+    pkey->bPressed = bPressed;
+    pkey->text = text;
+    pkey->keysym = map_sym(keysym, sequence_length);
+    pkey->keycode = map_code(keycode);
+    pkey->bShift = (state & 0x1);
+    pkey->bControl = (state & 0x4);
+    pkey->bAlt = (state & 0x8);
 
-    ke.bShift = (state & 0x1);
-    ke.bControl = (state & 0x4);
-    ke.bAlt = (state & 0x8);
-
-    push(ke);
+    push(std::move(unique_ptr<InputEvent>(pkey)));
 }
 
 uint KeyboardDriver::map_code(const uint& code)

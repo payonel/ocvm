@@ -8,6 +8,7 @@
 #include "apis/unicode.h"
 
 #include "io/mouse_drv.h"
+#include "log.h"
 
 Screen::Screen()
 {
@@ -35,6 +36,19 @@ bool Screen::onInitialize(Value& config)
         _mouse->start();
 
     return true;
+}
+
+RunState Screen::update()
+{
+    unique_ptr<InputEvent> pe(_mouse->pop());
+    if (pe)
+    {
+        MouseEvent& me = *static_cast<MouseEvent*>(pe.get());
+        lout << "mouse event: " << sizeof(me) << endl;
+        // client()->pushSignal({ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode});
+    }
+
+    return RunState::Continue;
 }
 
 int Screen::getKeyboards(lua_State* lua)

@@ -10,8 +10,9 @@ class Screen : public Component, public Frame
 public:
     Screen();
     ~Screen();
-    int getKeyboards(lua_State*);
+    RunState update() override;
 
+    int getKeyboards(lua_State*);
     void addKeyboard(const string& addr);
 protected:
     bool onInitialize(Value& config) override;

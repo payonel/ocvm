@@ -47,9 +47,10 @@ bool Keyboard::postInit()
 
 RunState Keyboard::update()
 {
-    KeyEvent ke;
-    if (_driver->pop(&ke))
+    unique_ptr<InputEvent> pe(_driver->pop());
+    if (pe)
     {
+        KeyEvent& ke = *static_cast<KeyEvent*>(pe.get());
         if (ke.keycode == 1)
         {
             lout << "shell abort";

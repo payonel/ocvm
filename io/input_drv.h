@@ -3,11 +3,14 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <memory>
 using std::mutex;
 using std::queue;
 using std::thread;
+using std::unique_ptr;
 
-template <typename TEventType>
+struct InputEvent {};
+
 class InputDriver
 {
 public:
@@ -17,10 +20,10 @@ public:
 
     bool start();
     void stop();
-    bool pop(TEventType* pe);
+    unique_ptr<InputEvent> pop();
 
 protected:
-    void push(const TEventType& e);
+    void push(unique_ptr<InputEvent> e);
 
     virtual void onStart();
     virtual bool runOnce() = 0;
@@ -30,7 +33,7 @@ private:
     void proc();
     volatile bool _continue = false;
     mutex _m;
-    queue<TEventType> _events;
+    queue<InputEvent*> _events;
     thread* _pthread = nullptr;
     bool _running = false;
 };

@@ -11,11 +11,11 @@ using std::queue;
 using std::thread;
 using std::mutex;
 
-struct MouseEvent
+struct MouseEvent : public InputEvent
 {
 };
 
-class MouseDriver : public InputDriver<MouseEvent>
+class MouseDriver : public InputDriver
 {
 public:
     MouseDriver();

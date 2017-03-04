@@ -7,7 +7,7 @@
 using std::unordered_map;
 using std::string;
 
-struct KeyEvent
+struct KeyEvent : public InputEvent
 {
     string text;
     unsigned int keysym;
@@ -19,7 +19,7 @@ struct KeyEvent
     bool bAlt; // 0x8
 };
 
-class KeyboardDriver : public InputDriver<KeyEvent>
+class KeyboardDriver : public InputDriver
 {
 public:
     KeyboardDriver();

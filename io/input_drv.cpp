@@ -3,36 +3,21 @@
 #include <thread>
 using namespace std;
 
-template <typename TEventType>
-InputDriver<TEventType>::InputDriver()
+InputDriver::InputDriver()
 {
-    // template hacks
-    auto _start = &InputDriver<TEventType>::start;
-    (void)_start;
-    auto _pop = &InputDriver<TEventType>::pop;
-    (void)_pop;
-    auto _on_start = &InputDriver<TEventType>::onStart;
-    (void)_on_start;
-    auto _on_stop = &InputDriver<TEventType>::onStop;
-    (void)_on_stop;
-    auto _push = &InputDriver<TEventType>::push;
-    (void)_push;
 }
 
-template <typename TEventType>
-InputDriver<TEventType>::~InputDriver()
+InputDriver::~InputDriver()
 {
     this->stop();
 }
 
-template <typename TEventType>
-bool InputDriver<TEventType>::isRunning()
+bool InputDriver::isRunning()
 {
     return this->_pthread && this->_running;
 }
 
-template <typename TEventType>
-bool InputDriver<TEventType>::start()
+bool InputDriver::start()
 {
     if (this->isRunning())
         return false;
@@ -41,13 +26,12 @@ bool InputDriver<TEventType>::start()
     this->_continue = true;
     decltype(this->_events) empty_queue;
     std::swap(this->_events, empty_queue);
-    this->_pthread = new thread(&InputDriver<TEventType>::proc, this);
+    this->_pthread = new thread(&InputDriver::proc, this);
 
     return true;
 }
 
-template <typename TEventType>
-void InputDriver<TEventType>::stop()
+void InputDriver::stop()
 {
     this->_continue = false;
     if (this->isRunning())
@@ -58,28 +42,27 @@ void InputDriver<TEventType>::stop()
 
     delete this->_pthread;
     this->_pthread = nullptr;
+
+    while (pop());
 }
 
-template <typename TEventType>
-bool InputDriver<TEventType>::pop(TEventType* pe)
+unique_ptr<InputEvent> InputDriver::pop()
 {
     if (this->_events.size() == 0)
-        return false;
+        return {}; // empty
     unique_lock<mutex> lk(this->_m);
-    *pe = this->_events.front();
+    unique_ptr<InputEvent> pe(this->_events.front());
     this->_events.pop();
-    return true;
+    return pe;
 }
 
-template <typename TEventType>
-void InputDriver<TEventType>::push(const TEventType& e)
+void InputDriver::push(unique_ptr<InputEvent> pe)
 {
     unique_lock<mutex> lk(this->_m);
-    this->_events.push(e);
+    this->_events.push(pe.release());
 }
 
-template <typename TEventType>
-void InputDriver<TEventType>::proc()
+void InputDriver::proc()
 {
     this->onStart();
     while (_continue)
@@ -91,12 +74,10 @@ void InputDriver<TEventType>::proc()
     this->onStop();
 }
 
-template <typename TEventType>
-void InputDriver<TEventType>::onStart()
+void InputDriver::onStart()
 {
 }
 
-template <typename TEventType>
-void InputDriver<TEventType>::onStop()
+void InputDriver::onStop()
 {
 }
