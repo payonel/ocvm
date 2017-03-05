@@ -39,8 +39,22 @@ RunState Screen::update()
     if (pe)
     {
         MouseEvent& me = *static_cast<MouseEvent*>(pe.get());
-        lout << "mouse event: " << sizeof(me) << endl;
-        // client()->pushSignal({ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode});
+        string msg;
+        switch (me.press)
+        {
+            case EPressType::Press:
+                msg = "touch";
+            break;
+            case EPressType::Drag:
+                msg = "drag";
+            break;
+            case EPressType::Release: break; // release could always be drop
+            case EPressType::Drop:
+                msg = "drop";
+            break;
+        }
+        if (!msg.empty())
+            client()->pushSignal({msg, address(), me.x, me.y, me.btn / 2});
     }
 
     return RunState::Continue;

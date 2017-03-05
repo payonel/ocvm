@@ -7,6 +7,6 @@ class MouseDriverImpl : public MouseDriver
 public:
     void enqueue(unsigned char* buf);
 private:
-    bool _pressed = false;
+    int _pressed = 0x3;
     bool _dragging = false;
 };

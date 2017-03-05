@@ -22,6 +22,7 @@ struct MouseEvent : public InputEvent
     EPressType press;
     int x;
     int y;
+    int btn;
 };
 
 class MouseInput : protected InputSource
