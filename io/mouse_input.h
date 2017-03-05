@@ -9,8 +9,19 @@ class MouseDriver : public InputDriver
 {
 };
 
+enum class EPressType
+{
+    Press,
+    Release,
+    Drag,
+    Drop
+};
+
 struct MouseEvent : public InputEvent
 {
+    EPressType press;
+    int x;
+    int y;
 };
 
 class MouseInput : protected InputSource

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <thread>
+#include <mutex>
 using std::thread;
+using std::mutex;
 
 class Worker
 {
@@ -22,4 +24,5 @@ private:
     volatile bool _continue = false;
     thread* _pthread = nullptr;
     bool _running = false;
+    mutex _m;
 };

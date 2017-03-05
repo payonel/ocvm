@@ -19,6 +19,30 @@ public:
     {
     }
 private:
+    bool get(unsigned char* pOut)
+    {
+        struct timeval tv { 0L, 0L };
+        fd_set fds;
+
+        FD_ZERO(&fds);
+        FD_SET(0, &fds);
+        if (select(1, &fds, NULL, NULL, &tv))
+        {
+            int len = read(0, pOut, sizeof(unsigned char));
+            return len > 0;
+        }
+
+        return false;
+    }
+
+    unsigned char get()
+    {
+        unsigned char c;
+        if (get(&c))
+            return c;
+        return static_cast<unsigned char>(0);
+    }
+
     void onStart() override
     {
         //save current settings
@@ -31,21 +55,18 @@ private:
         ::tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 
         //enable mouse tracking
-        cout << Ansi::mouse_on;
+        cout << Ansi::mouse_prd_on;
     }
 
     bool runOnce() override
     {
-        struct timeval tv { 0L, 0L };
-        fd_set fds;
-        unsigned char c;
-
-        FD_ZERO(&fds);
-        FD_SET(0, &fds);
-        if (select(1, &fds, NULL, NULL, &tv))
+        static unsigned char buf[3];
+        if (get() == Ansi::ESC && get() == '[' && get() == 'M')
         {
-            read(0, &c, sizeof(c));
-            _driver->enqueue();
+            buf[0] = get();
+            buf[1] = get();
+            buf[2] = get();
+            _driver->enqueue(buf);
         }
 
         return true;
@@ -54,7 +75,7 @@ private:
     void onStop() override
     {
         // disable mouse tracking
-        cout << Ansi::mouse_off;
+        cout << Ansi::mouse_prd_off;
         if (_original)
         {
             ::tcsetattr(STDIN_FILENO, TCSANOW, _original);

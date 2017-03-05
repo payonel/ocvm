@@ -11,8 +11,12 @@ namespace Ansi
     static const string cursor_off = esc + "?25l";
     static const string track_on   = esc + "?1002h";
     static const string track_off  = esc + "?1002l";
-    static const string mouse_on   = esc + "?9h";
-    static const string mouse_off  = esc + "?9l";
+    static const string mouse_p_on   = esc + "?9h";
+    static const string mouse_p_off  = esc + "?9l"; // press events only (X10)
+    static const string mouse_pr_on   = esc + "?1000h";
+    static const string mouse_pr_off  = esc + "?1000l"; // press and release events (X11)
+    static const string mouse_prd_on   = esc + "?1003h";
+    static const string mouse_prd_off  = esc + "?1003l"; // press, release, and drag events (X11)
     static const string clear_term = esc + "2J";
     static const string clean_line = esc + "K";
     static const string save_pos   = esc + "s";
