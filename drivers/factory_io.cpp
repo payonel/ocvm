@@ -1,12 +1,29 @@
 #include "kb_scanner.h"
-#include "mouse_raw.h"
+#include "raw_tty.h"
 
 #include <memory>
-using std::unique_ptr;
+#include <vector>
+#include <string>
+using namespace std;
 
 unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
-{
-    if (kbTypeName == "scanner")
+{   
+    if (kbTypeName.empty())
+    {
+        vector<string> defaults { "raw", "scanner", "x", "stdin" };
+        for (auto name : defaults)
+        {
+            auto result = Factory::create_kb(name);
+            if (result)
+                return result;
+        }
+    }
+    else if (kbTypeName == "raw")
+    {
+        if (KeyboardLocalRawTtyDriver::isAvailable())
+            return unique_ptr<KeyboardDriver>(new KeyboardLocalRawTtyDriver);
+    }
+    else if (kbTypeName == "scanner")
     {
         return unique_ptr<KeyboardDriver>(new KeyboardScanner);
     }
@@ -16,7 +33,17 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
 
 unique_ptr<MouseDriver> Factory::create_mouse(const string& mouseTypeName)
 {
-    if (mouseTypeName == "raw")
+    if (mouseTypeName.empty())
+    {
+        vector<string> defaults { "raw", "x", "stdin" };
+        for (auto name : defaults)
+        {
+            auto result = Factory::create_mouse(name);
+            if (result)
+                return result;
+        }
+    }
+    else if (mouseTypeName == "raw")
     {
         return unique_ptr<MouseDriver>(new MouseLocalRawTtyDriver);
     }

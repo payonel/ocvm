@@ -4,6 +4,7 @@
 #include <mutex>
 using std::thread;
 using std::mutex;
+using std::unique_lock;
 
 class Worker
 {
@@ -18,6 +19,8 @@ protected:
     virtual void onStart() = 0;
     virtual bool runOnce() = 0;
     virtual void onStop() = 0;
+
+    unique_lock<mutex> make_lock();
 
 private:
     void proc();

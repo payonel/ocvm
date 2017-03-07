@@ -32,5 +32,5 @@ private:
 
 namespace Factory
 {
-    unique_ptr<KeyboardDriver> create_kb(const string& kbTypeName);
+    unique_ptr<KeyboardDriver> create_kb(const string& kbTypeName = "");
 };

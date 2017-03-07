@@ -37,5 +37,5 @@ private:
 
 namespace Factory
 {
-    unique_ptr<MouseDriver> create_mouse(const string& mouseTypeName);
+    unique_ptr<MouseDriver> create_mouse(const string& mouseTypeName = "");
 };

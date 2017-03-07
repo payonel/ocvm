@@ -30,7 +30,7 @@ void Worker::stop()
     _continue = false;
     if (isRunning())
     {
-        unique_lock<mutex> lk(_m);
+        make_lock();
         _pthread->join();
     }
     _running = false;
@@ -45,11 +45,16 @@ void Worker::proc()
     while (_continue)
     {
         {
-            unique_lock<mutex> lk(_m);
+            make_lock();
             if (!runOnce())
                 break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     onStop();
+}
+
+unique_lock<mutex> Worker::make_lock()
+{
+    return std::move(unique_lock<mutex> (_m));
 }
