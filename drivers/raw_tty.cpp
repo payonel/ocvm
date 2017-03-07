@@ -180,9 +180,9 @@ private:
         {
             RawTtyInputStreamImpl stream(this);
             unsigned char c = stream.get();
-            if (c == Ansi::ESC)
+            if (c == Ansi::ESC && stream.get() == '[') // escape sequence
             {
-                if (stream.get() == '[' && stream.get() == 'M')
+                if (stream.get() == 'M') // mouse escape sequence
                 {
                     stream.clear(); // clear the buffer thus far, the 3 bytes
                     for (auto driver : _mouse_drivers)
