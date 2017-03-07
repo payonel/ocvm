@@ -88,20 +88,18 @@ public:
         return &one;
     }
 
-    bool get(unsigned char* pOut)
+    static inline bool has_input()
     {
         struct timeval tv { 0L, 0L };
         fd_set fds;
-
         FD_ZERO(&fds);
         FD_SET(0, &fds);
-        if (select(1, &fds, NULL, NULL, &tv))
-        {
-            int len = read(0, pOut, sizeof(unsigned char));
-            return len > 0;
-        }
+        return select(1, &fds, nullptr, nullptr, &tv);
+    }
 
-        return false;
+    static inline bool get(unsigned char* pOut)
+    {
+        return has_input() && read(0, pOut, sizeof(unsigned char)) > 0;
     }
 
     unsigned char get()
@@ -136,7 +134,7 @@ private:
         }
         _master_tty = ec == 0 && errno == 0;
 
-        _terminal_out = !(isatty(fileno(stdout)));
+        _terminal_out = (isatty(fileno(stdout)));
     }
 
     static void exit_function()
@@ -178,21 +176,24 @@ private:
 
     bool runOnce() override
     {
-        RawTtyInputStreamImpl stream(this);
-        unsigned char c = stream.get();
-        if (c == Ansi::ESC)
+        if (has_input())
         {
-            if (stream.get() == '[' && stream.get() == 'M')
+            RawTtyInputStreamImpl stream(this);
+            unsigned char c = stream.get();
+            if (c == Ansi::ESC)
             {
-                stream.clear(); // clear the buffer thus far, the 3 bytes
-                for (auto driver : _mouse_drivers)
+                if (stream.get() == '[' && stream.get() == 'M')
+                {
+                    stream.clear(); // clear the buffer thus far, the 3 bytes
+                    for (auto driver : _mouse_drivers)
+                        driver->enqueue(stream.reset());
+                }
+            }
+            else if (c > 0)
+            {
+                for (auto driver : _kb_drivers)
                     driver->enqueue(stream.reset());
             }
-        }
-        else if (c > 0)
-        {
-            for (auto driver : _kb_drivers)
-                driver->enqueue(stream.reset());
         }
 
         return true;
@@ -236,7 +237,7 @@ unsigned char RawTtyInputStreamImpl::get()
         if (next == 0)
             return next;
 
-        _buffer.push_back(_reader->get());
+        _buffer.push_back(next);
     }
 
     unsigned next = _buffer.at(_index++);
@@ -252,21 +253,6 @@ RawTtyInputStreamImpl* RawTtyInputStreamImpl::reset()
 void RawTtyInputStreamImpl::clear()
 {
     _buffer.clear();
-}
-
-class MouseLocalRawTtyDriverPrivate : public Worker
-{
-public:
-    MouseLocalRawTtyDriverPrivate(MouseLocalRawTtyDriver* driver) :
-        _driver(driver)
-    {
-    }
-private:
-    MouseLocalRawTtyDriver* _driver;
-};
-
-MouseLocalRawTtyDriver::MouseLocalRawTtyDriver()
-{
 }
 
 MouseLocalRawTtyDriver::~MouseLocalRawTtyDriver()
@@ -291,12 +277,9 @@ void MouseLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
     MouseDriverImpl::enqueue(buf);
 }
 
-KeyboardLocalRawTtyDriver::KeyboardLocalRawTtyDriver()
-{
-}
-
 KeyboardLocalRawTtyDriver::~KeyboardLocalRawTtyDriver()
 {
+    TtyReader::engine()->remove(this);
 }
 
 bool KeyboardLocalRawTtyDriver::onStart()
@@ -320,13 +303,109 @@ bool MouseLocalRawTtyDriver::isAvailable()
     return TtyReader::engine()->hasTerminalOut();
 }
 
+class RawKeyMap
+{
+public:
+    RawKeyMap(RawKeyMap&) = delete;
+
+    static RawKeyMap* get()
+    {
+        static RawKeyMap rkm;
+        return &rkm;
+    }
+
+    uint keysym(unsigned char c)
+    {
+        return 0;
+    }
+
+    uint sequence(unsigned char c)
+    {
+        return 0;
+    }
+
+    uint keycode(RawTtyInputStream* reader, bool* preleased)
+    {
+        // ] (27) doesn't produce key_down !?
+
+        unsigned char c = reader->get();
+        unsigned char byte_1 = 0x0;
+        // cout << "[" << (int)c << "]\r\n" << flush;
+        switch (c) // multi byte sequences
+        {
+            case 0xE0:
+                byte_1 = reader->get();
+                *preleased = byte_1 & 0x80;
+                byte_1 &= 0x7F;
+                switch (byte_1)
+                {
+                    case 56: c = 108; break; // ralt
+                    case 71: c = 110; break; // home
+                    case 73: c = 112; break; // pg up
+                    case 72: c = 111; break; // up
+                    case 75: c = 113; break; // left
+                    case 77: c = 114; break; // right
+                    case 79: c = 115; break; // end
+                    case 80: c = 116; break; // down
+                    case 81: c = 117; break; // pg dn
+                    case 82: c = 118; break; // insert
+                    case 83: c = 119; break; // delete
+                    case 91: c = 133; break; // windows
+                    case 93: c = 135; break; // menu
+                    default: c = byte_1; break;
+                }
+                break;
+            case 0xE1: 
+                byte_1 = reader->get(); // 29
+                *preleased = byte_1 & 0x80;
+                reader->get(); // 69 
+                c = 127;
+                break;
+            default:
+                *preleased = c & 0x80;
+                c &= 0x7F;
+                switch (c)
+                {
+                    case 29: c =  37; break; // left control
+                    case 56: c =  64; break; // left alt
+                    case 91: c = 133; break; // windows
+                }
+                break;
+        }
+
+        return c;
+    }
+
+    string text(unsigned char c, uint state)
+    {
+        stringstream ss;
+        ss << (int)c;
+        return ss.str();
+    }
+
+private:
+    RawKeyMap()
+    {
+    }
+};
+
+void KeyboardLocalRawTtyDriver::updateState(uint keycode, bool pressed)
+{
+}
+
 void KeyboardLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
 {
-    unsigned char keycode = stream->get();
-    bool bPressed = keycode & 0x80;
+    bool bReleased;
+    uint keycode = RawKeyMap::get()->keycode(stream, &bReleased);
+    bool bPressed = !bReleased;
 
-    stringstream ss;
-    ss << (int)keycode;
+    uint keysym = RawKeyMap::get()->keysym(keycode);
+    uint sequence_length = RawKeyMap::get()->sequence(keycode);
 
-    KeyboardDriverImpl::enqueue(bPressed, ss.str(), 2, 1, 3, 0);
+    updateState(keycode, bPressed);
+    uint state = _state;
+
+    string text = RawKeyMap::get()->text(keycode, _state);
+
+    KeyboardDriverImpl::enqueue(bPressed, text, keysym, sequence_length, keycode, state);
 }

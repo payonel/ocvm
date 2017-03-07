@@ -195,6 +195,8 @@ public:
             int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
             buf[len] = 0;
 
+            cout << "[" << event.xkey.keycode << "]\r\n" << flush;
+
             _driver->enqueue(event.type == KeyPress, buf, ks, len, event.xkey.keycode, event.xkey.state);
         }
 

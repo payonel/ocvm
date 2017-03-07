@@ -12,7 +12,6 @@ public:
 class MouseLocalRawTtyDriver : public MouseDriverImpl
 {
 public:
-    MouseLocalRawTtyDriver();
     ~MouseLocalRawTtyDriver();
 
     void enqueue(RawTtyInputStream* stream);
@@ -26,7 +25,6 @@ protected:
 class KeyboardLocalRawTtyDriver : public KeyboardDriverImpl
 {
 public:
-    KeyboardLocalRawTtyDriver();
     ~KeyboardLocalRawTtyDriver();
 
     void enqueue(RawTtyInputStream* stream);
@@ -35,4 +33,8 @@ public:
 protected:
     bool onStart() override;
     void onStop() override;
+
+private:
+    void updateState(uint keycode, bool pressed);
+    uint _state = 0;
 };

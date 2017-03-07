@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <iostream>
 using namespace std;
 
 unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
@@ -15,7 +16,10 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
         {
             auto result = Factory::create_kb(name);
             if (result)
+            {
+                cout << name << " kb created\r\n";
                 return result;
+            }
         }
     }
     else if (kbTypeName == "raw")
@@ -40,7 +44,10 @@ unique_ptr<MouseDriver> Factory::create_mouse(const string& mouseTypeName)
         {
             auto result = Factory::create_mouse(name);
             if (result)
+            {
+                cout << name << " mouse created\r\n";
                 return result;
+            }
         }
     }
     else if (mouseTypeName == "raw")
