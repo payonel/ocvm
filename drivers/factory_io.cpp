@@ -45,7 +45,8 @@ unique_ptr<MouseDriver> Factory::create_mouse(const string& mouseTypeName)
     }
     else if (mouseTypeName == "raw")
     {
-        return unique_ptr<MouseDriver>(new MouseLocalRawTtyDriver);
+        if (MouseLocalRawTtyDriver::isAvailable())
+            return unique_ptr<MouseDriver>(new MouseLocalRawTtyDriver);
     }
 
     return nullptr;

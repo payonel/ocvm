@@ -1,6 +1,7 @@
 #include "raw_tty.h"
 
 #include <iostream>
+#include <sstream>
 #include <set>
 using namespace std;
 
@@ -12,6 +13,20 @@ using namespace std;
 
 #include "worker.h"
 #include "ansi.h"
+
+class TtyReader;
+class RawTtyInputStreamImpl : public RawTtyInputStream
+{
+public:
+    RawTtyInputStreamImpl(TtyReader* reader);
+    unsigned char get() override;
+    RawTtyInputStreamImpl* reset();
+    void clear();
+private:
+    vector<unsigned char> _buffer;
+    TtyReader* _reader;
+    size_t _index;
+};
 
 class TtyReader : public Worker
 {
@@ -83,10 +98,6 @@ public:
         if (select(1, &fds, NULL, NULL, &tv))
         {
             int len = read(0, pOut, sizeof(unsigned char));
-            if (len)
-            {
-                cerr << (int)(*pOut) << "\r\n";
-            }
             return len > 0;
         }
 
@@ -106,10 +117,16 @@ public:
         return _master_tty;
     }
 
+    bool hasTerminalOut() const
+    {
+        return _terminal_out;
+    }
+
 private:
     TtyReader()
     {
         _master_tty = false;
+        _terminal_out = false;
 
         int ec = 0;
         ec = ioctl(0, KDGKBMODE, &_original_kb_mode);
@@ -118,6 +135,8 @@ private:
             ec = ioctl(0, KDSKBMODE, _original_kb_mode);
         }
         _master_tty = ec == 0 && errno == 0;
+
+        _terminal_out = !(isatty(fileno(stdout)));
     }
 
     static void exit_function()
@@ -159,18 +178,21 @@ private:
 
     bool runOnce() override
     {
-        static unsigned char buf[3];
-        unsigned char c = get();
+        RawTtyInputStreamImpl stream(this);
+        unsigned char c = stream.get();
         if (c == Ansi::ESC)
         {
-            if (get() == '[' && get() == 'M')
+            if (stream.get() == '[' && stream.get() == 'M')
             {
-                buf[0] = get();
-                buf[1] = get();
-                buf[2] = get();
+                stream.clear(); // clear the buffer thus far, the 3 bytes
                 for (auto driver : _mouse_drivers)
-                    driver->enqueue(buf);
+                    driver->enqueue(stream.reset());
             }
+        }
+        else if (c > 0)
+        {
+            for (auto driver : _kb_drivers)
+                driver->enqueue(stream.reset());
         }
 
         return true;
@@ -192,13 +214,45 @@ private:
     }
     
     bool _master_tty;
+    bool _terminal_out;
     static unsigned long _original_kb_mode;
     termios* _original = nullptr;
     set<MouseLocalRawTtyDriver*> _mouse_drivers;
     set<KeyboardLocalRawTtyDriver*> _kb_drivers;
 };
-
 unsigned long TtyReader::_original_kb_mode = 0;
+
+RawTtyInputStreamImpl::RawTtyInputStreamImpl(TtyReader* reader) :
+    _reader(reader),
+    _index(0)
+{
+}
+
+unsigned char RawTtyInputStreamImpl::get()
+{
+    while (_index >= _buffer.size())
+    {
+        unsigned char next = _reader->get();
+        if (next == 0)
+            return next;
+
+        _buffer.push_back(_reader->get());
+    }
+
+    unsigned next = _buffer.at(_index++);
+    return next;
+}
+
+RawTtyInputStreamImpl* RawTtyInputStreamImpl::reset()
+{
+    _index = 0;
+    return this;
+}
+
+void RawTtyInputStreamImpl::clear()
+{
+    _buffer.clear();
+}
 
 class MouseLocalRawTtyDriverPrivate : public Worker
 {
@@ -231,6 +285,12 @@ void MouseLocalRawTtyDriver::onStop()
     TtyReader::engine()->remove(this);
 }
 
+void MouseLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
+{
+    unsigned char buf[] {stream->get(), stream->get(), stream->get()};
+    MouseDriverImpl::enqueue(buf);
+}
+
 KeyboardLocalRawTtyDriver::KeyboardLocalRawTtyDriver()
 {
 }
@@ -253,4 +313,20 @@ void KeyboardLocalRawTtyDriver::onStop()
 bool KeyboardLocalRawTtyDriver::isAvailable()
 {
     return TtyReader::engine()->hasMasterTty();
+}
+
+bool MouseLocalRawTtyDriver::isAvailable()
+{
+    return TtyReader::engine()->hasTerminalOut();
+}
+
+void KeyboardLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
+{
+    unsigned char keycode = stream->get();
+    bool bPressed = keycode & 0x80;
+
+    stringstream ss;
+    ss << (int)keycode;
+
+    KeyboardDriverImpl::enqueue(bPressed, ss.str(), 2, 1, 3, 0);
 }
