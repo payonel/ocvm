@@ -14,11 +14,11 @@ public:
 
     // TODO enqueue should take just K_RAW stdin data
     // void enqueue(char* bytes, uint length);
-    void enqueue(bool bPressed, uint keysym, uint sequence_length, uint keycode, uint state);
+    void enqueue(bool bPressed, uint keycode, uint state);
 
 protected:
-    uint map_code(const uint& code);
-    uint map_sym(const uint& sym, int sequence_length);
+    uint map_code(uint code);
+    uint map_sym(uint code, uint state);
 
 private:
     unordered_map<uint, uint> _codes;

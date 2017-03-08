@@ -190,13 +190,7 @@ public:
                 return true;
             }
 
-            char buf[32] {};
-            KeySym ks;
-
-            int len = XLookupString(&event.xkey, buf, sizeof(buf) - 1, &ks, nullptr);
-            buf[len] = 0;
-
-             _driver->enqueue(event.type == KeyPress, ks, len, event.xkey.keycode, event.xkey.state);
+             _driver->enqueue(event.type == KeyPress, event.xkey.keycode, event.xkey.state);
         }
 
         return true;

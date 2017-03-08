@@ -320,16 +320,6 @@ public:
         return &rkm;
     }
 
-    uint keysym(unsigned char c)
-    {
-        return 0;
-    }
-
-    uint sequence(unsigned char c)
-    {
-        return 0;
-    }
-
     uint keycode(RawTtyInputStream* reader, bool* preleased)
     {
         // ] (27) doesn't produce key_down !?
@@ -397,11 +387,8 @@ void KeyboardLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
     uint keycode = RawKeyMap::get()->keycode(stream, &bReleased);
     bool bPressed = !bReleased;
 
-    uint keysym = RawKeyMap::get()->keysym(keycode);
-    uint sequence_length = RawKeyMap::get()->sequence(keycode);
-
     updateState(keycode, bPressed);
     uint state = _state;
 
-    KeyboardDriverImpl::enqueue(bPressed, keysym, sequence_length, keycode, state);
+    KeyboardDriverImpl::enqueue(bPressed, keycode, state);
 }

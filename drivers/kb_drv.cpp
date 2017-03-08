@@ -65,11 +65,11 @@ KeyboardDriverImpl::KeyboardDriverImpl()
     _syms[106] = 0xAFFF;
 }
 
-void KeyboardDriverImpl::enqueue(bool bPressed, uint keysym, uint sequence_length, uint keycode, uint state)
+void KeyboardDriverImpl::enqueue(bool bPressed, uint keycode, uint state)
 {
     KeyEvent* pkey = new KeyEvent;
     pkey->bPressed = bPressed;
-    pkey->keysym = map_sym(keysym, sequence_length);
+    pkey->keysym = map_sym(keycode, state);
     pkey->keycode = map_code(keycode);
     pkey->bShift = (state & 0x1);
     pkey->bControl = (state & 0x4);
@@ -78,7 +78,7 @@ void KeyboardDriverImpl::enqueue(bool bPressed, uint keysym, uint sequence_lengt
     _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }
 
-uint KeyboardDriverImpl::map_code(const uint& code)
+uint KeyboardDriverImpl::map_code(uint code)
 {
     const auto& it = _codes.find(code);
     if (it != _codes.end())
@@ -89,14 +89,16 @@ uint KeyboardDriverImpl::map_code(const uint& code)
     return code;
 }
 
-uint KeyboardDriverImpl::map_sym(const uint& keysym, int sequence_length)
+uint KeyboardDriverImpl::map_sym(uint keycode, uint state)
 {
-    if (sequence_length == 0)
-        return 0;
+    auto it = _syms.find(keycode);
+    if (it == _syms.end())
+        return 0x0;
 
-    if (keysym & 0xFF00)
-        return keysym & 0x7F;
+    uint state_mask = 0x1 << state;
+    if (it->second & state_mask)
+        return 0x1;
 
-    return keysym;
+    return 0x0;
 }
 
