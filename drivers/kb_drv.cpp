@@ -31,13 +31,44 @@ KeyboardDriverImpl::KeyboardDriverImpl()
     _codes[117] = 209;
     _codes[118] = 210;
     _codes[119] = 211;
+
+    for (uint sym = 9; sym <= 61; sym++)
+    {
+        if (sym == 23 || sym == 37 || sym == 50)
+            continue;
+        _syms[sym] = 0xFFFF;
+    }
+
+    _syms[65] = 0xFFFF;
+    _syms[94] = 0xFFFF;
+    _syms[104] = 0xFFFF;
+    _syms[109] = 0xFFFF;
+    _syms[119] = 0xFFFF;
+    _syms[125] = 0xFFFF;
+    _syms[126] = 0xFFFF;
+    _syms[129] = 0xFFFF;
+    _syms[187] = 0xFFFF;
+    _syms[188] = 0xFFFF;
+
+    _syms[23] = 0x5555;
+
+    for (uint code = 79; code <= 91; code++)
+    {
+        if (code == 82)
+            continue;
+        _syms[code] = 0xAAAA;
+    }
+
+    _syms[63] = 0xAFFF;
+    _syms[82] = 0xAFFF;
+    _syms[86] = 0xAFFF;
+    _syms[106] = 0xAFFF;
 }
 
-void KeyboardDriverImpl::enqueue(bool bPressed, const string& text, uint keysym, uint sequence_length, uint keycode, uint state)
+void KeyboardDriverImpl::enqueue(bool bPressed, uint keysym, uint sequence_length, uint keycode, uint state)
 {
     KeyEvent* pkey = new KeyEvent;
     pkey->bPressed = bPressed;
-    pkey->text = text;
     pkey->keysym = map_sym(keysym, sequence_length);
     pkey->keycode = map_code(keycode);
     pkey->bShift = (state & 0x1);

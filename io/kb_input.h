@@ -10,7 +10,6 @@ class KeyboardDriver : public InputDriver
 
 struct KeyEvent : public InputEvent
 {
-    string text;
     unsigned int keysym;
     unsigned int keycode;
     bool bPressed; // false: released

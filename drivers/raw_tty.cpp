@@ -42,6 +42,9 @@ public:
 
     void add(MouseLocalRawTtyDriver* driver)
     {
+        if (!hasTerminalOut())
+            return; // ignore if we don't have an interactive shell
+
         size_t size = driver_count();
         {
             auto lk = make_lock();
@@ -63,6 +66,9 @@ public:
 
     void add(KeyboardLocalRawTtyDriver* driver)
     {
+        if (!hasMasterTty())
+            return; // ignore if we dont have master tty
+
         size_t size = driver_count();
         {
             auto lk = make_lock();
@@ -375,14 +381,6 @@ public:
 
         return c;
     }
-
-    string text(unsigned char c, uint state)
-    {
-        stringstream ss;
-        ss << (int)c;
-        return ss.str();
-    }
-
 private:
     RawKeyMap()
     {
@@ -405,7 +403,5 @@ void KeyboardLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
     updateState(keycode, bPressed);
     uint state = _state;
 
-    string text = RawKeyMap::get()->text(keycode, _state);
-
-    KeyboardDriverImpl::enqueue(bPressed, text, keysym, sequence_length, keycode, state);
+    KeyboardDriverImpl::enqueue(bPressed, keysym, sequence_length, keycode, state);
 }
