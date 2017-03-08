@@ -377,18 +377,11 @@ private:
     }
 };
 
-void KeyboardLocalRawTtyDriver::updateState(uint keycode, bool pressed)
-{
-}
-
 void KeyboardLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
 {
     bool bReleased;
     uint keycode = RawKeyMap::get()->keycode(stream, &bReleased);
     bool bPressed = !bReleased;
 
-    updateState(keycode, bPressed);
-    uint state = _state;
-
-    KeyboardDriverImpl::enqueue(bPressed, keycode, state);
+    KeyboardDriverImpl::enqueue(bPressed, keycode);
 }

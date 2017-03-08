@@ -36,5 +36,4 @@ protected:
 
 private:
     void updateState(uint keycode, bool pressed);
-    uint _state = 0;
 };

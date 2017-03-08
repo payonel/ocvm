@@ -30,31 +30,6 @@ public:
     {
         _display = XOpenDisplay(nullptr);
         _window_stack.clear();
-        _modifiers.clear();
-
-        XModifierKeymap* mapping = XGetModifierMapping(_display);
-
-        int width = mapping->max_keypermod;
-        auto& map = mapping->modifiermap;
-        for (int mod_index = ShiftMapIndex; mod_index <= Mod5MapIndex; mod_index++)
-        {
-            for (int i = 0; i < width; i++)
-            {
-                uint code = map[mod_index*width + i];
-                if (code)
-                {
-                    _modifiers[code] = make_tuple(mod_index, i);
-                }
-            }
-        }
-
-        XFreeModifiermap(mapping);
-
-        _key_template = XKeyEvent();
-        _key_template.display = _display;
-        _key_template.time = CurrentTime;
-        _key_template.send_event = true;
-        _key_template.same_screen = true;
     }
 
     void close_display()
@@ -85,7 +60,6 @@ public:
             w = parent;
         }
 
-        _key_template.window = w;
         _top = w;
     }
 
@@ -116,7 +90,7 @@ public:
         return _window_stack.find(w) != _window_stack.end();
     }
 
-    bool infer_next_event(XEvent* pev)
+    bool infer_next_event(uint* pCode, bool* pbPressed)
     {
         char keymap[32] {};
         XQueryKeymap(_display, keymap);
@@ -147,30 +121,8 @@ public:
 
             _keymap[i] ^= first_bit;
 
-            pev->xkey = _key_template;
-
-            bool pressed = (current & first_bit);
-            pev->type = pressed ? KeyPress : KeyRelease;
-
-            // cout << "computed code: " << i << ' ' << (i*8) << ' ' << hex << (int)first_bit << ' ' << dec << code << endl;
-            const auto& modifier_set_iterator = _modifiers.find(code);
-            if (modifier_set_iterator != _modifiers.end())
-            {
-                const auto& mod_key_tuple = modifier_set_iterator->second;
-
-                uint mod_index = std::get<0>(mod_key_tuple); // shift(0), lock(1), ctrl(2), etc
-                uint nth_code = std::get<1>(mod_key_tuple); // the nth code in the group
-
-                bitset<8> mod_bits = _mod_groups[mod_index];
-                mod_bits.set(nth_code, pressed);
-                _mod_groups[mod_index] = static_cast<unsigned char>(mod_bits.to_ulong());
-
-                bitset<8> state_bits = _modifier_state;
-                state_bits.set(mod_index, mod_bits.any());
-                _modifier_state = static_cast<unsigned char>(state_bits.to_ulong());
-            }
-            pev->xkey.state = _modifier_state;
-            pev->xkey.keycode = code;
+            *pbPressed = (current & first_bit);
+            *pCode = code;
             return true;
         }
 
@@ -182,15 +134,11 @@ public:
         if (!is_in_focus())
             return true;
 
-        XEvent event {};
-        if (infer_next_event(&event))
+        uint code;
+        bool pressed;
+        if (infer_next_event(&code, &pressed))
         {
-            if (event.type != KeyPress && event.type != KeyRelease)
-            {
-                return true;
-            }
-
-             _driver->enqueue(event.type == KeyPress, event.xkey.keycode, event.xkey.state);
+             _driver->enqueue(pressed, code);
         }
 
         return true;
@@ -210,14 +158,11 @@ public:
 
 private:
     unordered_set<Window> _window_stack;
-    unordered_map<uint, tuple<uint, uint>> _modifiers;
-    unsigned char _mod_groups[8] {}; // 8 mod keys, 8 possible locations of those keys
 
     Display* _display {};
     Window _top {};
     char _keymap[32] {};
     unsigned char _modifier_state {};
-    XKeyEvent _key_template;
     KeyboardScanner* _driver;
 };
 
