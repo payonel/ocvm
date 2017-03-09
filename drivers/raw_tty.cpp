@@ -347,7 +347,6 @@ public:
     uint keycode(RawTtyInputStream* reader, bool* preleased)
     {
         unsigned char c = reader->get();
-        cout << "raw: " << (int)c;
         unsigned char byte_1 = 0x0;
         
         switch (c) // multi byte sequences
