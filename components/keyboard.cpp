@@ -19,7 +19,7 @@ Keyboard::~Keyboard()
 bool Keyboard::onInitialize(Value& config)
 {
     _preferredScreen = config.get(3).Or("").toString();
-    return _keyboard->open(Factory::create_kb("scanner"));
+    return _keyboard->open(Factory::create_kb());
 }
 
 bool Keyboard::postInit()

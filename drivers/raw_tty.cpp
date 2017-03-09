@@ -322,11 +322,9 @@ public:
 
     uint keycode(RawTtyInputStream* reader, bool* preleased)
     {
-        // ] (27) doesn't produce key_down !?
-
         unsigned char c = reader->get();
         unsigned char byte_1 = 0x0;
-        // cout << "[" << (int)c << "]\r\n" << flush;
+        
         switch (c) // multi byte sequences
         {
             case 0xE0:

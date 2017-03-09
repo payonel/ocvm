@@ -30,7 +30,7 @@ bool Screen::onInitialize(Value& config)
     if (!client()->host()->getFramer()->add(this, 0))
         return false;
 
-    return _mouse->open(Factory::create_mouse("raw"));
+    return _mouse->open(Factory::create_mouse());
 }
 
 RunState Screen::update()
