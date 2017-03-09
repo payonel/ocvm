@@ -358,6 +358,7 @@ public:
                 byte_1 &= 0x7F;
                 switch (byte_1)
                 {
+                    case 29: c = 105; break; // rctrl
                     case 56: c = 108; break; // ralt
                     case 71: c = 110; break; // home
                     case 73: c = 112; break; // pg up
@@ -385,10 +386,14 @@ public:
                 c &= 0x7F;
                 switch (c)
                 {
-                    case 29: c =  37; break; // left control
-                    case 56: c =  64; break; // left alt
                     case 91: c = 133; break; // windows
                 }
+
+                if (c >= 1 && c <= 88)
+                {
+                    c += 8;
+                }
+
                 break;
         }
 
