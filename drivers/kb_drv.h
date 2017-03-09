@@ -14,8 +14,6 @@ class KeyboardDriverImpl : public KeyboardDriver
 public:
     KeyboardDriverImpl();
 
-    // TODO enqueue should take just K_RAW stdin data
-    // void enqueue(char* bytes, uint length);
     void enqueue(bool bPressed, uint keycode);
 
 protected:
@@ -27,6 +25,6 @@ private:
     unordered_map<uint, tuple<uint, uint>> _modifiers;
     unsigned char _mod_groups[8] {}; // 8 mod keys, 8 possible locations of those keys
     unordered_map<uint, uint> _codes;
-    unordered_map<uint, uint> _syms;
+    unordered_map<uint, tuple<uint, uint, uint>> _syms;
     uint _modifier_state;
 };
