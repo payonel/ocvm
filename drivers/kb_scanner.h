@@ -9,6 +9,8 @@ public:
     KeyboardScanner();
     ~KeyboardScanner();
 
+    static bool isAvailable();
+    
 protected:
     bool onStart() override;
     void onStop() override;

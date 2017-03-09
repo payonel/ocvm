@@ -10,9 +10,26 @@ using namespace std;
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <linux/kd.h>
+#include <signal.h>
+#include <string.h> // memset
 
 #include "worker.h"
 #include "ansi.h"
+
+static unsigned long _original_kb_mode = 0;
+static struct sigaction sig_action_data;
+
+static inline void exit_function()
+{
+    // leave raw mode
+    ioctl(0, KDSKBMODE, _original_kb_mode ? _original_kb_mode : K_UNICODE);
+}
+
+static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
+{
+    exit_function();
+    exit(0);
+}
 
 class TtyReader;
 class RawTtyInputStreamImpl : public RawTtyInputStream
@@ -91,6 +108,15 @@ public:
     static TtyReader* engine()
     {
         static TtyReader one;
+        static bool init = false;
+        if (!init)
+        {
+            init = true;
+            memset(&sig_action_data, 0, sizeof(sig_action_data));
+            sig_action_data.sa_sigaction = segfault_sigaction;
+            sig_action_data.sa_flags = SA_SIGINFO;
+            sigaction(SIGTERM, &sig_action_data, nullptr);
+        }
         return &one;
     }
 
@@ -143,11 +169,6 @@ private:
         _terminal_out = (isatty(fileno(stdout)));
     }
 
-    static void exit_function()
-    {
-        // leave raw mode
-        ioctl(0, KDSKBMODE, _original_kb_mode ? _original_kb_mode : K_UNICODE);
-    }
 
     void onStart() override
     {
@@ -172,11 +193,14 @@ private:
                 cerr << "critical failure: tried to use ioctl\n";
                 ::exit(1);
             }
+
             atexit(&exit_function);
         }
 
         //enable mouse tracking
-        cout << Ansi::mouse_prd_on;
+        if (_terminal_out)
+            cout << Ansi::mouse_prd_on;
+
         cout << flush;
     }
 
@@ -211,7 +235,9 @@ private:
         ioctl(0, KDSKBMODE, _original_kb_mode);
 
         // disable mouse tracking
-        cout << Ansi::mouse_prd_off;
+        if (_terminal_out)
+            cout << Ansi::mouse_prd_off;
+
         if (_original)
         {
             ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
@@ -222,12 +248,10 @@ private:
     
     bool _master_tty;
     bool _terminal_out;
-    static unsigned long _original_kb_mode;
     termios* _original = nullptr;
     set<MouseLocalRawTtyDriver*> _mouse_drivers;
     set<KeyboardLocalRawTtyDriver*> _kb_drivers;
 };
-unsigned long TtyReader::_original_kb_mode = 0;
 
 RawTtyInputStreamImpl::RawTtyInputStreamImpl(TtyReader* reader) :
     _reader(reader),
@@ -323,6 +347,7 @@ public:
     uint keycode(RawTtyInputStream* reader, bool* preleased)
     {
         unsigned char c = reader->get();
+        cout << "raw: " << (int)c;
         unsigned char byte_1 = 0x0;
         
         switch (c) // multi byte sequences

@@ -29,7 +29,8 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
     }
     else if (kbTypeName == "scanner")
     {
-        return unique_ptr<KeyboardDriver>(new KeyboardScanner);
+        if (KeyboardScanner::isAvailable())
+            return unique_ptr<KeyboardDriver>(new KeyboardScanner);
     }
 
     return nullptr;

@@ -189,3 +189,10 @@ void KeyboardScanner::onStop()
     _priv->stop();
 }
 
+bool KeyboardScanner::isAvailable()
+{
+    Display* d = XOpenDisplay(nullptr);
+    if (d)
+        XCloseDisplay(d);
+    return d;
+}
