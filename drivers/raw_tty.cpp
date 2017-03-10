@@ -57,7 +57,7 @@ public:
         return _mouse_drivers.size() + _kb_drivers.size();
     }
 
-    void add(MouseLocalRawTtyDriver* driver)
+    void add(MouseTerminalDriver* driver)
     {
         if (!hasTerminalOut())
             return; // ignore if we don't have an interactive shell
@@ -71,7 +71,7 @@ public:
             start();
     }
 
-    void remove(MouseLocalRawTtyDriver* driver)
+    void remove(MouseTerminalDriver* driver)
     {
         {
             auto lk = make_lock();
@@ -249,7 +249,7 @@ private:
     bool _master_tty;
     bool _terminal_out;
     termios* _original = nullptr;
-    set<MouseLocalRawTtyDriver*> _mouse_drivers;
+    set<MouseTerminalDriver*> _mouse_drivers;
     set<KeyboardLocalRawTtyDriver*> _kb_drivers;
 };
 
@@ -285,23 +285,23 @@ void RawTtyInputStreamImpl::clear()
     _buffer.clear();
 }
 
-MouseLocalRawTtyDriver::~MouseLocalRawTtyDriver()
+MouseTerminalDriver::~MouseTerminalDriver()
 {
     TtyReader::engine()->remove(this);
 }
 
-bool MouseLocalRawTtyDriver::onStart()
+bool MouseTerminalDriver::onStart()
 {
     TtyReader::engine()->add(this);
     return true;
 }
 
-void MouseLocalRawTtyDriver::onStop()
+void MouseTerminalDriver::onStop()
 {
     TtyReader::engine()->remove(this);
 }
 
-void MouseLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
+void MouseTerminalDriver::enqueue(RawTtyInputStream* stream)
 {
     unsigned char buf[] {stream->get(), stream->get(), stream->get()};
     MouseDriverImpl::enqueue(buf);
@@ -328,7 +328,7 @@ bool KeyboardLocalRawTtyDriver::isAvailable()
     return TtyReader::engine()->hasMasterTty();
 }
 
-bool MouseLocalRawTtyDriver::isAvailable()
+bool MouseTerminalDriver::isAvailable()
 {
     return TtyReader::engine()->hasTerminalOut();
 }
@@ -385,4 +385,26 @@ void KeyboardLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
     bool bPressed = !bReleased;
 
     KeyboardDriverImpl::enqueue(bPressed, keycode);
+}
+
+KeyboardPtyDriver::~KeyboardPtyDriver()
+{
+}
+
+void KeyboardPtyDriver::enqueue(RawTtyInputStream*)
+{
+}
+
+bool KeyboardPtyDriver::isAvailable()
+{
+    return false;
+}
+
+bool KeyboardPtyDriver::onStart()
+{
+    return false;
+}
+
+void KeyboardPtyDriver::onStop()
+{
 }

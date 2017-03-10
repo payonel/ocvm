@@ -32,6 +32,11 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
         if (KeyboardScanner::isAvailable())
             return unique_ptr<KeyboardDriver>(new KeyboardScanner);
     }
+    else if (kbTypeName == "pty")
+    {
+        if (KeyboardPtyDriver::isAvailable())
+            return unique_ptr<KeyboardDriver>(new KeyboardPtyDriver);
+    }
 
     return nullptr;
 }
@@ -53,8 +58,8 @@ unique_ptr<MouseDriver> Factory::create_mouse(const string& mouseTypeName)
     }
     else if (mouseTypeName == "raw")
     {
-        if (MouseLocalRawTtyDriver::isAvailable())
-            return unique_ptr<MouseDriver>(new MouseLocalRawTtyDriver);
+        if (MouseTerminalDriver::isAvailable())
+            return unique_ptr<MouseDriver>(new MouseTerminalDriver);
     }
 
     return nullptr;

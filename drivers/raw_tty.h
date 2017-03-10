@@ -9,10 +9,10 @@ public:
     virtual unsigned char get() = 0;
 };
 
-class MouseLocalRawTtyDriver : public MouseDriverImpl
+class MouseTerminalDriver : public MouseDriverImpl
 {
 public:
-    ~MouseLocalRawTtyDriver();
+    ~MouseTerminalDriver();
 
     void enqueue(RawTtyInputStream* stream);
     static bool isAvailable();
@@ -33,7 +33,17 @@ public:
 protected:
     bool onStart() override;
     void onStop() override;
+};
 
-private:
-    void updateState(uint keycode, bool pressed);
+class KeyboardPtyDriver : public KeyboardDriverImpl
+{
+public:
+    ~KeyboardPtyDriver();
+
+    void enqueue(RawTtyInputStream* stream);
+    static bool isAvailable();
+
+protected:
+    bool onStart() override;
+    void onStop() override;
 };
