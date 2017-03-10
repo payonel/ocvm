@@ -122,6 +122,32 @@ public:
             _keymap[i] ^= first_bit;
 
             *pbPressed = (current & first_bit);
+
+            switch (code)
+            {
+                case 127: code = 197; break; // pause
+                case 118: code = 210; break; // insert
+                case 119: code = 211; break; // delete
+                case 110: code = 199; break; // home
+                case 112: code = 201; break; // pgup
+                case 117: code = 209; break; // pgdn
+                case 115: code = 207; break; // end
+                case 133: code =  91; break; // windows
+                case 108: code = 184; break; // ralt
+                case 135: code =  93; break; // menu
+                case 105: code = 157; break; // rctrl
+                case 113: code = 203; break; // left
+                case 111: code = 200; break; // up
+                case 116: code = 208; break; // down
+                case 114: code = 205; break; // right
+                default:
+                    if (code >= 8 && code <= 96)
+                    {
+                        code -= 8;
+                    }
+                    break;
+            }
+
             *pCode = code;
             return true;
         }
