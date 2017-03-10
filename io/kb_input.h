@@ -14,9 +14,11 @@ struct KeyEvent : public InputEvent
     unsigned int keycode;
     bool bPressed; // false: released
 
-    bool bShift; //0x1
-    bool bControl; // 0x4
-    bool bAlt; // 0x8
+    bool bShift;    //0x01
+    bool bCaps;     //0x02
+    bool bControl;  //0x04
+    bool bAlt;      //0x08
+    bool bNumLock;  //0x10
 };
 
 class KeyboardInput : protected InputSource

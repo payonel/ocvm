@@ -347,52 +347,26 @@ public:
     uint keycode(RawTtyInputStream* reader, bool* preleased)
     {
         unsigned char c = reader->get();
-        unsigned char byte_1 = 0x0;
         
         switch (c) // multi byte sequences
         {
             case 0xE0:
-                byte_1 = reader->get();
-                *preleased = byte_1 & 0x80;
-                byte_1 &= 0x7F;
-                switch (byte_1)
-                {
-                    case 29: c = 105; break; // rctrl
-                    case 56: c = 108; break; // ralt
-                    case 71: c = 110; break; // home
-                    case 73: c = 112; break; // pg up
-                    case 72: c = 111; break; // up
-                    case 75: c = 113; break; // left
-                    case 77: c = 114; break; // right
-                    case 79: c = 115; break; // end
-                    case 80: c = 116; break; // down
-                    case 81: c = 117; break; // pg dn
-                    case 82: c = 118; break; // insert
-                    case 83: c = 119; break; // delete
-                    case 91: c = 133; break; // windows
-                    case 93: c = 135; break; // menu
-                    default: c = byte_1; break;
-                }
+                c = reader->get();
+                *preleased = c & 0x80;
+                c |= 0x80; // add press indicator
                 break;
-            case 0xE1: 
-                byte_1 = reader->get(); // 29
-                *preleased = byte_1 & 0x80;
-                reader->get(); // 69 
-                c = 127;
+            case 0xE1: // pause
+                c = reader->get(); // 29(released) or 29+0x80[157](pressed)
+                *preleased = c & 0x80;
+                // NUMLK is a double byte 0xE0, 69 (| x80)
+                // PAUSE is a triple byte 0xE1, 29 (| x80), 69 (| 0x80)
+                // because triple byte press state is encoded in the 2nd byte
+                // the third byte should retain 0x80
+                c = reader->get() | 0x80;
                 break;
             default:
                 *preleased = c & 0x80;
-                c &= 0x7F;
-                switch (c)
-                {
-                    case 91: c = 133; break; // windows
-                }
-
-                if (c >= 1 && c <= 88)
-                {
-                    c += 8;
-                }
-
+                c &= 0x7F; // remove pressed indicator
                 break;
         }
 

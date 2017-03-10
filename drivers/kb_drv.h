@@ -18,13 +18,11 @@ public:
 
 protected:
     void update_modifier(bool bPressed, uint keycode);
-    uint map_code(uint code);
     uint map_sym(uint code);
 
 private:
     unordered_map<uint, tuple<uint, uint>> _modifiers;
     unsigned char _mod_groups[8] {}; // 8 mod keys, 8 possible locations of those keys
-    unordered_map<uint, uint> _codes;
     unordered_map<uint, tuple<uint, uint, uint>> _syms;
     uint _modifier_state;
 };
