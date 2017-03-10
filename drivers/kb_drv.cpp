@@ -69,6 +69,22 @@ KeyboardDriverImpl::KeyboardDriverImpl()
     _syms[53] = make_tuple(63, 0xaaaa, 47);     // / -16
     _syms[57] = make_tuple(32, 0xffff, 0);      // SPACE
 
+    _syms[71]  = make_tuple(55, 0xffff, 0);     // numpad 7
+    _syms[72]  = make_tuple(56, 0xffff, 0);     // numpad 8
+    _syms[73]  = make_tuple(57, 0xffff, 0);     // numpad 9
+    _syms[181] = make_tuple(47, 0xffff, 0);     // numpad /
+    _syms[75]  = make_tuple(52, 0xffff, 0);     // numpad 4
+    _syms[76]  = make_tuple(53, 0xffff, 0);     // numpad 5
+    _syms[77]  = make_tuple(54, 0xffff, 0);     // numpad 6
+    _syms[55]  = make_tuple(42, 0xffff, 0);     // numpad *
+    _syms[79]  = make_tuple(49, 0xffff, 0);     // numpad 1
+    _syms[80]  = make_tuple(50, 0xffff, 0);     // numpad 2
+    _syms[81]  = make_tuple(51, 0xffff, 0);     // numpad 3
+    _syms[74]  = make_tuple(45, 0xffff, 0);     // numpad -
+    _syms[82]  = make_tuple(48, 0xffff, 0);     // numpad 0
+    _syms[83]  = make_tuple(46, 0xffff, 0);     // numpad .
+    _syms[78]  = make_tuple(43, 0xffff, 0);     // numpad +
+
     // _modifiers[keycode] = make_tuple(modifier index, nth instance of that modifier)
     // shift:    0
     // caps:     1

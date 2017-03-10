@@ -140,6 +140,7 @@ public:
                 case 111: code = 200; break; // up
                 case 116: code = 208; break; // down
                 case 114: code = 205; break; // right
+                case 106: code = 181; break; // numpad /
                 default:
                     if (code >= 8 && code <= 96)
                     {
