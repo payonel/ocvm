@@ -32,12 +32,12 @@ static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
 }
 
 class TtyReader;
-class RawTtyInputStreamImpl : public RawTtyInputStream
+class TermInputStreamImpl : public TermInputStream
 {
 public:
-    RawTtyInputStreamImpl(TtyReader* reader);
+    TermInputStreamImpl(TtyReader* reader);
     unsigned char get() override;
-    RawTtyInputStreamImpl* reset();
+    TermInputStreamImpl* reset();
     void clear();
 private:
     vector<unsigned char> _buffer;
@@ -208,7 +208,7 @@ private:
     {
         if (has_input())
         {
-            RawTtyInputStreamImpl stream(this);
+            TermInputStreamImpl stream(this);
             unsigned char c = stream.get();
             if (c == Ansi::ESC && stream.get() == '[') // escape sequence
             {
@@ -253,13 +253,13 @@ private:
     set<KeyboardLocalRawTtyDriver*> _kb_drivers;
 };
 
-RawTtyInputStreamImpl::RawTtyInputStreamImpl(TtyReader* reader) :
+TermInputStreamImpl::TermInputStreamImpl(TtyReader* reader) :
     _reader(reader),
     _index(0)
 {
 }
 
-unsigned char RawTtyInputStreamImpl::get()
+unsigned char TermInputStreamImpl::get()
 {
     while (_index >= _buffer.size())
     {
@@ -274,13 +274,13 @@ unsigned char RawTtyInputStreamImpl::get()
     return next;
 }
 
-RawTtyInputStreamImpl* RawTtyInputStreamImpl::reset()
+TermInputStreamImpl* TermInputStreamImpl::reset()
 {
     _index = 0;
     return this;
 }
 
-void RawTtyInputStreamImpl::clear()
+void TermInputStreamImpl::clear()
 {
     _buffer.clear();
 }
@@ -301,7 +301,7 @@ void MouseTerminalDriver::onStop()
     TtyReader::engine()->remove(this);
 }
 
-void MouseTerminalDriver::enqueue(RawTtyInputStream* stream)
+void MouseTerminalDriver::enqueue(TermInputStream* stream)
 {
     unsigned char buf[] {stream->get(), stream->get(), stream->get()};
     MouseDriverImpl::enqueue(buf);
@@ -333,65 +333,41 @@ bool MouseTerminalDriver::isAvailable()
     return TtyReader::engine()->hasTerminalOut();
 }
 
-class RawKeyMap
+void KeyboardLocalRawTtyDriver::enqueue(TermInputStream* stream)
 {
-public:
-    RawKeyMap(RawKeyMap&) = delete;
-
-    static RawKeyMap* get()
+    bool released;
+    uint keycode = stream->get();
+    
+    switch (keycode)
     {
-        static RawKeyMap rkm;
-        return &rkm;
+        case 0xE0: // double byte
+            keycode = stream->get();
+            released = keycode & 0x80;
+            keycode |= 0x80; // add press indicator
+            break;
+        case 0xE1: // triple byte
+            keycode = stream->get(); // 29(released) or 29+0x80[157](pressed)
+            released = keycode & 0x80;
+            // NUMLK is a double byte 0xE0, 69 (| x80)
+            // PAUSE is a triple byte 0xE1, 29 (| x80), 69 (| 0x80)
+            // because triple byte press state is encoded in the 2nd byte
+            // the third byte should retain 0x80
+            keycode = stream->get() | 0x80;
+            break;
+        default:
+            released = keycode & 0x80;
+            keycode &= 0x7F; // remove pressed indicator
+            break;
     }
 
-    uint keycode(RawTtyInputStream* reader, bool* preleased)
-    {
-        unsigned char c = reader->get();
-        
-        switch (c) // multi byte sequences
-        {
-            case 0xE0:
-                c = reader->get();
-                *preleased = c & 0x80;
-                c |= 0x80; // add press indicator
-                break;
-            case 0xE1: // pause
-                c = reader->get(); // 29(released) or 29+0x80[157](pressed)
-                *preleased = c & 0x80;
-                // NUMLK is a double byte 0xE0, 69 (| x80)
-                // PAUSE is a triple byte 0xE1, 29 (| x80), 69 (| 0x80)
-                // because triple byte press state is encoded in the 2nd byte
-                // the third byte should retain 0x80
-                c = reader->get() | 0x80;
-                break;
-            default:
-                *preleased = c & 0x80;
-                c &= 0x7F; // remove pressed indicator
-                break;
-        }
-
-        return c;
-    }
-private:
-    RawKeyMap()
-    {
-    }
-};
-
-void KeyboardLocalRawTtyDriver::enqueue(RawTtyInputStream* stream)
-{
-    bool bReleased;
-    uint keycode = RawKeyMap::get()->keycode(stream, &bReleased);
-    bool bPressed = !bReleased;
-
-    KeyboardDriverImpl::enqueue(bPressed, keycode);
+    KeyboardDriverImpl::enqueue(!released, keycode);
 }
 
 KeyboardPtyDriver::~KeyboardPtyDriver()
 {
 }
 
-void KeyboardPtyDriver::enqueue(RawTtyInputStream*)
+void KeyboardPtyDriver::enqueue(TermInputStream*)
 {
 }
 

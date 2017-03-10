@@ -3,18 +3,24 @@
 #include "mouse_drv.h"
 #include "kb_drv.h"
 
-class RawTtyInputStream
+class TermInputStream
 {
 public:
     virtual unsigned char get() = 0;
 };
 
-class MouseTerminalDriver : public MouseDriverImpl
+class TermInputDriver
+{
+public:
+    virtual void enqueue(TermInputStream* stream) = 0;
+};
+
+class MouseTerminalDriver : public TermInputDriver, public MouseDriverImpl
 {
 public:
     ~MouseTerminalDriver();
 
-    void enqueue(RawTtyInputStream* stream);
+    void enqueue(TermInputStream* stream) override;
     static bool isAvailable();
 
 protected:
@@ -22,12 +28,12 @@ protected:
     void onStop() override;
 };
 
-class KeyboardLocalRawTtyDriver : public KeyboardDriverImpl
+class KeyboardLocalRawTtyDriver : public TermInputDriver, public KeyboardDriverImpl
 {
 public:
     ~KeyboardLocalRawTtyDriver();
 
-    void enqueue(RawTtyInputStream* stream);
+    void enqueue(TermInputStream* stream) override;
     static bool isAvailable();
 
 protected:
@@ -35,12 +41,12 @@ protected:
     void onStop() override;
 };
 
-class KeyboardPtyDriver : public KeyboardDriverImpl
+class KeyboardPtyDriver : public TermInputDriver, public KeyboardDriverImpl
 {
 public:
     ~KeyboardPtyDriver();
 
-    void enqueue(RawTtyInputStream* stream);
+    void enqueue(TermInputStream* stream) override;
     static bool isAvailable();
 
 protected:
