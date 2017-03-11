@@ -51,57 +51,27 @@ public:
     TtyReader(TtyReader&) = delete;
     void operator= (TtyReader&) = delete;
 
-    size_t driver_count()
+    void add(TermInputDriver* driver)
     {
-        auto lk = make_lock();
-        return _mouse_drivers.size() + _kb_drivers.size();
-    }
-
-    void add(MouseTerminalDriver* driver)
-    {
-        if (!hasTerminalOut())
-            return; // ignore if we don't have an interactive shell
-
-        size_t size = driver_count();
+        bool first = false;
         {
             auto lk = make_lock();
-            _mouse_drivers.insert(driver);
+            first = _drivers.size() == 0;
+            _drivers.insert(driver);
         }
-        if (size == 0)
+        if (first)
             start();
     }
 
-    void remove(MouseTerminalDriver* driver)
+    void remove(TermInputDriver* driver)
     {
+        bool last = false;
         {
             auto lk = make_lock();
-            _mouse_drivers.erase(driver);
+            _drivers.erase(driver);
+            last = _drivers.size() == 0;
         }
-        if (driver_count() == 0)
-            stop();
-    }
-
-    void add(KeyboardLocalRawTtyDriver* driver)
-    {
-        if (!hasMasterTty())
-            return; // ignore if we dont have master tty
-
-        size_t size = driver_count();
-        {
-            auto lk = make_lock();
-            _kb_drivers.insert(driver);
-        }
-        if (size == 0)
-            start();
-    }
-
-    void remove(KeyboardLocalRawTtyDriver* driver)
-    {
-        {
-            auto lk = make_lock();
-            _kb_drivers.erase(driver);
-        }
-        if (driver_count() == 0)
+        if (last)
             stop();
     }
 
@@ -210,18 +180,9 @@ private:
         {
             TermInputStreamImpl stream(this);
             unsigned char c = stream.get();
-            if (c == Ansi::ESC && stream.get() == '[') // escape sequence
+            if (c)
             {
-                if (stream.get() == 'M') // mouse escape sequence
-                {
-                    stream.clear(); // clear the buffer thus far, the 3 bytes
-                    for (auto driver : _mouse_drivers)
-                        driver->enqueue(stream.reset());
-                }
-            }
-            else if (c > 0)
-            {
-                for (auto driver : _kb_drivers)
+                for (auto driver : _drivers)
                     driver->enqueue(stream.reset());
             }
         }
@@ -249,8 +210,7 @@ private:
     bool _master_tty;
     bool _terminal_out;
     termios* _original = nullptr;
-    set<MouseTerminalDriver*> _mouse_drivers;
-    set<KeyboardLocalRawTtyDriver*> _kb_drivers;
+    set<TermInputDriver*> _drivers;
 };
 
 TermInputStreamImpl::TermInputStreamImpl(TtyReader* reader) :
@@ -303,6 +263,11 @@ void MouseTerminalDriver::onStop()
 
 void MouseTerminalDriver::enqueue(TermInputStream* stream)
 {
+    if (stream->get() != Ansi::ESC || stream->get() != '[' || stream->get() != 'M') // mouse escape sequence
+    {
+        return; // ignore
+    }
+
     unsigned char buf[] {stream->get(), stream->get(), stream->get()};
     MouseDriverImpl::enqueue(buf);
 }
