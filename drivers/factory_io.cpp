@@ -11,7 +11,12 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
 {   
     if (kbTypeName.empty())
     {
-        vector<string> defaults { "raw", "scanner", "x", "stdin" };
+        // requesting raw kb explicitly should always succeed because
+        // raw kb driver use file io
+        if (KeyboardLocalRawTtyDriver::isAvailable())
+            return Factory::create_kb("raw");
+
+        vector<string> defaults { "scanner", "pty" };
         for (auto name : defaults)
         {
             auto result = Factory::create_kb(name);
@@ -24,8 +29,7 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
     }
     else if (kbTypeName == "raw")
     {
-        if (KeyboardLocalRawTtyDriver::isAvailable())
-            return unique_ptr<KeyboardDriver>(new KeyboardLocalRawTtyDriver);
+        return unique_ptr<KeyboardDriver>(new KeyboardLocalRawTtyDriver);
     }
     else if (kbTypeName == "scanner")
     {
@@ -43,23 +47,9 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
 
 unique_ptr<MouseDriver> Factory::create_mouse(const string& mouseTypeName)
 {
-    if (mouseTypeName.empty())
+    if (mouseTypeName.empty() || mouseTypeName == "raw")
     {
-        vector<string> defaults { "raw", "x", "stdin" };
-        for (auto name : defaults)
-        {
-            auto result = Factory::create_mouse(name);
-            if (result)
-            {
-                cout << name << " mouse created\r\n";
-                return result;
-            }
-        }
-    }
-    else if (mouseTypeName == "raw")
-    {
-        if (MouseTerminalDriver::isAvailable())
-            return unique_ptr<MouseDriver>(new MouseTerminalDriver);
+        return unique_ptr<MouseDriver>(new MouseTerminalDriver);
     }
 
     return nullptr;
