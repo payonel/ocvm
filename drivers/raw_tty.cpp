@@ -39,6 +39,15 @@ public:
     unsigned char get() override;
     TermInputStreamImpl* reset();
     void clear();
+    bool hasMouseCode() override
+    {
+        if (get() == Ansi::ESC && get() == '[' && get() == 'M')
+        {
+            return true;
+        }
+        reset();
+        return false;
+    }
 private:
     vector<unsigned char> _buffer;
     TtyReader* _reader;
@@ -263,7 +272,7 @@ void MouseTerminalDriver::onStop()
 
 void MouseTerminalDriver::enqueue(TermInputStream* stream)
 {
-    if (stream->get() != Ansi::ESC || stream->get() != '[' || stream->get() != 'M') // mouse escape sequence
+    if (!stream->hasMouseCode())
     {
         return; // ignore
     }
@@ -300,6 +309,9 @@ bool MouseTerminalDriver::isAvailable()
 
 void KeyboardLocalRawTtyDriver::enqueue(TermInputStream* stream)
 {
+    if (stream->hasMouseCode())
+        return;
+
     bool released;
     uint keycode = stream->get();
     
@@ -330,22 +342,30 @@ void KeyboardLocalRawTtyDriver::enqueue(TermInputStream* stream)
 
 KeyboardPtyDriver::~KeyboardPtyDriver()
 {
+    TtyReader::engine()->remove(this);
 }
 
-void KeyboardPtyDriver::enqueue(TermInputStream*)
+void KeyboardPtyDriver::enqueue(TermInputStream* stream)
 {
+    if (stream->hasMouseCode())
+        return;
+
+    int sym = stream->get();
+    KeyboardDriverImpl::enqueue(sym);
 }
 
 bool KeyboardPtyDriver::isAvailable()
 {
-    return false;
+    return true;
 }
 
 bool KeyboardPtyDriver::onStart()
 {
-    return false;
+    TtyReader::engine()->add(this);
+    return true;
 }
 
 void KeyboardPtyDriver::onStop()
 {
+    TtyReader::engine()->remove(this);
 }

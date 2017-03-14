@@ -7,6 +7,7 @@ class TermInputStream
 {
 public:
     virtual unsigned char get() = 0;
+    virtual bool hasMouseCode() = 0;
 };
 
 class TermInputDriver

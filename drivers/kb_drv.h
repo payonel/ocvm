@@ -15,6 +15,7 @@ public:
     KeyboardDriverImpl();
 
     void enqueue(bool bPressed, uint keycode);
+    void enqueue(uint keysym);
 
 protected:
     void update_modifier(bool bPressed, uint keycode);

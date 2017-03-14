@@ -101,6 +101,10 @@ KeyboardDriverImpl::KeyboardDriverImpl()
     _modifiers[69] = make_tuple(4, 0);  // num lock
 }
 
+void KeyboardDriverImpl::enqueue(uint keysym)
+{
+}
+
 void KeyboardDriverImpl::enqueue(bool bPressed, uint keycode)
 {
     // filter out some events
