@@ -313,8 +313,22 @@ void KeyboardPtyDriver::enqueue(TermInputStream* stream)
     if (stream->hasMouseCode())
         return;
 
-    int sym = stream->get();
-    KeyboardDriverImpl::enqueue(sym);
+    unsigned char buf[]
+    {
+        stream->get(),
+        stream->get(),
+        stream->get(),
+        stream->get()
+    };
+
+    if (buf[0] == 127)
+    {
+        buf[0] = 8;
+    }
+
+    if (!buf[0]) return;
+
+    KeyboardDriverImpl::enqueue(buf, sizeof(buf));
 }
 
 bool KeyboardPtyDriver::isAvailable()

@@ -38,7 +38,7 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
     }
     else if (kbTypeName == "pty")
     {
-        if (KeyboardPtyDriver::isAvailable())
+        if (KeyboardPtyDriver::isAvailable() && !KeyboardLocalRawTtyDriver::isAvailable())
             return unique_ptr<KeyboardDriver>(new KeyboardPtyDriver);
     }
 

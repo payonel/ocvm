@@ -15,7 +15,7 @@ public:
     KeyboardDriverImpl();
 
     void enqueue(bool bPressed, uint keycode);
-    void enqueue(uint keysym);
+    void enqueue(unsigned char* keysequence, uint len);
 
 protected:
     void update_modifier(bool bPressed, uint keycode);
@@ -25,5 +25,6 @@ private:
     unordered_map<uint, tuple<uint, uint>> _modifiers;
     unsigned char _mod_groups[8] {}; // 8 mod keys, 8 possible locations of those keys
     unordered_map<uint, tuple<uint, uint, uint>> _syms;
+    unordered_map<uint, tuple<uint, uint>> _modcodes;
     uint _modifier_state;
 };

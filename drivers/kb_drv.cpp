@@ -99,10 +99,53 @@ KeyboardDriverImpl::KeyboardDriverImpl()
     _modifiers[56] = make_tuple(3, 0);  // left alt
     _modifiers[184] = make_tuple(3, 1); // right alt
     _modifiers[69] = make_tuple(4, 0);  // num lock
+
+    for (const auto& symit : _syms)
+    {
+        uint code = symit.first;
+        const auto& symmap = symit.second;
+        uint sym0 = std::get<0>(symmap);
+        uint mask = std::get<1>(symmap);
+        uint sym1 = std::get<2>(symmap);
+
+        _modcodes[sym0] = make_tuple(code, mask);
+        if (sym1)
+        {
+            _modcodes[sym1] = make_tuple(code, ~mask);
+        }
+    }
 }
 
-void KeyboardDriverImpl::enqueue(uint keysym)
+void KeyboardDriverImpl::enqueue(unsigned char* buf, uint len)
 {
+    uint keysym = buf[0];
+    (void)len;
+
+    const auto& it = _modcodes.find(keysym);
+    if (it == _modcodes.end())
+    {
+        cout << "unknown sym: " << keysym << "\r\n";
+        return;
+    }
+
+    uint keycode = std::get<0>(it->second);
+    uint mod = std::get<1>(it->second);
+    (void)mod;
+
+    KeyEvent* pkey = new KeyEvent;
+    pkey->bPressed = true;
+    pkey->keycode = keycode;
+
+    //update_modifier(bPressed, pkey->keycode);
+    pkey->keysym = keysym;
+
+    pkey->bShift = (_modifier_state & 0x1);
+    pkey->bCaps = (_modifier_state & 0x2);
+    pkey->bControl = (_modifier_state & 0x4);
+    pkey->bAlt = (_modifier_state & 0x8);
+    pkey->bNumLock = (_modifier_state & 0x10);
+
+    _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }
 
 void KeyboardDriverImpl::enqueue(bool bPressed, uint keycode)
