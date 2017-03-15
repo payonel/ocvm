@@ -4,7 +4,7 @@
 #include <string>
 using std::string;
 
-class KeyboardDriver : public InputDriver
+class KeyboardDriver : public virtual InputDriver
 {
 };
 

@@ -5,7 +5,7 @@ using std::string;
 
 #include "input.h"
 
-class MouseDriver : public InputDriver
+class MouseDriver : public virtual InputDriver
 {
 };
 

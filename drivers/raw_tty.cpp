@@ -254,22 +254,6 @@ void TermInputStreamImpl::clear()
     _buffer.clear();
 }
 
-MouseTerminalDriver::~MouseTerminalDriver()
-{
-    TtyReader::engine()->remove(this);
-}
-
-bool MouseTerminalDriver::onStart()
-{
-    TtyReader::engine()->add(this);
-    return true;
-}
-
-void MouseTerminalDriver::onStop()
-{
-    TtyReader::engine()->remove(this);
-}
-
 void MouseTerminalDriver::enqueue(TermInputStream* stream)
 {
     if (!stream->hasMouseCode())
@@ -279,22 +263,6 @@ void MouseTerminalDriver::enqueue(TermInputStream* stream)
 
     unsigned char buf[] {stream->get(), stream->get(), stream->get()};
     MouseDriverImpl::enqueue(buf);
-}
-
-KeyboardLocalRawTtyDriver::~KeyboardLocalRawTtyDriver()
-{
-    TtyReader::engine()->remove(this);
-}
-
-bool KeyboardLocalRawTtyDriver::onStart()
-{
-    TtyReader::engine()->add(this);
-    return true;
-}
-
-void KeyboardLocalRawTtyDriver::onStop()
-{
-    TtyReader::engine()->remove(this);
 }
 
 bool KeyboardLocalRawTtyDriver::isAvailable()
@@ -340,11 +308,6 @@ void KeyboardLocalRawTtyDriver::enqueue(TermInputStream* stream)
     KeyboardDriverImpl::enqueue(!released, keycode);
 }
 
-KeyboardPtyDriver::~KeyboardPtyDriver()
-{
-    TtyReader::engine()->remove(this);
-}
-
 void KeyboardPtyDriver::enqueue(TermInputStream* stream)
 {
     if (stream->hasMouseCode())
@@ -359,13 +322,18 @@ bool KeyboardPtyDriver::isAvailable()
     return true;
 }
 
-bool KeyboardPtyDriver::onStart()
+TermInputDriver::~TermInputDriver()
+{
+    TtyReader::engine()->remove(this);
+}
+
+bool TermInputDriver::onStart()
 {
     TtyReader::engine()->add(this);
     return true;
 }
 
-void KeyboardPtyDriver::onStop()
+void TermInputDriver::onStop()
 {
     TtyReader::engine()->remove(this);
 }
