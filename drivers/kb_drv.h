@@ -12,19 +12,20 @@ using std::string;
 class KeyboardDriverImpl : public KeyboardDriver
 {
 public:
+    typedef uint ModifierMask;
+    typedef unsigned char KeyCode;
+    typedef unsigned char KeySym;
+
     KeyboardDriverImpl();
 
-    void enqueue(bool bPressed, uint keycode);
+    void enqueue(bool bPressed, KeyCode keycode);
     void enqueue(unsigned char* keysequence, uint len);
 
 protected:
-    void update_modifier(bool bPressed, uint keycode);
-    uint map_sym(uint code);
+    void update_modifier(bool bPressed, KeyCode keycode);
+    KeySym map_sym(KeyCode code);
 
 private:
-    unordered_map<uint, tuple<uint, uint>> _modifiers;
     unsigned char _mod_groups[8] {}; // 8 mod keys, 8 possible locations of those keys
-    unordered_map<uint, tuple<uint, uint, uint>> _syms;
-    unordered_map<uint, tuple<uint, uint>> _modcodes;
-    uint _modifier_state;
+    ModifierMask _modifier_state;
 };

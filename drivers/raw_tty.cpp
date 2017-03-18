@@ -282,7 +282,7 @@ void KeyboardLocalRawTtyDriver::enqueue(TermInputStream* stream)
 
     bool released;
     uint keycode = stream->get();
-    
+
     switch (keycode)
     {
         case 0xE0: // double byte
@@ -315,6 +315,9 @@ void KeyboardPtyDriver::enqueue(TermInputStream* stream)
 
     unsigned char buf[]
     {
+        stream->get(),
+        stream->get(),
+        stream->get(),
         stream->get(),
         stream->get(),
         stream->get(),

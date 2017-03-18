@@ -16,7 +16,7 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
         if (KeyboardLocalRawTtyDriver::isAvailable())
             return Factory::create_kb("raw");
 
-        vector<string> defaults { "scanner", "pty" };
+        vector<string> defaults { "pty" };
         for (auto name : defaults)
         {
             auto result = Factory::create_kb(name);
