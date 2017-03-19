@@ -9,7 +9,7 @@ struct KBData
 {
     unordered_map<KeyboardDriverImpl::KeyCode, tuple<uint, uint>> modifiers;
     unordered_map<KeyboardDriverImpl::KeyCode, tuple<KeyboardDriverImpl::KeySym, KeyboardDriverImpl::ModifierMask, KeyboardDriverImpl::KeySym>> syms;
-    unordered_map<KeyboardDriverImpl::KeySym, tuple<KeyboardDriverImpl::KeyCode, KeyboardDriverImpl::ModifierMask, KeyboardDriverImpl::KeySym>> codes;
+    unordered_map<KeyboardDriverImpl::KeySym, tuple<KeyboardDriverImpl::KeyCode, KeyboardDriverImpl::ModifierMask>> codes;
     
     KBData()
     {
@@ -32,7 +32,7 @@ struct KBData
         syms[8] = make_tuple(38, 0xaaaa, 55);      // 7 17
         syms[9] = make_tuple(42, 0xaaaa, 56);      // 8 14
         syms[10] = make_tuple(40, 0xaaaa, 57);     // 9 17
-        syms[11] = make_tuple(51, 0xaaaa, 58);     // 10 7
+        syms[11] = make_tuple(41, 0xaaaa, 48);     // 0 7
         syms[12] = make_tuple(95, 0xaaaa, 45);     // - -50
         syms[13] = make_tuple(43, 0xaaaa, 61);     // = 18
         syms[14] = make_tuple(8, 0xffff, 0);       // BACKSPACE
@@ -74,6 +74,34 @@ struct KBData
         syms[53] = make_tuple(63, 0xaaaa, 47);     // / -16
         syms[57] = make_tuple(32, 0xffff, 0);      // SPACE
 
+        // modifiers[keycode] = make_tuple(modifier index, nth instance of that modifier)
+        // shift:    0
+        // caps:     1
+        // control:  2
+        // alt:      3
+        // num lock: 4
+        modifiers[ 42] = make_tuple(0, 0);  // left shift
+        modifiers[ 54] = make_tuple(0, 1);  // right shift
+        modifiers[ 58] = make_tuple(1, 0);  // caps lock
+        modifiers[ 29] = make_tuple(2, 0);  // left control
+        modifiers[157] = make_tuple(2, 1); // right control
+        modifiers[ 56] = make_tuple(3, 0);  // left alt
+        modifiers[184] = make_tuple(3, 1); // right alt
+        modifiers[ 69] = make_tuple(4, 0);  // num lock
+
+        codes.clear();
+        for (auto s : syms)
+        {
+            auto key = s.first;
+            auto stup = s.second;
+            auto s0 = std::get<0>(stup);
+            auto s1 = std::get<2>(stup);
+
+            codes[s0] = make_tuple(key, 1);
+            if (s1)
+                codes[s1] = make_tuple(key, 0);
+        }
+
         syms[71]  = make_tuple(55, 0xffff, 0);     // numpad 7
         syms[72]  = make_tuple(56, 0xffff, 0);     // numpad 8
         syms[73]  = make_tuple(57, 0xffff, 0);     // numpad 9
@@ -89,77 +117,6 @@ struct KBData
         syms[82]  = make_tuple(48, 0xffff, 0);     // numpad 0
         syms[83]  = make_tuple(46, 0xffff, 0);     // numpad .
         syms[78]  = make_tuple(43, 0xffff, 0);     // numpad +
-
-        // modifiers[keycode] = make_tuple(modifier index, nth instance of that modifier)
-        // shift:    0
-        // caps:     1
-        // control:  2
-        // alt:      3
-        // num lock: 4
-        modifiers[42] = make_tuple(0, 0);  // left shift
-        modifiers[54] = make_tuple(0, 1);  // right shift
-        modifiers[58] = make_tuple(1, 0);  // caps lock
-        modifiers[29] = make_tuple(2, 0);  // left control
-        modifiers[157] = make_tuple(2, 1); // right control
-        modifiers[56] = make_tuple(3, 0);  // left alt
-        modifiers[184] = make_tuple(3, 1); // right alt
-        modifiers[69] = make_tuple(4, 0);  // num lock
-
-        codes[ 27] = make_tuple(  1, 0, 27); // escape (also ^[, but we assume escape)
-        codes[ 96] = make_tuple( 41, 0, '`');   codes[126] = make_tuple( 41, 1, '~');
-        codes[ 49] = make_tuple(  2, 0, '1');   codes[ 33] = make_tuple(  2, 1, '!');
-        codes[ 50] = make_tuple(  3, 0, '2');   codes[ 64] = make_tuple(  3, 1, '@');
-        codes[ 51] = make_tuple(  4, 0, '3');   codes[ 35] = make_tuple(  4, 1, '#');
-        codes[ 52] = make_tuple(  5, 0, '4');   codes[ 36] = make_tuple(  5, 1, '$');
-        codes[ 53] = make_tuple(  6, 0, '5');   codes[ 37] = make_tuple(  6, 1, '%');
-        codes[ 54] = make_tuple(  7, 0, '6');   codes[ 94] = make_tuple(  7, 1, '^');
-        codes[ 55] = make_tuple(  8, 0, '7');   codes[ 38] = make_tuple(  8, 1, '&');
-        codes[ 56] = make_tuple(  9, 0, '8');   codes[ 42] = make_tuple(  9, 1, '*');
-        codes[ 57] = make_tuple( 10, 0, '9');   codes[ 40] = make_tuple( 10, 1, '(');
-        codes[ 48] = make_tuple( 11, 0, '0');   codes[ 41] = make_tuple( 11, 1, ')');
-        codes[ 45] = make_tuple( 12, 0, '-');   codes[ 95] = make_tuple( 12, 1, '-');
-        codes[ 61] = make_tuple( 13, 0, '=');   codes[ 43] = make_tuple( 13, 1, '=');
-        codes[  8] = make_tuple( 14, 0,   0); // backspace
-
-        codes[  9] = make_tuple( 15, 0,   0); // tab
-        codes[113] = make_tuple( 16, 0, 'q');   codes[ 81] = make_tuple( 16, 1, 'Q');
-        codes[119] = make_tuple( 17, 0, 'w');   codes[ 87] = make_tuple( 17, 1, 'W');
-        codes[101] = make_tuple( 18, 0, 'e');   codes[ 69] = make_tuple( 18, 1, 'E');
-        codes[114] = make_tuple( 19, 0, 'r');   codes[ 82] = make_tuple( 19, 1, 'R');
-        codes[116] = make_tuple( 20, 0, 't');   codes[ 84] = make_tuple( 20, 1, 'T');
-        codes[121] = make_tuple( 21, 0, 'y');   codes[ 89] = make_tuple( 21, 1, 'Y');
-        codes[117] = make_tuple( 22, 0, 'u');   codes[ 85] = make_tuple( 22, 1, 'U');
-        codes[105] = make_tuple( 23, 0, 'i');   codes[ 73] = make_tuple( 23, 1, 'I');
-        codes[111] = make_tuple( 24, 0, 'o');   codes[ 79] = make_tuple( 24, 1, 'O');
-        codes[112] = make_tuple( 25, 0, 'p');   codes[ 80] = make_tuple( 25, 1, 'P');
-        codes[ 91] = make_tuple( 26, 0, '[');   codes[123] = make_tuple( 26, 1, '{');
-        codes[ 93] = make_tuple( 27, 0, ']');   codes[125] = make_tuple( 27, 1, '}');
-        codes[ 92] = make_tuple( 43, 0, '\\');  codes[124] = make_tuple( 43, 1, '|');
-
-        codes[ 97] = make_tuple( 30, 0, 'a');   codes[ 65] = make_tuple( 30, 1, 'A');
-        codes[115] = make_tuple( 31, 0, 's');   codes[ 83] = make_tuple( 31, 1, 'S');
-        codes[100] = make_tuple( 32, 0, 'd');   codes[ 68] = make_tuple( 32, 1, 'D');
-        codes[102] = make_tuple( 33, 0, 'f');   codes[ 70] = make_tuple( 33, 1, 'F');
-        codes[103] = make_tuple( 34, 0, 'g');   codes[ 71] = make_tuple( 34, 1, 'G');
-        codes[104] = make_tuple( 35, 0, 'h');   codes[ 72] = make_tuple( 35, 1, 'H');
-        codes[106] = make_tuple( 36, 0, 'j');   codes[ 74] = make_tuple( 36, 1, 'J');
-        codes[107] = make_tuple( 37, 0, 'k');   codes[ 75] = make_tuple( 37, 1, 'K');
-        codes[108] = make_tuple( 38, 0, 'l');   codes[ 76] = make_tuple( 38, 1, 'L');
-        codes[ 59] = make_tuple( 39, 0, ';');   codes[ 58] = make_tuple( 39, 1, ':');
-        codes[ 39] = make_tuple( 40, 0, '\'');  codes[ 34] = make_tuple( 40, 1, '"');
-        codes[ 13] = make_tuple( 28, 0,   0); // enter
-
-        codes[122] = make_tuple( 44, 0, 'z');   codes[ 90] = make_tuple( 44, 1, 'Z');
-        codes[120] = make_tuple( 45, 0, 'x');   codes[ 88] = make_tuple( 45, 1, 'X');
-        codes[ 99] = make_tuple( 46, 0, 'c');   codes[ 67] = make_tuple( 46, 1, 'C');
-        codes[118] = make_tuple( 47, 0, 'v');   codes[ 86] = make_tuple( 47, 1, 'V');
-        codes[ 98] = make_tuple( 48, 0, 'b');   codes[ 66] = make_tuple( 48, 1, 'B');
-        codes[110] = make_tuple( 49, 0, 'n');   codes[ 78] = make_tuple( 49, 1, 'N');
-        codes[109] = make_tuple( 50, 0, 'm');   codes[ 77] = make_tuple( 50, 1, 'M');
-        codes[ 44] = make_tuple( 51, 0, ',');   codes[ 60] = make_tuple( 51, 1, '<');
-        codes[ 46] = make_tuple( 52, 0, '.');   codes[ 62] = make_tuple( 52, 1, '>');
-        codes[ 47] = make_tuple( 53, 0, '/');   codes[ 63] = make_tuple( 53, 1, '?');
-        codes[ 32] = make_tuple( 57, 0, ' '); // space
     }
 } kb_data;
 
@@ -194,7 +151,7 @@ struct SymJob
             case 68: code = 203; return confirmEnd(index); // LEFT
             case 70: code = 207; return confirmEnd(index); // END
             case 72: code = 199; return confirmEnd(index); // HOME
-            case 90: code = 0; sym = 15; mod = 1; return confirmEnd(index); // shift tab
+            case 90: code = 15; sym = 0; mod = 1; return confirmEnd(index); // shift tab
             default: return false;
         }
 
@@ -217,7 +174,7 @@ struct SymJob
         {
             code = std::get<0>(it->second);
             mod = std::get<1>(it->second);
-            sym = std::get<2>(it->second);
+            sym = buf[0];
             return true;
         }
 
@@ -365,21 +322,8 @@ void KeyboardDriverImpl::enqueue(unsigned char* buf, uint len)
     }
     cout << "\r\n";
 
-    // KeyEvent* pkey = new KeyEvent;
-    // pkey->bPressed = true;
-    // pkey->keycode = job.code;
-
-    // update_modifier(true, job.modCode());
-    // pkey->keysym = job.sym;
-
-    // pkey->bShift = (_modifier_state & 0x1);
-    // pkey->bCaps = (_modifier_state & 0x2);
-    // pkey->bControl = (_modifier_state & 0x4);
-    // pkey->bAlt = (_modifier_state & 0x8);
-    // pkey->bNumLock = (_modifier_state & 0x10);
-
-    // _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
-    return enqueue(true, job.code);
+    update_modifier(true, job.modCode());
+    enqueue(true, job.code);
 }
 
 void KeyboardDriverImpl::enqueue(bool bPressed, KeyboardDriverImpl::KeyCode keycode)
