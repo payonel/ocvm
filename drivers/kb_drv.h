@@ -9,23 +9,22 @@ using std::tuple;
 using std::unordered_map;
 using std::string;
 
+typedef uint _Mod;
+typedef unsigned char _Code;
+typedef unsigned char _Sym;
+
 class KeyboardDriverImpl : public KeyboardDriver
 {
 public:
-    typedef uint ModifierMask;
-    typedef unsigned char KeyCode;
-    typedef unsigned char KeySym;
-
     KeyboardDriverImpl();
 
-    void enqueue(bool bPressed, KeyCode keycode);
+    void enqueue(bool bPressed, _Code keycode);
     void enqueue(unsigned char* keysequence, uint len);
 
 protected:
-    void update_modifier(bool bPressed, KeyCode keycode);
-    KeySym map_sym(KeyCode code);
+    void update_modifier(bool bPressed, _Code keycode);
 
 private:
     unsigned char _mod_groups[8] {}; // 8 mod keys, 8 possible locations of those keys
-    ModifierMask _modifier_state;
+    _Mod _modifier_state;
 };

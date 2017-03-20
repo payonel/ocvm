@@ -5,118 +5,294 @@
 #include <iostream>
 using namespace std;
 
+struct KeyCodeData
+{
+    _Code code = 0;
+    _Sym syms[8] {};
+    vector<_Sym> sequences[8];
+};
+
 struct KBData
 {
-    unordered_map<KeyboardDriverImpl::KeyCode, tuple<uint, uint>> modifiers;
-    unordered_map<KeyboardDriverImpl::KeyCode, tuple<KeyboardDriverImpl::KeySym, KeyboardDriverImpl::ModifierMask, KeyboardDriverImpl::KeySym>> syms;
-    unordered_map<KeyboardDriverImpl::KeySym, tuple<KeyboardDriverImpl::KeyCode, KeyboardDriverImpl::ModifierMask>> codes;
+    unordered_map<_Code, tuple<uint, uint>> modifiers;
+    unordered_map<_Code, KeyCodeData> _db;
+
+    static const uint None = 0;
+    static const uint Shift = 1;
+    static const uint Control = 4;
+    static const uint Alt = 8;
+
+    _Sym lookup(_Code code, _Mod mod)
+    {
+        const auto& it = _db.find(code);
+        if (it == _db.end())
+            return 0x0;
+
+        switch (mod)
+        {
+            case None: return it->second.syms[0];
+            case Shift: return it->second.syms[1];
+            case Control: return it->second.syms[2];
+            case Alt: return it->second.syms[3];
+            case Control | Shift: return it->second.syms[4];
+            case Control | Alt: return it->second.syms[5];
+            case Shift | Alt: return it->second.syms[6];
+            case Control | Shift | Alt: return it->second.syms[7];
+        }
+
+        return 0;
+    }
+
+    vector<_Code> getModCodes(_Mod mod)
+    {
+        vector<_Code> codes;
+        if (mod & Shift)
+            codes.push_back(42);
+        if (mod & Control)
+            codes.push_back(29);
+        if (mod & Alt)
+            codes.push_back(56);
+        return codes;
+    }
+
+    bool lookup(_Sym* syms, size_t len, _Code* pCode, _Mod* pMod)
+    {
+        for (const auto& item : _db)
+        {
+            for (int seq_index = 0; seq_index < 8; seq_index++)
+            {
+                const auto& seq = item.second.sequences[seq_index];
+                if (len == seq.size())
+                {
+                    for (size_t i = 0; i < seq.size(); i++)
+                    {
+                        if (syms[i] != seq.at(i))
+                            break;
+
+                        if (i + 1 == seq.size())
+                        {
+                            // match
+                            *pCode = item.first;
+                            switch (seq_index)
+                            {
+                                case 0: *pMod = None; break; // none
+                                case 1: *pMod = Shift; break; // shift
+                                case 2: *pMod = Control; break; // control
+                                case 3: *pMod = Alt; break; // alt
+                                case 4: *pMod = Control | Shift; break; // control shift
+                                case 5: *pMod = Control | Alt; break; // control alt
+                                case 6: *pMod = Shift | Alt; break; // shift alt
+                                case 7: *pMod = Control | Shift | Alt; break; // control shift alt
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    void add_code_sym(_Code code, _Sym s0, _Sym s1, _Sym s2, _Sym s3, _Sym s4, _Sym s5, _Sym s6, _Sym s7)
+    {
+        KeyCodeData& data = _db[code];
+        data.code = code;
+        data.syms[0] = s0;
+        data.syms[1] = s1;
+        data.syms[2] = s2;
+        data.syms[3] = s3;
+        data.syms[4] = s4;
+        data.syms[5] = s5;
+        data.syms[6] = s6;
+        data.syms[7] = s7;
+    }
+
+    void add_sequence(_Code code,
+        vector<_Sym> seq0,
+        vector<_Sym> seq1,
+        vector<_Sym> seq2,
+        vector<_Sym> seq3,
+        vector<_Sym> seq4,
+        vector<_Sym> seq5,
+        vector<_Sym> seq6,
+        vector<_Sym> seq7)
+    {
+        KeyCodeData& data = _db[code];
+        data.code = code;
+        data.sequences[0] = seq0;
+        data.sequences[1] = seq1;
+        data.sequences[2] = seq2;
+        data.sequences[3] = seq3;
+        data.sequences[4] = seq4;
+        data.sequences[5] = seq5;
+        data.sequences[6] = seq6;
+        data.sequences[7] = seq7;
+    }
     
     KBData()
     {
         // hard coded for now
         // termios should be able to provide this data
-        syms.clear();
-        
-        // syms[keycode] = make_tuple(keysym_a, modifier_mask, keysym_b)
-        // keysym_a represents keycode if modifier_state is active for the modifier_mask
-        // i.e. modifier_state & modifier_mask is non-zero (true)
-        // else, keysym_b
-        syms[41] = make_tuple(126, 0xaaaa, 96);    // ` -30
-        syms[1] = make_tuple(27, 0xffff, 0);       // escape
-        syms[2] = make_tuple(33, 0xaaaa, 49);      // 1 16
-        syms[3] = make_tuple(64, 0xaaaa, 50);      // 2 -14
-        syms[4] = make_tuple(35, 0xaaaa, 51);      // 3 16
-        syms[5] = make_tuple(36, 0xaaaa, 52);      // 4 16
-        syms[6] = make_tuple(37, 0xaaaa, 53);      // 5 16
-        syms[7] = make_tuple(94, 0xaaaa, 54);      // 6 -40
-        syms[8] = make_tuple(38, 0xaaaa, 55);      // 7 17
-        syms[9] = make_tuple(42, 0xaaaa, 56);      // 8 14
-        syms[10] = make_tuple(40, 0xaaaa, 57);     // 9 17
-        syms[11] = make_tuple(41, 0xaaaa, 48);     // 0 7
-        syms[12] = make_tuple(95, 0xaaaa, 45);     // - -50
-        syms[13] = make_tuple(43, 0xaaaa, 61);     // = 18
-        syms[14] = make_tuple(8, 0xffff, 0);       // BACKSPACE
-        syms[15] = make_tuple(9, 0x5555, 0);       // TAB
-        syms[16] = make_tuple(81, 0x6666, 113);    // Q 32
-        syms[17] = make_tuple(87, 0x6666, 119);    // W 32
-        syms[18] = make_tuple(69, 0x6666, 101);    // E 32
-        syms[19] = make_tuple(82, 0x6666, 114);    // R 32
-        syms[20] = make_tuple(84, 0x6666, 116);    // T 32
-        syms[21] = make_tuple(89, 0x6666, 121);    // Y 32
-        syms[22] = make_tuple(85, 0x6666, 117);    // U 32
-        syms[23] = make_tuple(73, 0x6666, 105);    // I 32
-        syms[24] = make_tuple(79, 0x6666, 111);    // O 32
-        syms[25] = make_tuple(80, 0x6666, 112);    // P 32
-        syms[26] = make_tuple(123, 0xaaaa, 91);    // [ -32
-        syms[27] = make_tuple(125, 0xaaaa, 93);    // ] -32
-        syms[43] = make_tuple(124, 0xaaaa, 92);    // \ -32
-        syms[30] = make_tuple(65, 0x6666, 97);     // A 32
-        syms[31] = make_tuple(83, 0x6666, 115);    // S 32
-        syms[32] = make_tuple(68, 0x6666, 100);    // D 32
-        syms[33] = make_tuple(70, 0x6666, 102);    // F 32
-        syms[34] = make_tuple(71, 0x6666, 103);    // G 32
-        syms[35] = make_tuple(72, 0x6666, 104);    // H 32
-        syms[36] = make_tuple(74, 0x6666, 106);    // J 32
-        syms[37] = make_tuple(75, 0x6666, 107);    // K 32
-        syms[38] = make_tuple(76, 0x6666, 108);    // L 32
-        syms[39] = make_tuple(58, 0xaaaa, 59);     // ; 1
-        syms[40] = make_tuple(34, 0xaaaa, 39);     // ' 5
-        syms[28] = make_tuple(13, 0xffff, 0);      // ENTER
-        syms[44] = make_tuple(90, 0x6666, 122);    // Z 32
-        syms[45] = make_tuple(88, 0x6666, 120);    // X 32
-        syms[46] = make_tuple(67, 0x6666, 99);     // C 32
-        syms[47] = make_tuple(86, 0x6666, 118);    // V 32
-        syms[48] = make_tuple(66, 0x6666, 98);     // B 32
-        syms[49] = make_tuple(78, 0x6666, 110);    // N 32
-        syms[50] = make_tuple(77, 0x6666, 109);    // M 32 ('m')
-        syms[51] = make_tuple(60, 0xaaaa, 44);     // , -16
-        syms[52] = make_tuple(62, 0xaaaa, 46);     // . -16
-        syms[53] = make_tuple(63, 0xaaaa, 47);     // / -16
-        syms[57] = make_tuple(32, 0xffff, 0);      // SPACE
+        add_code_sym(211, 127, 127, 127, 127, 127, 127, 127, 127); // delete
+        add_code_sym( 41,  96, 126,   0,/*?*/0,  30, 126, 126, 30); // backtick
+        add_code_sym(  2,  49,  33,  49,  49,  33,  49,  33,  33); // 1
+        add_code_sym(  3,  50,  64,   0,  50,   0,   0,  64,   0); // 2 [shift code 145]
+        add_code_sym(  4,  51,  35,  27,  51,  35,  27,  35,  35); // 3
+        add_code_sym(  5,  52,  36,  28,  52,  36,  28,  36,  36); // 4
+        add_code_sym(  6,  53,  37,  29,  53,  37,  29,  37,  37); // 5
+        add_code_sym(  7,  54,  94,  30,  54,  30,  30,  94,  30); // 6 [shift code 144]
+        add_code_sym(  8,  55,  38,  31,  55,  38,  31,  38,  38); // 7
+        add_code_sym(  9,  56,  42, 127,  56,  42, 127,  42,  42); // 8
+        add_code_sym( 10,  57,  40,  57,  57,  40,  57,  40,  40); // 9
+        add_code_sym( 11,  48,  41,  48,  48,  41,  48,  41,  41); // 0
+        add_code_sym( 12,  45,  95,  45,  45,  31,  45,  95,  31); // - [shift code 147]
+        add_code_sym( 13,  61,  43,  61,  61,  43,  61,  43,  43); // =
+        add_code_sym( 14,   8,   8,   8,   8,   8,   8,   8,   8); // backspace
+        add_code_sym( 15,   9,   0,   9,   9,   0,   9,   9,   0); // tab
+        add_code_sym( 16, 113,  81,  17, 113,  17,  17,  81,  17); // q
+        add_code_sym( 17, 119,  87,  23, 119,  23,  23,  87,  23); // w
+        add_code_sym( 18, 101,  69,   5, 101,   5,   5,  69,   5); // e
+        add_code_sym( 19, 114,  82,  18, 114,  18,  18,  82,  18); // r
+        add_code_sym( 20, 116,  84,  20, 116,  20,  20,  84,  20); // t
+        add_code_sym( 21, 121,  89,  25, 121,  25,  25,  89,  25); // y
+        add_code_sym( 22, 117,  85,  21, 117,  21,  21,  85,  21); // u
+        add_code_sym( 23, 105,  73,   9, 105,   9,   9,  73,   9); // i
+        add_code_sym( 24, 111,  79,  15, 111,  15,  15,  79,  15); // o
+        add_code_sym( 25, 112,  80,  16, 112,  16,  16,  80,  16); // p
+        add_code_sym( 26,  91, 123,  27,  91,  27,  27, 123,  27); // [
+        add_code_sym( 27,  93, 125,  29,  93,  29,  29, 125,  29); // ]
+        add_code_sym( 43,  92, 124,  28,  92,  28,  28, 124,  28); // \ [in-game, 0 code]
+        add_code_sym( 30,  97,  65,   1,  97,   1,   1,  65,   1); // a
+        add_code_sym( 31, 115,  83,  19, 115,  19,  19,  83,  19); // s
+        add_code_sym( 32, 100,  68,   4, 100,   4,   4,  68,   4); // d
+        add_code_sym( 33, 102,  70,   6, 102,   6,   6,  70,   6); // f
+        add_code_sym( 34, 103,  71,   7, 103,   7,   7,  71,   7); // g
+        add_code_sym( 35, 104,  72,   8, 104,   8,   8,  72,   8); // h
+        add_code_sym( 36, 106,  74,  10, 106,  10,  10,  74,  10); // j
+        add_code_sym( 37, 107,  75,  11, 107,  11,  11,  75,  11); // k
+        add_code_sym( 38, 108,  76,  12, 108,  12,  12,  76,  12); // l
+        add_code_sym( 39,  59,  58,  59,  59,  58,  59,  58,  58); // ; [shift code 146]
+        add_code_sym( 40,  39,  34,  39,  39,  34,  39,  34,  34); // '
+        add_code_sym( 28,  13,  13,  13,  13,  13,  13,  13,  13); // ENTER
+        add_code_sym( 44, 122,  90,  26, 122,  26,  26,  90,  26); // z
+        add_code_sym( 45, 120,  88,  24, 120,  24,  24,  88,  24); // x
+        add_code_sym( 46,  99,  67,   3,  99,   3,   3,  67,   3); // c
+        add_code_sym( 47, 118,  86,  22, 118,  22,  22,  86,  22); // v
+        add_code_sym( 48,  98,  66,   2,  98,   2,   2,  66,   2); // b
+        add_code_sym( 49, 110,  78,  14, 110,  14,  14,  78,  14); // n
+        add_code_sym( 50, 109,  77,  13, 109,  13,  13,  77,  13); // m
+        add_code_sym( 51,  44,  60,  44,  44,  60,  44,  60,  60); // ,
+        add_code_sym( 52,  46,  62,  46,  46,  62,  46,  62,  62); // .
+        add_code_sym( 53,  47,  63,  31,  47,  63,  31,  63,  63); // /
+        add_code_sym( 57,  32,  32,   0,  32,   0,   0,  32,   0); // space
+
+        //          code,       {none},                  {shift},                {control},       {alt},          {control shift}, {control alt},              {shift alt},                    {all}
+        add_sequence( 59, {27, 79, 80}, {27, 91, 49, 59, 50, 80}, {27, 91, 49, 59, 53, 80}, {/*focus*/}, {27, 91, 49, 59, 54, 80}, {/*use tty*/}, {27, 91, 49, 59, 52, 80}, {27, 91, 49, 59, 56, 80}); // F1
+        add_sequence( 60, {27, 79, 81}, {27, 91, 49, 59, 50, 81}, {27, 91, 49, 59, 53, 81}, {/*focus*/}, {27, 91, 49, 59, 54, 81}, {}, {27, 91, 49, 59, 52, 81}, {27, 91, 49, 59, 56, 81}); // F2
+        add_sequence( 61, {27, 79, 82}, {27, 91, 49, 59, 50, 82}, {27, 91, 49, 59, 53, 82}, {27, 91, 49, 59, 51, 82}, {27, 91, 49, 59, 54, 82}, {}, {27, 91, 49, 59, 52, 82}, {27, 91, 49, 59, 56, 82}); // F3
+        add_sequence( 62, {27, 79, 83}, {27, 91, 49, 59, 50, 83}, {27, 91, 49, 59, 53, 83}, {/*closes window*/}, {27, 91, 49, 59, 54, 83}, {}, {27, 91, 49, 59, 52, 83}, {27, 91, 49, 59, 56, 83}); // F4
+        add_sequence( 63, {27, 91, 49, 53, 126}, {27, 91, 49, 53, 59, 50, 126}, {27, 91, 49, 53, 59, 53, 126}, {27, 91, 49, 53, 59, 51, 126}, {27, 91, 49, 53, 59, 54, 126}, {}, {27, 91, 49, 53, 59, 52, 126}, {27, 91, 49, 53, 59, 56, 126}); // F5
+        add_sequence( 64, {27, 91, 49, 55, 126}, {27, 91, 49, 55, 59, 50, 126}, {27, 91, 49, 55, 59, 53, 126}, {27, 91, 49, 55, 59, 51, 126}, {27, 91, 49, 55, 59, 54, 126}, {}, {27, 91, 49, 55, 59, 52, 126}, {27, 91, 49, 55, 59, 56, 126}); // F6
+        add_sequence( 65, {27, 91, 49, 56, 126}, {27, 91, 49, 56, 59, 50, 126}, {27, 91, 49, 56, 59, 53, 126}, {/*focus*/}, {27, 91, 49, 56, 59, 54, 126}, {}, {27, 91, 49, 56, 59, 52, 126}, {27, 91, 49, 56, 59, 56, 126}); // F7
+        add_sequence( 66, {27, 91, 49, 57, 126}, {27, 91, 49, 57, 59, 50, 126}, {27, 91, 49, 57, 59, 53, 126}, {/*focus*/}, {27, 91, 49, 57, 59, 54, 126}, {}, {27, 91, 49, 57, 59, 52, 126}, {27, 91, 49, 57, 59, 56, 126}); // F8
+        add_sequence( 67, {27, 91, 50, 48, 126}, {27, 91, 50, 48, 59, 50, 126}, {27, 91, 50, 48, 59, 53, 126}, {27, 91, 50, 48, 59, 51, 126}, {27, 91, 50, 48, 59, 54, 126}, {}, {27, 91, 50, 48, 59, 52, 126}, {27, 91, 50, 48, 59, 56, 126}); // F9
+        add_sequence( 68, {27, 91, 50, 49, 126}, {27, 91, 50, 49, 59, 50, 126}, {27, 91, 50, 49, 59, 53, 126}, {/*focus*/}, {27, 91, 50, 49, 59, 54, 126}, {}, {27, 91, 50, 49, 59, 52, 126}, {27, 91, 50, 49, 59, 56, 126}); // F10
+        add_sequence( 87, {27, 91, 50, 51, 126}, {27, 91, 50, 51, 59, 50, 126}, {27, 91, 50, 51, 59, 53, 126}, {27, 91, 50, 51, 59, 51, 126}, {27, 91, 50, 51, 59, 54, 126}, {}, {27, 91, 50, 51, 59, 52, 126}, {27, 91, 50, 51, 59, 56, 126}); // F11
+        add_sequence( 88, {27, 91, 50, 52, 126}, {27, 91, 50, 52, 59, 50, 126}, {27, 91, 50, 52, 59, 53, 126}, {27, 91, 50, 52, 59, 51, 126}, {27, 91, 50, 52, 59, 54, 126}, {}, {27, 91, 50, 52, 59, 52, 126}, {27, 91, 50, 52, 59, 56, 126}); // F12
+        add_sequence(210, {27, 91, 50, 126}, {/*paste*/}, {27, 91, 50, 59, 53, 126}, {27, 91, 50, 59, 51, 126}, {/*paste*/}, {27, 91, 50, 59, 55, 126}, {111, 112, 62}, {/*paste*/}); // INSERT
+        add_sequence(211, {27, 91, 51, 126}, {27, 91, 51, 59, 50, 126}, {27, 91, 51, 59, 53, 126}, {27, 91, 51, 59, 51, 126}, {27, 91, 51, 59, 54, 126}, {/*logout hotkey*/}, {27, 91, 51, 59, 52, 126}, {27, 91, 51, 59, 56, 126}); // DELETE
+        add_sequence( 41, {96}, {126}, {/*no sym*/}, {/*focus*/}, {30}, {194, 128}, {195, 190}, {194, 158}); // `
+        add_sequence(  2, {49}, {33}, {49}, {194, 177}, {33}, {194, 177}, {194, 161}, {194, 161}); // 1
+        add_sequence(  3, {50}, {64}, {/*no sym*/}, {194, 178}, {/*no sym*/}, {194, 128}, {195, 128}, {194, 128}); // 2
+        add_sequence(  4, {51}, {35}, {/*ignored 27*/}, {194, 179}, {35}, {194, 155}, {194, 163}, {194, 163}); // 3
+        add_sequence(  5, {52}, {36}, {28}, {194, 180}, {36}, {194, 156}, {194, 164}, {194, 164}); // 4
+        add_sequence(  6, {53}, {37}, {29}, {194, 181}, {37}, {194, 157}, {194, 165}, {194, 165}); // 5
+        add_sequence(  7, {54}, {94}, {30}, {194, 182}, {30}, {194, 158}, {195, 158}, {194, 158}); // 6
+        add_sequence(  8, {55}, {38}, {31}, {194, 183}, {38}, {194, 159}, {194, 166}, {194, 166}); // 7
+        add_sequence(  9, {56}, {42},  {8}, {194, 184}, {42}, {195, 191}, {194, 170}, {194, 170}); // 8
+        add_sequence( 10, {57}, {40}, {57}, {194, 185}, {40}, {194, 185}, {194, 168}, {194, 168}); // 9
+        add_sequence( 11, {48}, {41}, {48}, {194, 176}, {41}, {194, 176}, {194, 169}, {194, 169}); // 0
+        add_sequence( 12, {45}, {95}, {45}, {194, 173}, {31}, {194, 173}, {195, 159}, {194, 159}); // -
+        add_sequence( 13, {61}, {43}, {61}, {194, 189}, {43}, {194, 189}, {194, 171}, {194, 171}); // =
+        add_sequence( 14,  {8},  {8},  {8}, {195, 191},  {8}, {194, 136}, {195, 191}, {194, 136}); // backspace
+        add_sequence(199, {27, 91, 72}, {27, 91, 49, 59, 50, 72}, {27, 91, 49, 59, 53, 72}, {27, 91, 49, 59, 51, 72}, {27, 91, 49, 59, 54, 72}, {27, 91, 49, 59, 55, 72}, {27, 91, 49, 59, 52, 72}, {27, 91, 49, 59, 56, 72}); // home
+        add_sequence( 15, {9}, {27, 91, 90}, {9}, {/*focus*/}, {27, 91, 90}, {/*focus*/}, {27, 91, 90}, {27, 91, 90}); // tab
+        add_sequence( 16, {113}, {81}, {17}, {195, 177}, {17}, {194, 145}, {195, 145}, {194, 145}); // q
+        add_sequence( 17, {119}, {87}, {23}, {195, 183}, {23}, {194, 151}, {195, 151}, {194, 151}); // w
+        add_sequence( 18, {101}, {69},  {5}, {195, 165},  {5}, {194, 133}, {195, 133}, {194, 133}); // e
+        add_sequence( 19, {114}, {82}, {18}, {195, 178}, {18}, {194, 146}, {195, 146}, {194, 146}); // r
+        add_sequence( 20, {116}, {84}, {20}, {195, 180}, {20}, {/*focus*/}, {195, 148}, {194, 148}); // t
+        add_sequence( 21, {121}, {89}, {25}, {195, 185},  {2}, {194, 153}, {195, 153}, {194, 153}); // y
+        add_sequence( 22, {117}, {85}, {21}, {195, 181}, {/*unicode mode*/}, {194, 149}, {195, 149}, {/*unicode mode*/}); // u
+        add_sequence( 23, {105}, {73},  {9}, {195, 169},  {9}, {194, 137}, {195, 137}, {194, 137}); // i
+        add_sequence( 24, {111}, {79}, {15}, {195, 175}, {15}, {194, 143}, {195, 143}, {194, 143}); // o
+        add_sequence( 25, {112}, {80}, {16}, {195, 176}, {16}, {194, 144}, {195, 144}, {194, 144}); // p
+        add_sequence( 26, {91}, {123}, {/*ignored 27*/}, {195, 155}, {/*ignored 27*/}, {194, 155}, {195, 187}, {194, 155}); // [
+        add_sequence( 27, {93}, {125}, {29}, {195, 157}, {29}, {194, 157}, {195, 189}, {194, 157}); // ]
+        add_sequence( 43, {92}, {124}, {28}, {195, 156}, {28}, {194, 156}, {195, 188}, {194, 156}); // backslash
+        add_sequence(201, {27, 91, 53, 126}, {/*?scrolls up*/}, {27, 91, 53, 59, 53, 126}, {27, 91, 53, 59, 51, 126}, {/*scrolls up*/}, {27, 91, 53, 59, 55, 126}, {/*scrolls up*/}, {/*scrolls up*/}); // pgup
+        add_sequence( 30,  {97}, {65},  {1}, {195, 161},  {1}, {194, 129}, {195, 129}, {194, 129}); // a
+        add_sequence( 31, {115}, {83}, {19}, {195, 179}, {19}, {/*no sym*/}, {195, 147}, {194, 147}); // s
+        add_sequence( 32, {100}, {68},  {4}, {195, 164},  {4}, {194, 132}, {195, 132}, {194, 132}); // d
+        add_sequence( 33, {102}, {70},  {6}, {195, 166},  {6}, {194, 134}, {195, 134}, {194, 134}); // f
+        add_sequence( 34, {103}, {71},  {7}, {195, 167},  {7}, {194, 135}, {195, 135}, {194, 135}); // g
+        add_sequence( 35, {104}, {72},  {8}, {195, 168},  {8}, {194, 136}, {195, 136}, {194, 136}); // h
+        add_sequence( 36, {106}, {74}, {10}, {195, 170}, {10}, {194, 138}, {195, 138}, {194, 138}); // j
+        add_sequence( 37, {107}, {75}, {11}, {195, 171}, {11}, {194, 139}, {195, 139}, {194, 139}); // k
+        add_sequence( 38, {108}, {76}, {12}, {195, 172}, {12}, {/*lock*/}, {195, 140}, {194, 140}); // l
+        add_sequence( 39,  {59}, {58}, {59}, {194, 187}, {58}, {194, 187}, {194, 186}, {194, 186}); // ;
+        add_sequence( 40,  {39}, {34}, {39}, {194, 167}, {34}, {194, 167}, {194, 16}, {194, 162}); // '
+        add_sequence( 28,  {13}, {13}, {13},   {27, 13},  {1}, {/*focus*/}, {/*focus*/}, {/*focus*/}); // enter
+        add_sequence(209, {27, 91, 54, 126}, {/*?:scrolls down*/}, {27, 91, 54, 59, 53, 126}, {27, 91, 54, 59, 51, 126}, {/*scrolls down*/}, {27, 91, 54, 59, 55, 126}, {/*scrolls down*/}, {/*scrolls down*/}); // pgdn
+        add_sequence( 44, {122}, {90}, {26}, {195, 186}, {26}, {194, 154}, {195, 154}, {194, 154}); // z
+        add_sequence( 45, {120}, {88}, {24}, {195, 184}, {24}, {194, 152}, {195, 152}, {194, 152}); // x
+        add_sequence( 46,  {99}, {67},  {3}, {195, 163},  {3}, {194, 131}, {195, 131}, {194, 131}); // c
+        add_sequence( 47, {118}, {86}, {22}, {195, 182}, {22}, {194, 150}, {195, 150}, {194, 150}); // v
+        add_sequence( 48,  {98}, {66},  {2}, {195, 162},  {2}, {194, 130}, {195, 130}, {194, 130}); // b
+        add_sequence( 49, {110}, {78}, {14}, {195, 174}, {14}, {194, 142}, {195, 142}, {194, 142}); // n
+        add_sequence( 50, {109}, {77}, {13}, {195, 173}, {13}, {194, 141}, {195, 141}, {194, 141}); // m
+        add_sequence( 51,  {44}, {60}, {44}, {194, 172}, {60}, {194, 172}, {194, 188}, {194, 188}); // ,
+        add_sequence( 52,  {46}, {62}, {46}, {194, 174}, {62}, {194, 174}, {194, 190}, {194, 190}); // .
+        add_sequence( 53,  {47}, {63}, {31}, {194, 175},  {8}, {194, 159}, {194, 191}, {194, 191}); // /
+        add_sequence(207, {27, 91, 70}, {27, 91, 49, 59, 50, 70}, {27, 91, 49, 59, 53, 70}, {27, 91, 49, 59, 51, 70}, {27, 91, 49, 59, 54, 70}, {27, 91, 49, 59, 55, 70}, {27, 91, 49, 59, 52, 70}, {27, 91, 49, 59, 56, 70}); // end
+        add_sequence( 57, {32}, {32}, {/*no sym*/}, {/*focus*/}, {/*no sym*/}, {194, 128}, {194, 160}, {194, 128}); // space
+        add_sequence(221, {27, 91, 50, 57, 126}, {27, 91, 50, 57, 59, 50, 126}, {27, 91, 50, 57, 59, 53, 126}, {27, 91, 50, 57, 59, 51, 126}, {27, 91, 50, 57, 59, 54, 126}, {27, 91, 50, 57, 59, 55, 126}, {27, 91, 50, 57, 59, 52, 126}, {27, 91, 50, 57, 59, 56, 126}); // menu
+        add_sequence(203, {27, 91, 68}, {27, 91, 49, 59, 50, 68}, {27, 91, 49, 59, 53, 68}, {27, 91, 49, 59, 51, 68}, {27, 91, 49, 59, 54, 68}, {/*no sym*/}, {27, 91, 49, 59, 52, 68}, {/*no sym*/}); // left
+        add_sequence(200, {27, 91, 65}, {27, 91, 49, 59, 50, 65}, {27, 91, 49, 59, 53, 65}, {27, 91, 49, 59, 51, 65}, {27, 91, 49, 59, 54, 65}, {/*no sym*/}, {27, 91, 49, 59, 52, 65}, {/*no sym*/}); // up
+        add_sequence(208, {27, 91, 66}, {27, 91, 49, 59, 50, 66}, {27, 91, 49, 59, 53, 66}, {27, 91, 49, 59, 51, 66}, {27, 91, 49, 59, 54, 66}, {/*no sym*/}, {27, 91, 49, 59, 52, 66}, {/*no sym*/}); // down
+        add_sequence(205, {27, 91, 67}, {27, 91, 49, 59, 50, 67}, {27, 91, 49, 59, 53, 67}, {27, 91, 49, 59, 51, 67}, {27, 91, 49, 59, 54, 67}, {/*no sym*/}, {27, 91, 49, 59, 52, 67}, {/*no sym*/}); // right
+        add_sequence(  1, {27}, {27}, {27}, {194, 155}, {27}, {27}, {194, 155}, {194, 155}); // escape
 
         // modifiers[keycode] = make_tuple(modifier index, nth instance of that modifier)
-        // shift:    0
-        // caps:     1
-        // control:  2
-        // alt:      3
-        // num lock: 4
-        modifiers[ 42] = make_tuple(0, 0);  // left shift
-        modifiers[ 54] = make_tuple(0, 1);  // right shift
-        modifiers[ 58] = make_tuple(1, 0);  // caps lock
-        modifiers[ 29] = make_tuple(2, 0);  // left control
+        // shift:    0  0x01
+        // caps:     1  0x02
+        // control:  2  0x04
+        // alt:      3  0x08
+        // num lock: 4  0x10
+        modifiers[ 42] = make_tuple(0, 0); // left shift
+        modifiers[ 54] = make_tuple(0, 1); // right shift
+        modifiers[ 58] = make_tuple(1, 0); // caps lock
+        modifiers[ 29] = make_tuple(2, 0); // left control
         modifiers[157] = make_tuple(2, 1); // right control
-        modifiers[ 56] = make_tuple(3, 0);  // left alt
+        modifiers[ 56] = make_tuple(3, 0); // left alt
         modifiers[184] = make_tuple(3, 1); // right alt
-        modifiers[ 69] = make_tuple(4, 0);  // num lock
+        modifiers[ 69] = make_tuple(4, 0); // num lock
 
-        codes.clear();
-        for (auto s : syms)
-        {
-            auto key = s.first;
-            auto stup = s.second;
-            auto s0 = std::get<0>(stup);
-            auto s1 = std::get<2>(stup);
-
-            codes[s0] = make_tuple(key, 1);
-            if (s1)
-                codes[s1] = make_tuple(key, 0);
-        }
-
-        syms[71]  = make_tuple(55, 0xffff, 0);     // numpad 7
-        syms[72]  = make_tuple(56, 0xffff, 0);     // numpad 8
-        syms[73]  = make_tuple(57, 0xffff, 0);     // numpad 9
-        syms[181] = make_tuple(47, 0xffff, 0);     // numpad /
-        syms[75]  = make_tuple(52, 0xffff, 0);     // numpad 4
-        syms[76]  = make_tuple(53, 0xffff, 0);     // numpad 5
-        syms[77]  = make_tuple(54, 0xffff, 0);     // numpad 6
-        syms[55]  = make_tuple(42, 0xffff, 0);     // numpad *
-        syms[79]  = make_tuple(49, 0xffff, 0);     // numpad 1
-        syms[80]  = make_tuple(50, 0xffff, 0);     // numpad 2
-        syms[81]  = make_tuple(51, 0xffff, 0);     // numpad 3
-        syms[74]  = make_tuple(45, 0xffff, 0);     // numpad -
-        syms[82]  = make_tuple(48, 0xffff, 0);     // numpad 0
-        syms[83]  = make_tuple(46, 0xffff, 0);     // numpad .
-        syms[78]  = make_tuple(43, 0xffff, 0);     // numpad +
+        // syms[71]  = make_tuple(55, 0xffff, 0);     // numpad 7
+        // syms[72]  = make_tuple(56, 0xffff, 0);     // numpad 8
+        // syms[73]  = make_tuple(57, 0xffff, 0);     // numpad 9
+        // syms[181] = make_tuple(47, 0xffff, 0);     // numpad /
+        // syms[75]  = make_tuple(52, 0xffff, 0);     // numpad 4
+        // syms[76]  = make_tuple(53, 0xffff, 0);     // numpad 5
+        // syms[77]  = make_tuple(54, 0xffff, 0);     // numpad 6
+        // syms[55]  = make_tuple(42, 0xffff, 0);     // numpad *
+        // syms[79]  = make_tuple(49, 0xffff, 0);     // numpad 1
+        // syms[80]  = make_tuple(50, 0xffff, 0);     // numpad 2
+        // syms[81]  = make_tuple(51, 0xffff, 0);     // numpad 3
+        // syms[74]  = make_tuple(45, 0xffff, 0);     // numpad -
+        // syms[82]  = make_tuple(48, 0xffff, 0);     // numpad 0
+        // syms[83]  = make_tuple(46, 0xffff, 0);     // numpad .
+        // syms[78]  = make_tuple(43, 0xffff, 0);     // numpad +
     }
 } kb_data;
 
@@ -124,181 +300,6 @@ KeyboardDriverImpl::KeyboardDriverImpl()
 {
     _modifier_state = 0;
 }
-
-struct SymJob
-{
-    unsigned char* buf;
-    uint len;
-    KeyboardDriverImpl::KeyCode code;
-    KeyboardDriverImpl::ModifierMask mod;
-    KeyboardDriverImpl::KeySym sym;
-
-    bool computeSequenceContinuation(uint index)
-    {
-        if (index >= len)
-            return false;
-
-        switch (buf[index])
-        {
-            case 49: return computeHeader49(index + 1); // header start
-            case 50: return computeHeader50(index + 1); // header start
-            case 51: code = 211; return confirmEnd(index + 1, 126); // delete
-            case 53: code = 201; return confirmEnd(index + 1, 126); // page up
-            case 54: code = 209; return confirmEnd(index + 1, 126); // page down
-            case 65: code = 200; return confirmEnd(index); // UP
-            case 66: code = 208; return confirmEnd(index); // DOWN
-            case 67: code = 205; return confirmEnd(index); // RIGHT
-            case 68: code = 203; return confirmEnd(index); // LEFT
-            case 70: code = 207; return confirmEnd(index); // END
-            case 72: code = 199; return confirmEnd(index); // HOME
-            case 90: code = 15; sym = 0; mod = 1; return confirmEnd(index); // shift tab
-            default: return false;
-        }
-
-        return true;
-    }
-
-    bool confirmEnd(uint index, unsigned char end = 0)
-    {
-        if (index + 1 != len)
-            return false;
-
-        return !end || buf[index] == end;
-    }
-
-    bool computeSingal()
-    {
-        // not a sequence
-        const auto& it = kb_data.codes.find(buf[0]);
-        if (it != kb_data.codes.end())
-        {
-            code = std::get<0>(it->second);
-            mod = std::get<1>(it->second);
-            sym = buf[0];
-            return true;
-        }
-
-        return false;
-    }
-
-    bool computeSequenceEnd(uint index)
-    {
-        if (index + 1 != len)
-            return false;
-
-        switch (buf[index])
-        {
-            case 80: code = 59; break; // F1
-            case 81: code = 60; break; // F2
-            case 82: code = 61; break; // F3
-            case 83: code = 62; break; // F4
-            default: return false;
-        }
-
-        return true;
-    }
-
-    bool computeMod(uint index)
-    {
-        if (index + 1 >= len)
-            return false;
-
-        switch (buf[index])
-        {
-            case 50: mod = 0x1; break; // shift
-            case 51: mod = 0x4; break; // alt
-            case 52: mod = 0x5; break; // shift + alt
-            case 53: mod = 0x2; break; // control
-            case 54: mod = 0x3; break; // shift+control
-            default: return false;
-        }
-
-        return true;
-    }
-
-    bool computeHeader49(uint index)
-    {
-        if (index + 1 >= len)
-            return false;
-
-        switch (buf[index])
-        {
-            case 53: code = 63; return confirmEnd(index + 1, 126); // F5
-            case 55: code = 64; return confirmEnd(index + 1, 126); // F6
-            case 56: code = 65; return confirmEnd(index + 1, 126); // F7
-            case 57: code = 66; return confirmEnd(index + 1, 126); // F8
-            case 59: return computeMod(index + 1) && computeSequenceContinuation(index + 2); // compute mod
-        }
-
-        return false;
-    }
-
-    bool computeHeader50(uint index)
-    {
-        if (index + 1 >= len)
-            return false;
-
-        switch (buf[index])
-        {
-            case 48: code = 67; return confirmEnd(index + 1, 126); // F9
-            case 49: code = 68; return confirmEnd(index + 1, 126); // F10
-            case 51: code = 87; return confirmEnd(index + 1, 126); // F11
-            case 52: code = 88; return confirmEnd(index + 1, 126); // F12
-            case 57:
-                code = 221;
-                if (buf[index + 1] == 59)
-                    return computeMod(index + 2) && confirmEnd(index + 3, 126);
-                else
-                    return confirmEnd(index + 1, 126);
-        }
-
-        return false;
-    }
-
-    bool computeEscapeSequence(uint index)
-    {
-        if (index + 1 >= len)
-            return false;
-
-        switch (buf[index])
-        {
-            case 79: return computeSequenceEnd(index + 1); break;
-            case 91: return computeSequenceContinuation(index + 1); break;
-        }
-
-        return false;
-    }
-
-    bool computeSymJob()
-    {
-        if (len == 0) return false;
-
-        if (len == 1)
-        {
-            return computeSingal();
-        }
-        else if (buf[0] == Ansi::ESC)
-        {
-            return computeEscapeSequence(1);
-        }
-
-        return false;
-    }
-
-    KeyboardDriverImpl::KeyCode modCode()
-    {
-        switch (mod)
-        {
-            case 0x01: return 42; // shift
-            case 0x02: return 58; // caps
-            case 0x04: return 29; // control
-            case 0x08: return 56; // alt
-            case 0x10: return 69; // num lock
-        }
-
-        return 0;
-    }
-};
 
 void KeyboardDriverImpl::enqueue(unsigned char* buf, uint len)
 {
@@ -311,22 +312,41 @@ void KeyboardDriverImpl::enqueue(unsigned char* buf, uint len)
         }
     }
 
-    cout << "keysym sequence: ";
-    for (uint i = 0; i < len; i++)
-        cout << (int)(buf[i]) << ' ';
-    SymJob job { buf, len, 0, 0, 0 };
-    if (!job.computeSymJob())
+    _Mod mod;
+    _Code code;
+    
+    if (!kb_data.lookup(buf, len, &code, &mod))
     {
-        cout << " - unknown\r\n";
+        cout << "unknown sequence: ";
+        for (uint i = 0; i < len; i++)
+            cout << (int)(buf[i]) << ' ';
+        cout << "\r\n" << flush;
         return;
     }
-    cout << "\r\n";
 
-    update_modifier(true, job.modCode());
-    enqueue(true, job.code);
+    if (mod != _modifier_state)
+    {
+        // send key release
+        // ~new (0101) & old (1001) = 0001
+        _Mod released = ~mod & _modifier_state;
+        auto codes = kb_data.getModCodes(released);
+        for (auto modCode : codes)
+            enqueue(false, modCode);
+
+        // send key press
+        // new (1010) & ~old (0110) = 0010
+        _Mod pressed = mod & ~_modifier_state;
+        codes = kb_data.getModCodes(pressed);
+        for (auto modCode : codes)
+            enqueue(true, modCode);
+
+        _modifier_state = mod;
+    }
+
+    enqueue(true, code);
 }
 
-void KeyboardDriverImpl::enqueue(bool bPressed, KeyboardDriverImpl::KeyCode keycode)
+void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
 {
     // filter out some events
     switch (keycode)
@@ -340,7 +360,7 @@ void KeyboardDriverImpl::enqueue(bool bPressed, KeyboardDriverImpl::KeyCode keyc
         case 42|0x80: // PRINT SCREEN (comes in a pair of double bytes, 42,55 -- each are pressed and unpressed)
         case 55|0x80: // PRINT SCREEN (comes in a pair of double bytes, 42,55 -- each are pressed and unpressed)
             return;
-        case 91: // WINDOWS
+        case 219: // WINDOWS
         case 221: // MENU
             keycode = 0;
             break;
@@ -351,7 +371,7 @@ void KeyboardDriverImpl::enqueue(bool bPressed, KeyboardDriverImpl::KeyCode keyc
     pkey->keycode = keycode;
 
     update_modifier(bPressed, pkey->keycode);
-    pkey->keysym = map_sym(pkey->keycode);
+    pkey->keysym = kb_data.lookup(pkey->keycode, _modifier_state);
 
     pkey->bShift = (_modifier_state & 0x1);
     pkey->bCaps = (_modifier_state & 0x2);
@@ -362,7 +382,7 @@ void KeyboardDriverImpl::enqueue(bool bPressed, KeyboardDriverImpl::KeyCode keyc
     _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }
 
-void KeyboardDriverImpl::update_modifier(bool bPressed, KeyboardDriverImpl::KeyCode keycode)
+void KeyboardDriverImpl::update_modifier(bool bPressed, _Code keycode)
 {
     const auto& modifier_set_iterator = kb_data.modifiers.find(keycode);
     if (modifier_set_iterator != kb_data.modifiers.end())
@@ -380,15 +400,5 @@ void KeyboardDriverImpl::update_modifier(bool bPressed, KeyboardDriverImpl::KeyC
         state_bits.set(mod_index, mod_bits.any());
         _modifier_state = static_cast<unsigned char>(state_bits.to_ulong());
     }
-}
-
-KeyboardDriverImpl::KeySym KeyboardDriverImpl::map_sym(KeyboardDriverImpl::KeyCode keycode)
-{
-    auto it = kb_data.syms.find(keycode);
-    if (it == kb_data.syms.end())
-        return 0x0;
-
-    const auto& tup = it->second;
-    return (std::get<1>(tup) & (0x1 << _modifier_state)) ? std::get<0>(tup) : std::get<2>(tup);
 }
 
