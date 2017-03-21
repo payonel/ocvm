@@ -1,4 +1,3 @@
-#include "kb_scanner.h"
 #include "raw_tty.h"
 
 #include <memory>
@@ -30,11 +29,6 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
     else if (kbTypeName == "raw")
     {
         return unique_ptr<KeyboardDriver>(new KeyboardLocalRawTtyDriver);
-    }
-    else if (kbTypeName == "scanner")
-    {
-        if (KeyboardScanner::isAvailable())
-            return unique_ptr<KeyboardDriver>(new KeyboardScanner);
     }
     else if (kbTypeName == "pty")
     {

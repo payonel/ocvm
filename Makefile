@@ -2,7 +2,7 @@ MAKEFLAGS+="-j 4"
 flags=-g --std=c++14 -Wl,--no-as-needed -Wall
 
 ifeq ($(prof),)
-libs=-llua5.2-c++
+libs=-llua5.2
 includes=-I/usr/include/lua5.2/
 else
 $(info profile build)
@@ -12,7 +12,7 @@ bin=-profiled
 endif
 
 includes+=-I.
-libs+=-lstdc++ -lncurses -lstdc++fs -lX11 -pthread
+libs+=-lstdc++ -lstdc++fs -pthread
 
 files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp) $(wildcard io/*.cpp) $(wildcard drivers/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
