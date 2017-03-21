@@ -457,7 +457,7 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
 
     // weird zero keycode for backslash
     if (keycode == 43)
-        keycode = 0;
+        pkey->keycode = 0;
 
     _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }
