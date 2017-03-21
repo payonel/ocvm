@@ -9,7 +9,6 @@ struct KeyCodeData
 {
     _Code code = 0;
     _Sym syms[8] {};
-    vector<_Sym> sequences[8];
 };
 
 struct KeySymData;
@@ -29,8 +28,10 @@ struct KBData
 
     static const uint None = 0;
     static const uint Shift = 1;
+    static const uint Caps = 2;
     static const uint Control = 4;
     static const uint Alt = 8;
+    static const uint NumLock = 0x10;
 
     _Sym lookup(_Code code, _Mod mod)
     {
@@ -67,40 +68,30 @@ struct KBData
 
     bool lookup(_Sym* syms, size_t len, _Code* pCode, _Mod* pMod)
     {
-        for (const auto& item : _db)
-        {
-            for (int seq_index = 0; seq_index < 8; seq_index++)
-            {
-                const auto& seq = item.second.sequences[seq_index];
-                if (len == seq.size())
-                {
-                    for (size_t i = 0; i < seq.size(); i++)
-                    {
-                        if (syms[i] != seq.at(i))
-                            break;
+        auto* pLinks = &_root;
 
-                        if (i + 1 == seq.size())
-                        {
-                            // match
-                            *pCode = item.first;
-                            switch (seq_index)
-                            {
-                                case 0: *pMod = None; break; // none
-                                case 1: *pMod = Shift; break; // shift
-                                case 2: *pMod = Control; break; // control
-                                case 3: *pMod = Alt; break; // alt
-                                case 4: *pMod = Control | Shift; break; // control shift
-                                case 5: *pMod = Control | Alt; break; // control alt
-                                case 6: *pMod = Shift | Alt; break; // shift alt
-                                case 7: *pMod = Control | Shift | Alt; break; // control shift alt
-                            }
-                            return true;
-                        }
-                    }
-                }
+        for (size_t i = 0; i < len; i++)
+        {
+            const auto& sym = syms[i];
+            const auto& it = pLinks->find(sym);
+            if (it == pLinks->end())
+            {
+                return false; // unknown sequence
+            }
+            const auto& data = it->second;
+
+            if (i + 1 == len)
+            {
+                *pCode = data->code;
+                *pMod = data->mod;
+            }
+            else
+            {
+                pLinks = &(data->links);
             }
         }
-        return false;
+
+        return true;
     }
 
     void add_code_sym(_Code code, _Sym s0, _Sym s1, _Sym s2, _Sym s3, _Sym s4, _Sym s5, _Sym s6, _Sym s7)
@@ -148,6 +139,25 @@ struct KBData
         }
     }
 
+    void add_alt_sequence(_Sym ch)
+    {
+        _Code code;
+        _Mod mod;
+        _Sym seq[] {ch};
+        if (lookup(seq, 1, &code, &mod))
+        {
+            add_sequence(code, Alt, _root, {27, ch}, 0);
+
+            // find the shift code
+            _Sym shifted = lookup(code, Shift);
+
+            if (shifted)
+            {
+                add_sequence(code, Shift | Alt, _root, {27, shifted}, 0);
+            }
+        }
+    }
+
     void add_sequence(_Code code,
         vector<_Sym> seq0,
         vector<_Sym> seq1,
@@ -158,18 +168,6 @@ struct KBData
         vector<_Sym> seq6,
         vector<_Sym> seq7)
     {
-        KeyCodeData& data = _db[code];
-        data.code = code;
-        data.sequences[0] = seq0;
-        data.sequences[1] = seq1;
-        data.sequences[2] = seq2;
-        data.sequences[3] = seq3;
-        data.sequences[4] = seq4;
-        data.sequences[5] = seq5;
-        data.sequences[6] = seq6;
-        data.sequences[7] = seq7;
-
-        // void add_sequence(_Code code, _Mod mod, KeySymDataLinks& links, const vector<_Sym> seq, size_t seq_index)
         add_sequence(code, 0, _root, seq0, 0);
         add_sequence(code, Shift, _root, seq1, 0);
         add_sequence(code, Control, _root, seq2, 0);
@@ -265,7 +263,7 @@ struct KBData
         add_sequence( 11, {48}, {41}, {/*48*/}, {194, 176}, {/*41*/}, {/*194, 176*/}, {194, 169}, {/*194, 169*/}); // 0
         add_sequence( 12, {45}, {95}, {/*45*/}, {194, 173}, {/*31*/}, {/*194, 173*/}, {195, 159}, {/*194, 159*/}); // -
         add_sequence( 13, {61}, {43}, {/*61*/}, {194, 189}, {/*43*/}, {/*194, 189*/}, {194, 171}, {/*194, 171*/}); // =
-        add_sequence( 14,  {8},  {/*8*/},  {/*8*/}, {/*195, 191*/},  {/*8*/}, {194, 136}, {/*195, 191*/}, {/*194, 136*/}); // backspace
+        add_sequence( 14, {8},  {/*8*/},  {/*8*/}, {/*195, 191*/},  {/*8*/}, {194, 136}, {/*195, 191*/}, {/*194, 136*/}); // backspace
         add_sequence(199, {27, 91, 72}, {27, 91, 49, 59, 50, 72}, {27, 91, 49, 59, 53, 72}, {27, 91, 49, 59, 51, 72}, {27, 91, 49, 59, 54, 72}, {27, 91, 49, 59, 55, 72}, {27, 91, 49, 59, 52, 72}, {27, 91, 49, 59, 56, 72}); // home
         add_sequence( 15, {9}, {27, 91, 90}, {/*9*/}, {/*focus*/}, {/*27, 91, 90*/}, {/*focus*/}, {/*27, 91, 90*/}, {/*27, 91, 90*/}); // tab
         add_sequence( 16, {113}, {81}, {17}, {195, 177}, {/*17*/}, {194, 145}, {195, 145}, {/*194, 145*/}); // q
@@ -313,6 +311,22 @@ struct KBData
         add_sequence(208, {27, 91, 66}, {27, 91, 49, 59, 50, 66}, {27, 91, 49, 59, 53, 66}, {27, 91, 49, 59, 51, 66}, {27, 91, 49, 59, 54, 66}, {/*no sym*/}, {27, 91, 49, 59, 52, 66}, {/*no sym*/}); // down
         add_sequence(205, {27, 91, 67}, {27, 91, 49, 59, 50, 67}, {27, 91, 49, 59, 53, 67}, {27, 91, 49, 59, 51, 67}, {27, 91, 49, 59, 54, 67}, {/*no sym*/}, {27, 91, 49, 59, 52, 67}, {/*no sym*/}); // right
         add_sequence(  1, {27}, {/*27*/}, {/*27*/}, {/*194, 155*/}, {/*27*/}, {/*27*/}, {/*194, 155*/}, {/*194, 155*/}); // escape
+
+        // and (of course) gnome terminal seqeunces are different
+        // alts
+        for (_Sym ch = 'a'; ch <= 'z'; ch++)
+        {
+            add_alt_sequence(ch);
+        }
+        add_alt_sequence('-');
+        add_alt_sequence('=');
+        add_alt_sequence(']');
+        add_alt_sequence('\\');
+        add_alt_sequence(';');
+        add_alt_sequence('\'');
+        add_alt_sequence(',');
+        add_alt_sequence('.');
+        add_alt_sequence('/');
 
         // modifiers[keycode] = make_tuple(modifier index, nth instance of that modifier)
         // shift:    0  0x01
@@ -366,12 +380,12 @@ void KeyboardDriverImpl::enqueue(unsigned char* buf, uint len)
     _Mod mod;
     _Code code;
     
+    if (!kb_data.lookup(buf, len, &code, &mod))
+    {
         cout << "unknown sequence: ";
         for (uint i = 0; i < len; i++)
             cout << (int)(buf[i]) << ' ';
         cout << "\r\n" << flush;
-    if (!kb_data.lookup(buf, len, &code, &mod))
-    {
         return;
     }
 
@@ -417,6 +431,17 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
             break;
     }
 
+    if (_modifier_state & KBData::Shift)
+    {
+        switch (keycode) // keycodes shift
+        {
+            case  3: keycode = 145; break; // 2
+            case  7: keycode = 144; break; // 6
+            case 12: keycode = 147; break; // -
+            case 39: keycode = 146; break; // ;
+        }
+    }
+
     KeyEvent* pkey = new KeyEvent;
     pkey->bPressed = bPressed;
     pkey->keycode = keycode;
@@ -424,11 +449,15 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
     update_modifier(bPressed, pkey->keycode);
     pkey->keysym = kb_data.lookup(pkey->keycode, _modifier_state);
 
-    pkey->bShift = (_modifier_state & 0x1);
-    pkey->bCaps = (_modifier_state & 0x2);
-    pkey->bControl = (_modifier_state & 0x4);
-    pkey->bAlt = (_modifier_state & 0x8);
-    pkey->bNumLock = (_modifier_state & 0x10);
+    pkey->bShift = (_modifier_state & KBData::Shift);
+    pkey->bCaps = (_modifier_state & KBData::Caps);
+    pkey->bControl = (_modifier_state & KBData::Control);
+    pkey->bAlt = (_modifier_state & KBData::Alt);
+    pkey->bNumLock = (_modifier_state & KBData::NumLock);
+
+    // weird zero keycode for backslash
+    if (keycode == 43)
+        keycode = 0;
 
     _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }
