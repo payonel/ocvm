@@ -25,5 +25,6 @@ namespace utils
     bool remove(const string& path);
 
     bool run_safely(function<void()> func, function<void(const string&)> onError = nullptr);
+    string proc_root();
 };
 

@@ -33,6 +33,10 @@ Client::Client(Host* host, const string& env_path) :
     add("type", &Client::component_type);
     add("slot", &Client::component_slot);
 
+    // adjust env path if it is relative
+    // if relative
+    _env_path = utils::proc_root() + _env_path;
+
     // make the env path if it doesn't already exist
     utils::mkdir(_env_path);
 }

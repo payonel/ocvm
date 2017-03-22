@@ -34,7 +34,7 @@ bool Filesystem::onInitialize(Value& config)
     if (source_uri.type() == "string") // loot disk
     {
         _isReadOnly = true;
-        _src = source_uri.toString();
+        _src = utils::proc_root() + source_uri.toString();
         _tmpfs = false;
         if (!utils::exists(_src))
         {
