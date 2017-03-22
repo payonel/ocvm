@@ -22,7 +22,7 @@ public:
     Value(int n) : Value(double(n)) {}
     Value(const char* cstr) : Value(string(cstr)) {}
     Value(int64_t n) : Value(double(n)) {}
-    Value(uint n) : Value(double(n)) {}
+    Value(unsigned int n) : Value(double(n)) {}
     Value(size_t n) : Value(double(n)) {}
     Value(lua_State*);
     Value(lua_State*, int);

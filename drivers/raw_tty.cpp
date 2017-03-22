@@ -233,7 +233,7 @@ void KeyboardLocalRawTtyDriver::enqueue(TermBuffer* buffer)
         return;
 
     bool released;
-    uint keycode = buffer->get();
+    unsigned int keycode = buffer->get();
 
     switch (keycode)
     {

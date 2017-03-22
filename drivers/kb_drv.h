@@ -10,7 +10,7 @@ using std::tuple;
 using std::unordered_map;
 using std::string;
 
-typedef uint _Mod;
+typedef unsigned int _Mod;
 typedef unsigned char _Code;
 typedef unsigned char _Sym;
 

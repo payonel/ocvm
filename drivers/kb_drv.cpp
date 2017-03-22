@@ -375,7 +375,7 @@ public:
         // syms[78]  = make_tuple(43, 0xffff, 0);     // numpad +
     }
 
-    unordered_map<_Code, tuple<uint, uint>> modifiers;
+    unordered_map<_Code, tuple<unsigned int, unsigned int>> modifiers;
 private:
     unordered_map<_Code, KeyCodeData> _db;
     KeySymDataLinks _root;
@@ -473,8 +473,8 @@ void KeyboardDriverImpl::update_modifier(bool bPressed, _Code keycode)
     {
         const auto& mod_key_tuple = modifier_set_iterator->second;
 
-        uint mod_index = std::get<0>(mod_key_tuple); // shift(0), lock(1), ctrl(2), etc
-        uint nth_code = std::get<1>(mod_key_tuple); // the nth code in the group
+        unsigned int mod_index = std::get<0>(mod_key_tuple); // shift(0), lock(1), ctrl(2), etc
+        unsigned int nth_code = std::get<1>(mod_key_tuple); // the nth code in the group
 
         bitset<8> mod_bits = _mod_groups[mod_index];
         mod_bits.set(nth_code, bPressed);
