@@ -194,7 +194,7 @@ bool Computer::postInit()
     for (auto* pc : client()->components("filesystem", true))
     {
         auto pfs = dynamic_cast<Filesystem*>(pc);
-        if (pfs && pfs->src() == "")
+        if (pfs && pfs->isTmpfs())
         {
             setTmpAddress(pc->address());
             return true;

@@ -28,23 +28,26 @@ Filesystem::Filesystem() :
 
 bool Filesystem::onInitialize(Value& config)
 {
-    Value vloot = config.get(3).Or("");
-    if (vloot.type() != "string")
+    Value source_uri = config.get(3).Or(false);
+    if (source_uri.type() == "string") // loot disk
     {
-        lout << "invalid filesystem configuration: loot path not nil or string\n";
-        return false;
-    }
-    _src = vloot.toString();
-    if (!utils::exists(path()))
-    {
-        utils::mkdir(path());
-        if (!_src.empty())
+        _isReadOnly = true;
+        _src = source_uri.toString();
+        if (!utils::exists(_src))
         {
-            if (!utils::copy(_src, path()))
-            {
-                lout << "filesystem failed to initialized, the source loot does not exist\n";
-                return false;
-            }
+            lout << "loot disk not found: " << _src << endl;
+            return false;
+        }
+    }
+    else if (source_uri.type() == "boolean")
+    {
+        _isReadOnly = false;
+        _tmpfs = source_uri.toBool();
+        _src = "";
+        // make local dir if it doesn't yet exist
+        if (!utils::exists(path()))
+        {
+            utils::mkdir(path());
         }
     }
     return true;
@@ -109,7 +112,10 @@ string Filesystem::relative(const string& requested, const string& full)
 
 string Filesystem::path() const
 {
-    return clean(client()->envPath(), false, true) + clean(address(), true, true);
+    if (_src.empty()) // use local path
+        return clean(client()->envPath(), false, true) + clean(address(), true, true);
+    else // else loot path
+        return clean(_src, false, true);
 }
 
 string Filesystem::src() const
@@ -122,16 +128,23 @@ bool Filesystem::isReadOnly() const
     return _isReadOnly;
 }
 
+bool Filesystem::isTmpfs() const
+{
+    return _tmpfs;
+}
+
 int Filesystem::open(lua_State* lua)
 {
     string filepath = Value::check(lua, 1, "string").toString();
     string mode_text = Value::check(lua, 2, "string", "nil").Or("r").toString();
 
-    map<char, fstream::openmode> mode_map;
-    mode_map['r'] = fstream::in;
-    mode_map['w'] = fstream::out;
-    mode_map['a'] = fstream::app;
-    mode_map['b'] = fstream::binary;
+    static map<char, fstream::openmode> mode_map
+    {
+        {'r', fstream::in},
+        {'w', fstream::out},
+        {'a', fstream::app},
+        {'b', fstream::binary}
+    };
     fstream::openmode mode;
     bool uninitialized = true;
     for (char c : mode_text)
@@ -159,6 +172,10 @@ int Filesystem::open(lua_State* lua)
     {
         lout << "bad file mode: " << mode_text << endl;
         return ValuePack::ret(lua, Value::nil, filepath);
+    }
+    else if (isReadOnly() && (mode & (mode_map['w'] | mode_map['a'])))
+    {
+        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
     }
 
     fstream* pf = new fstream;

@@ -15,6 +15,7 @@ public:
     string path() const;
     string src() const;
     bool isReadOnly() const;
+    bool isTmpfs() const;
 
     int open(lua_State* lua);
     int read(lua_State* lua);
@@ -38,7 +39,8 @@ protected:
     void init(const string& loot);
     fstream* get_handle(lua_State* lua, int* pIndex = nullptr);
 private:
-    const bool _isReadOnly;
+    bool _isReadOnly;
     map<int, fstream*> _handles;
     string _src;
+    bool _tmpfs;
 };
