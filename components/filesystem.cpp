@@ -7,7 +7,8 @@
 using namespace std;
 
 Filesystem::Filesystem() :
-    _isReadOnly(false)
+    _isReadOnly(true),
+    _tmpfs(false)
 {
     add("open", &Filesystem::open);
     add("read", &Filesystem::read);
@@ -24,6 +25,7 @@ Filesystem::Filesystem() :
     add("spaceUsed" ,&Filesystem::spaceUsed);
     add("spaceTotal" ,&Filesystem::spaceTotal);
     add("remove" ,&Filesystem::remove);
+    add("makeDirectory", &Filesystem::makeDirectory);
 }
 
 bool Filesystem::onInitialize(Value& config)
@@ -33,6 +35,7 @@ bool Filesystem::onInitialize(Value& config)
     {
         _isReadOnly = true;
         _src = source_uri.toString();
+        _tmpfs = false;
         if (!utils::exists(_src))
         {
             lout << "loot disk not found: " << _src << endl;
@@ -42,8 +45,8 @@ bool Filesystem::onInitialize(Value& config)
     else if (source_uri.type() == "boolean")
     {
         _isReadOnly = false;
-        _tmpfs = source_uri.toBool();
         _src = "";
+        _tmpfs = source_uri.toBool();
         // make local dir if it doesn't yet exist
         if (!utils::exists(path()))
         {
@@ -359,11 +362,31 @@ int Filesystem::spaceTotal(lua_State* lua)
 
 int Filesystem::remove(lua_State* lua)
 {
+    string filepath = Value::check(lua, 1, "string").toString();
+    filepath = path() + clean(filepath, true, false);
     if (isReadOnly())
     {
-        luaL_error(lua, "filesystem is readonly");
-        return 0;
+        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
     }
-    string filepath = Value::check(lua, 1, "string").toString();
-    return ValuePack::ret(lua, utils::remove(path() + clean(filepath, true, false)));
+    else if (!utils::exists(filepath))
+    {
+        return ValuePack::ret(lua, Value::nil, "no such file or directory");
+    }
+    return ValuePack::ret(lua, utils::remove(filepath));
+}
+
+int Filesystem::makeDirectory(lua_State* lua)
+{
+    string dirpath = Value::check(lua, 1, "string").toString();
+    dirpath = path() + clean(dirpath, true, false);
+    if (isReadOnly())
+    {
+        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
+    }
+    else if (utils::exists(dirpath))
+    {
+        return ValuePack::ret(lua, Value::nil, "file exists");
+    }
+    utils::mkdir(dirpath);
+    return ValuePack::ret(lua, true);
 }
