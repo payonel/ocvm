@@ -90,12 +90,12 @@ tuple<int, int> AnsiEscapeTerm::maxResolution() const
 
 #ifdef TIOCGSIZE
     struct ttysize ts;
-    ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
+    ioctl(STDOUT_FILENO, TIOCGSIZE, &ts);
     cols = ts.ts_cols;
     lines = ts.ts_lines;
 #elif defined(TIOCGWINSZ)
     struct winsize ts;
-    ioctl(STDIN_FILENO, TIOCGWINSZ, &ts);
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &ts);
     cols = ts.ws_col;
     lines = ts.ws_row;
 #endif /* TIOCGSIZE */

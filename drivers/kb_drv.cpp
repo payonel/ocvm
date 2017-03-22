@@ -76,7 +76,7 @@ public:
         auto* pLinks = &_root;
         string sequence;
 
-        while (buffer->size() > 0)
+        while (buffer->size())
         {
             auto sym = buffer->get();
             const auto& it = pLinks->find(sym);
