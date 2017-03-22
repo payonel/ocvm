@@ -3,10 +3,10 @@
 #include <iostream>
 using std::cout;
 
-void MouseDriverImpl::enqueue(unsigned char* buf)
+void MouseDriverImpl::enqueue(char b0, char b1, char b2)
 {
     EPressType press;
-    int btn = buf[0] - 0x20;
+    int btn = b0 - 0x20;
     if (btn == 0x3)
     {
         if (_pressed == 0x3) // odd
@@ -54,7 +54,7 @@ void MouseDriverImpl::enqueue(unsigned char* buf)
     if (press != EPressType::Drag)
         _pressed = btn;
 
-    pm->x = buf[1] - 32;
-    pm->y = buf[2] - 32;
+    pm->x = b1 - 32;
+    pm->y = b2 - 32;
     _source->push(std::move(unique_ptr<MouseEvent>(pm)));
 }

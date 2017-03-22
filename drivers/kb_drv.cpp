@@ -11,29 +11,33 @@ struct KeyCodeData
     _Sym syms[8] {};
 };
 
+enum class ModBit
+{
+    None = 0,
+    Shift = 1,
+    Caps = 2,
+    Control = 4,
+    Control_Shift = ModBit::Control | ModBit::Shift,
+    Alt = 8,
+    Shift_Alt = ModBit::Shift | ModBit::Alt,
+    Control_Alt = ModBit::Control | ModBit::Alt,
+    Shift_Control_Alt = ModBit::Shift | ModBit::Control | ModBit::Alt,
+    NumLock = 0x10,
+};
+
 struct KeySymData;
 typedef unordered_map<_Sym, shared_ptr<KeySymData>> KeySymDataLinks;
 struct KeySymData
 {
     _Code code;
-    _Mod mod;
+    ModBit mod;
     KeySymDataLinks links;
 };
 
-struct KBData
+class KBData
 {
-    unordered_map<_Code, tuple<uint, uint>> modifiers;
-    unordered_map<_Code, KeyCodeData> _db;
-    KeySymDataLinks _root;
-
-    static const uint None = 0;
-    static const uint Shift = 1;
-    static const uint Caps = 2;
-    static const uint Control = 4;
-    static const uint Alt = 8;
-    static const uint NumLock = 0x10;
-
-    _Sym lookup(_Code code, _Mod mod)
+public:
+    _Sym lookup(_Code code, ModBit mod)
     {
         const auto& it = _db.find(code);
         if (it == _db.end())
@@ -41,14 +45,15 @@ struct KBData
 
         switch (mod)
         {
-            case None: return it->second.syms[0];
-            case Shift: return it->second.syms[1];
-            case Control: return it->second.syms[2];
-            case Alt: return it->second.syms[3];
-            case Control | Shift: return it->second.syms[4];
-            case Control | Alt: return it->second.syms[5];
-            case Shift | Alt: return it->second.syms[6];
-            case Control | Shift | Alt: return it->second.syms[7];
+            case ModBit::None: return it->second.syms[0];
+            case ModBit::Shift: return it->second.syms[1];
+            case ModBit::Control: return it->second.syms[2];
+            case ModBit::Control_Shift: return it->second.syms[4];
+            case ModBit::Alt: return it->second.syms[3];
+            case ModBit::Shift_Alt: return it->second.syms[6];
+            case ModBit::Control_Alt: return it->second.syms[5];
+            case ModBit::Shift_Control_Alt: return it->second.syms[7];
+            default: break;
         }
 
         return 0;
@@ -57,33 +62,40 @@ struct KBData
     vector<_Code> getModCodes(_Mod mod)
     {
         vector<_Code> codes;
-        if (mod & Shift)
+        if (mod & (_Mod)ModBit::Shift)
             codes.push_back(42);
-        if (mod & Control)
+        if (mod & (_Mod)ModBit::Control)
             codes.push_back(29);
-        if (mod & Alt)
+        if (mod & (_Mod)ModBit::Alt)
             codes.push_back(56);
         return codes;
     }
 
-    bool lookup(_Sym* syms, size_t len, _Code* pCode, _Mod* pMod)
+    bool lookup(TermBuffer* buffer, _Code* pCode, _Mod* pMod)
     {
         auto* pLinks = &_root;
+        string sequence;
 
-        for (size_t i = 0; i < len; i++)
+        while (buffer->size() > 0)
         {
-            const auto& sym = syms[i];
+            auto sym = buffer->get();
             const auto& it = pLinks->find(sym);
+            sequence += sym;
             if (it == pLinks->end())
             {
-                return false; // unknown sequence
+                cout << "unknown sequence: ";
+                for (auto ch : sequence)
+                    cout << (int)ch << ' ';
+                cout << "\r\n";
+                break; // unknown sequence
             }
             const auto& data = it->second;
 
-            if (i + 1 == len)
+            if (!buffer->size())
             {
                 *pCode = data->code;
-                *pMod = data->mod;
+                *pMod = (_Mod)data->mod;
+                return true;
             }
             else
             {
@@ -91,7 +103,7 @@ struct KBData
             }
         }
 
-        return true;
+        return false;
     }
 
     void add_code_sym(_Code code, _Sym s0, _Sym s1, _Sym s2, _Sym s3, _Sym s4, _Sym s5, _Sym s6, _Sym s7)
@@ -108,7 +120,7 @@ struct KBData
         data.syms[7] = s7;
     }
 
-    void add_sequence(_Code code, _Mod mod, KeySymDataLinks& links, const vector<_Sym> seq, size_t seq_index)
+    void add_sequence(_Code code, ModBit mod, KeySymDataLinks& links, const vector<_Sym> seq, size_t seq_index)
     {
         if (seq_index >= seq.size()) return;
         const auto& sym = seq.at(seq_index);
@@ -143,17 +155,18 @@ struct KBData
     {
         _Code code;
         _Mod mod;
-        _Sym seq[] {ch};
-        if (lookup(seq, 1, &code, &mod))
+        TermBuffer seq;
+        seq.push(ch);
+        if (lookup(&seq, &code, &mod))
         {
-            add_sequence(code, Alt, _root, {27, ch}, 0);
+            add_sequence(code, ModBit::Alt, _root, {27, ch}, 0);
 
             // find the shift code
-            _Sym shifted = lookup(code, Shift);
+            _Sym shifted = lookup(code, ModBit::Shift);
 
             if (shifted)
             {
-                add_sequence(code, Shift | Alt, _root, {27, shifted}, 0);
+                add_sequence(code, ModBit::Shift_Alt, _root, {27, shifted}, 0);
             }
         }
     }
@@ -168,14 +181,14 @@ struct KBData
         vector<_Sym> seq6,
         vector<_Sym> seq7)
     {
-        add_sequence(code, 0, _root, seq0, 0);
-        add_sequence(code, Shift, _root, seq1, 0);
-        add_sequence(code, Control, _root, seq2, 0);
-        add_sequence(code, Alt, _root, seq3, 0);
-        add_sequence(code, Control | Shift, _root, seq4, 0);
-        add_sequence(code, Control | Alt, _root, seq5, 0);
-        add_sequence(code, Shift | Alt, _root, seq6, 0);
-        add_sequence(code, Control | Shift | Alt, _root, seq7, 0);
+        add_sequence(code, ModBit::None, _root, seq0, 0);
+        add_sequence(code, ModBit::Shift, _root, seq1, 0);
+        add_sequence(code, ModBit::Control, _root, seq2, 0);
+        add_sequence(code, ModBit::Alt, _root, seq3, 0);
+        add_sequence(code, ModBit::Control_Shift, _root, seq4, 0);
+        add_sequence(code, ModBit::Control_Alt, _root, seq5, 0);
+        add_sequence(code, ModBit::Shift_Alt, _root, seq6, 0);
+        add_sequence(code, ModBit::Shift_Control_Alt, _root, seq7, 0);
     }
     
     KBData()
@@ -312,6 +325,7 @@ struct KBData
         add_sequence(205, {27, 91, 67}, {27, 91, 49, 59, 50, 67}, {27, 91, 49, 59, 53, 67}, {27, 91, 49, 59, 51, 67}, {27, 91, 49, 59, 54, 67}, {/*no sym*/}, {27, 91, 49, 59, 52, 67}, {/*no sym*/}); // right
         add_sequence(  1, {27}, {/*27*/}, {/*27*/}, {/*194, 155*/}, {/*27*/}, {/*27*/}, {/*194, 155*/}, {/*194, 155*/}); // escape
 
+        add_sequence( 14, {127}, {}, {}, {}, {}, {}, {}, {});
         // and (of course) gnome terminal seqeunces are different
         // alts
         for (_Sym ch = 'a'; ch <= 'z'; ch++)
@@ -360,6 +374,12 @@ struct KBData
         // syms[83]  = make_tuple(46, 0xffff, 0);     // numpad .
         // syms[78]  = make_tuple(43, 0xffff, 0);     // numpad +
     }
+
+    unordered_map<_Code, tuple<uint, uint>> modifiers;
+private:
+    unordered_map<_Code, KeyCodeData> _db;
+    KeySymDataLinks _root;
+
 } kb_data;
 
 KeyboardDriverImpl::KeyboardDriverImpl()
@@ -367,26 +387,12 @@ KeyboardDriverImpl::KeyboardDriverImpl()
     _modifier_state = 0;
 }
 
-void KeyboardDriverImpl::enqueue(unsigned char* buf, uint len)
+void KeyboardDriverImpl::enqueue(TermBuffer* buffer)
 {
-    for (uint i = 0; i < len; i++)
-    {
-        if (buf[i] == 0)
-        {
-            len = i;
-            break;
-        }
-    }
-
     _Mod mod;
     _Code code;
-    
-    if (!kb_data.lookup(buf, len, &code, &mod))
+    if (!kb_data.lookup(buffer, &code, &mod))
     {
-        cout << "unknown sequence: ";
-        for (uint i = 0; i < len; i++)
-            cout << (int)(buf[i]) << ' ';
-        cout << "\r\n" << flush;
         return;
     }
 
@@ -417,14 +423,14 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
     // filter out some events
     switch (keycode)
     {
-        case 95|0x80: // FN+F3 (SLEEP) (double byte)
-        case 86|0x80: // FN+F4 (DISPLAY) (double byte)
+        case 42|0x80: // PRINT SCREEN (comes in a pair of double bytes, 42,55 -- each are pressed and unpressed)
         case 46|0x80: // FN+F6 (SPEAKER VOLUME DOWN) (double byte)
         case 48|0x80: // FN+F7 (SPEAKER VOLUME UP) (double byte)
+        case 55|0x80: // PRINT SCREEN (comes in a pair of double bytes, 42,55 -- each are pressed and unpressed)
         case 76|0x80: // FN+F9 (DISPLAY BACKLIGHT DECREASE) (double byte)
         case 84|0x80: // FN+F10 (DISPLAY BACKLIGHT INCREASE) (double byte)
-        case 42|0x80: // PRINT SCREEN (comes in a pair of double bytes, 42,55 -- each are pressed and unpressed)
-        case 55|0x80: // PRINT SCREEN (comes in a pair of double bytes, 42,55 -- each are pressed and unpressed)
+        case 86|0x80: // FN+F4 (DISPLAY) (double byte)
+        case 95|0x80: // FN+F3 (SLEEP) (double byte)
             return;
         case 219: // WINDOWS
         case 221: // MENU
@@ -432,7 +438,7 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
             break;
     }
 
-    if (_modifier_state & KBData::Shift)
+    if (_modifier_state & (_Mod)ModBit::Shift)
     {
         switch (keycode) // keycodes shift
         {
@@ -448,13 +454,13 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
     pkey->keycode = keycode;
 
     update_modifier(bPressed, pkey->keycode);
-    pkey->keysym = kb_data.lookup(pkey->keycode, _modifier_state);
+    pkey->keysym = kb_data.lookup(pkey->keycode, static_cast<ModBit>(_modifier_state));
 
-    pkey->bShift = (_modifier_state & KBData::Shift);
-    pkey->bCaps = (_modifier_state & KBData::Caps);
-    pkey->bControl = (_modifier_state & KBData::Control);
-    pkey->bAlt = (_modifier_state & KBData::Alt);
-    pkey->bNumLock = (_modifier_state & KBData::NumLock);
+    pkey->bShift =   (_modifier_state & (_Mod)ModBit::Shift);
+    pkey->bCaps =    (_modifier_state & (_Mod)ModBit::Caps);
+    pkey->bControl = (_modifier_state & (_Mod)ModBit::Control);
+    pkey->bAlt =     (_modifier_state & (_Mod)ModBit::Alt);
+    pkey->bNumLock = (_modifier_state & (_Mod)ModBit::NumLock);
 
     _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }

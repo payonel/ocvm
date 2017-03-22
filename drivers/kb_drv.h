@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io/kb_input.h"
+#include "term_buffer.h"
 
 #include <tuple>
 #include <unordered_map>
@@ -19,7 +20,7 @@ public:
     KeyboardDriverImpl();
 
     void enqueue(bool bPressed, _Code keycode);
-    void enqueue(unsigned char* keysequence, uint len);
+    void enqueue(TermBuffer* buffer);
 
 protected:
     void update_modifier(bool bPressed, _Code keycode);

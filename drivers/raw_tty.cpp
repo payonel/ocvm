@@ -31,29 +31,6 @@ static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
     exit(0);
 }
 
-class TtyReader;
-class TermInputStreamImpl : public TermInputStream
-{
-public:
-    TermInputStreamImpl(TtyReader* reader);
-    unsigned char get() override;
-    TermInputStreamImpl* reset();
-    void clear();
-    bool hasMouseCode() override
-    {
-        if (get() == Ansi::ESC && get() == '[' && get() == 'M')
-        {
-            return true;
-        }
-        reset();
-        return false;
-    }
-private:
-    vector<unsigned char> _buffer;
-    TtyReader* _reader;
-    size_t _index;
-};
-
 class TtyReader : public Worker
 {
 public:
@@ -108,17 +85,18 @@ public:
         return select(1, &fds, nullptr, nullptr, &tv);
     }
 
-    static inline bool get(unsigned char* pOut)
+    static inline bool get(char* pOut)
     {
-        return has_input() && read(0, pOut, sizeof(unsigned char)) > 0;
+        return has_input() && read(0, pOut, sizeof(char)) > 0;
     }
 
-    unsigned char get()
+    void flush_stdin()
     {
-        unsigned char c;
-        if (get(&c))
-            return c;
-        return static_cast<unsigned char>(0);
+        char byte;
+        while (get(&byte))
+        {
+            _buffer.push(byte);
+        }
     }
 
     bool hasMasterTty() const
@@ -185,15 +163,14 @@ private:
 
     bool runOnce() override
     {
-        if (has_input())
+        flush_stdin();
+        auto old_size = _buffer.size();
+        if (old_size > 0)
         {
-            TermInputStreamImpl stream(this);
-            unsigned char c = stream.get();
-            if (c)
-            {
-                for (auto driver : _drivers)
-                    driver->enqueue(stream.reset());
-            }
+            for (auto driver : _drivers)
+                driver->enqueue(&_buffer);
+            if (old_size == _buffer.size()) // nothing could read the buffer
+                _buffer.get(); // pop one off
         }
 
         return true;
@@ -220,49 +197,20 @@ private:
     bool _terminal_out;
     termios* _original = nullptr;
     set<TermInputDriver*> _drivers;
+    TermBuffer _buffer;
 };
-
-TermInputStreamImpl::TermInputStreamImpl(TtyReader* reader) :
-    _reader(reader),
-    _index(0)
+void MouseTerminalDriver::enqueue(TermBuffer* buffer)
 {
-}
-
-unsigned char TermInputStreamImpl::get()
-{
-    while (_index >= _buffer.size())
-    {
-        unsigned char next = _reader->get();
-        if (next == 0)
-            return next;
-
-        _buffer.push_back(next);
-    }
-
-    unsigned next = _buffer.at(_index++);
-    return next;
-}
-
-TermInputStreamImpl* TermInputStreamImpl::reset()
-{
-    _index = 0;
-    return this;
-}
-
-void TermInputStreamImpl::clear()
-{
-    _buffer.clear();
-}
-
-void MouseTerminalDriver::enqueue(TermInputStream* stream)
-{
-    if (!stream->hasMouseCode())
+    if (!buffer->hasMouseCode())
     {
         return; // ignore
     }
+    // eat the mouse code header
+    buffer->get();
+    buffer->get();
+    buffer->get();
 
-    unsigned char buf[] {stream->get(), stream->get(), stream->get()};
-    MouseDriverImpl::enqueue(buf);
+    MouseDriverImpl::enqueue(buffer->get(), buffer->get(), buffer->get());
 }
 
 bool KeyboardLocalRawTtyDriver::isAvailable()
@@ -275,29 +223,29 @@ bool MouseTerminalDriver::isAvailable()
     return TtyReader::engine()->hasTerminalOut();
 }
 
-void KeyboardLocalRawTtyDriver::enqueue(TermInputStream* stream)
+void KeyboardLocalRawTtyDriver::enqueue(TermBuffer* buffer)
 {
-    if (stream->hasMouseCode())
+    if (buffer->hasMouseCode())
         return;
 
     bool released;
-    uint keycode = stream->get();
+    uint keycode = buffer->get();
 
     switch (keycode)
     {
         case 0xE0: // double byte
-            keycode = stream->get();
+            keycode = buffer->get();
             released = keycode & 0x80;
             keycode |= 0x80; // add press indicator
             break;
         case 0xE1: // triple byte
-            keycode = stream->get(); // 29(released) or 29+0x80[157](pressed)
+            keycode = buffer->get(); // 29(released) or 29+0x80[157](pressed)
             released = keycode & 0x80;
             // NUMLK is a double byte 0xE0, 69 (| x80)
             // PAUSE is a triple byte 0xE1, 29 (| x80), 69 (| 0x80)
             // because triple byte press state is encoded in the 2nd byte
             // the third byte should retain 0x80
-            keycode = stream->get() | 0x80;
+            keycode = buffer->get() | 0x80;
             break;
         default:
             released = keycode & 0x80;
@@ -308,30 +256,12 @@ void KeyboardLocalRawTtyDriver::enqueue(TermInputStream* stream)
     KeyboardDriverImpl::enqueue(!released, keycode);
 }
 
-void KeyboardPtyDriver::enqueue(TermInputStream* stream)
+void KeyboardPtyDriver::enqueue(TermBuffer* buffer)
 {
-    if (stream->hasMouseCode())
+    if (buffer->hasMouseCode())
         return;
 
-    unsigned char buf[]
-    {
-        stream->get(),
-        stream->get(),
-        stream->get(),
-        stream->get(),
-        stream->get(),
-        stream->get(),
-        stream->get()
-    };
-
-    if (buf[0] == 127)
-    {
-        buf[0] = 8;
-    }
-
-    if (!buf[0]) return;
-
-    KeyboardDriverImpl::enqueue(buf, sizeof(buf));
+    KeyboardDriverImpl::enqueue(buffer);
 }
 
 bool KeyboardPtyDriver::isAvailable()
