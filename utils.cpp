@@ -10,6 +10,46 @@ using std::ofstream;
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
+static string handle_exception(std::exception& exp)
+{
+    return exp.what();
+}
+
+static string handle_exception(std::exception_ptr&& p)
+{
+    try
+    {
+        if (p)
+            std::rethrow_exception(p);
+    }
+    catch (std::exception& exp)
+    {
+        return handle_exception(exp);
+    }
+
+    return "unknown exception";
+}
+
+bool utils::run_safely(function<void()> func, function<void(const string&)> onError)
+{
+    string exception_message;
+    try
+    {
+        func();
+        return true;
+    }
+    catch (...)
+    {
+        exception_message = handle_exception(std::current_exception());
+    }
+
+    lout << exception_message << std::endl;
+    if (onError)
+        onError(exception_message);
+
+    return false;
+}
+
 bool utils::read(const string& path, string* pOutData)
 {
     ifstream file;
@@ -34,22 +74,10 @@ bool utils::copy(const string& src, const string& dst)
         return false;
     }
 
-    try
+    return run_safely([&src, &dst]()
     {
         fs::copy(src, dst, fs::copy_options::recursive);
-    }
-    catch (std::exception& se)
-    {
-        lout << se.what() << std::endl;
-        return false;
-    }
-    catch (...)
-    {
-        std::exception_ptr p = std::current_exception();
-        return false;
-    }
-
-    return true;
+    });
 }
 
 bool utils::write(const string& data, const string& dst)
@@ -66,12 +94,13 @@ bool utils::write(const string& data, const string& dst)
 
 void utils::mkdir(const string& path)
 {
-    fs::create_directories(path);
+    run_safely([&path](){fs::create_directories(path);});
 }
 
 bool utils::exists(const string& path)
 {
-    return fs::exists(path);
+    bool result = false;
+    return run_safely([&result, &path](){result = fs::exists(path);}) && result;
 }
 
 vector<string> utils::list(const string& path)
@@ -80,46 +109,30 @@ vector<string> utils::list(const string& path)
     if (!utils::exists(path))
         return result;
 
-    try
+    run_safely([&path, &result]()
     {
         for (const auto& ele : fs::directory_iterator(path))
         {
             result.push_back(ele.path());
         }
-    }
-    catch (std::exception& se)
-    {
-        lout << se.what() << std::endl;
-    }
-    catch (...)
-    {
-        std::exception_ptr p = std::current_exception();
-    }
+    });
 
     return result;
 }
 
 bool utils::isDirectory(const string& path)
 {
-    try
+    bool result = false;
+    return run_safely([&result, &path]()
     {
-        return utils::exists(path) && fs::is_directory(path);
-    }
-    catch (std::exception& se)
-    {
-        lout << se.what() << std::endl;
-    }
-    catch (...)
-    {
-        std::exception_ptr p = std::current_exception();
-    }
-
-    return false;
+        result = utils::exists(path) && fs::is_directory(path);
+    }) && result;
 }
 
 size_t utils::size(const string& path, bool recursive)
 {
-    try
+    size_t total;
+    run_safely([&total, &path, &recursive]()
     {
         if (utils::isDirectory(path))
         {
@@ -131,40 +144,39 @@ size_t utils::size(const string& path, bool recursive)
                     total += size(item, true);
                 }
             }
-            return total;
         }
         else
-            return fs::file_size(path);
-    }
-    catch (std::exception& se)
-    {
-        lout << se.what() << std::endl;
-    }
-    catch (...)
-    {
-        std::exception_ptr p = std::current_exception();
-    }
+        {
+            total = fs::file_size(path);
+        }
+    });
 
-    return 0;
+    return total;
 }
 
 uint64_t utils::lastModified(const string& filepath)
 {
-    try
+    uint64_t result = 0;
+    run_safely([&result, &filepath]()
     {
         auto ftime = fs::last_write_time(filepath);
         std::time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
-        return static_cast<uint64_t>(cftime);
-    }
-    catch (std::exception& se)
-    {
-        lout << se.what() << std::endl;
-    }
-    catch (...)
-    {
-        std::exception_ptr p = std::current_exception();
-    }
+        result = static_cast<uint64_t>(cftime);
+    });
 
-    return 0;
+    return result;
 }
 
+bool utils::remove(const string& path)
+{
+    bool success = false;
+    run_safely([&success, &path]()
+    {
+        std::error_code ec;
+        if (utils::isDirectory(path))
+            success = fs::remove_all(path, ec);
+        else
+            success = fs::remove(path, ec);
+    });
+    return success;
+}

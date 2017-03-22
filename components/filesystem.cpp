@@ -6,7 +6,8 @@
 #include <limits>
 using namespace std;
 
-Filesystem::Filesystem()
+Filesystem::Filesystem() :
+    _isReadOnly(false)
 {
     add("open", &Filesystem::open);
     add("read", &Filesystem::read);
@@ -22,6 +23,7 @@ Filesystem::Filesystem()
     add("lastModified" ,&Filesystem::lastModified);
     add("spaceUsed" ,&Filesystem::spaceUsed);
     add("spaceTotal" ,&Filesystem::spaceTotal);
+    add("remove" ,&Filesystem::remove);
 }
 
 bool Filesystem::onInitialize(Value& config)
@@ -113,6 +115,11 @@ string Filesystem::path() const
 string Filesystem::src() const
 {
     return _src;
+}
+
+bool Filesystem::isReadOnly() const
+{
+    return _isReadOnly;
 }
 
 int Filesystem::open(lua_State* lua)
@@ -262,7 +269,7 @@ int Filesystem::exists(lua_State* lua)
 
 int Filesystem::isReadOnly(lua_State* lua)
 {
-    return ValuePack::ret(lua, false);
+    return ValuePack::ret(lua, isReadOnly());
 }
 
 int Filesystem::seek(lua_State* lua)
@@ -331,4 +338,15 @@ int Filesystem::spaceUsed(lua_State* lua)
 int Filesystem::spaceTotal(lua_State* lua)
 {
     return ValuePack::ret(lua, numeric_limits<double>::max());
+}
+
+int Filesystem::remove(lua_State* lua)
+{
+    if (isReadOnly())
+    {
+        luaL_error(lua, "filesystem is readonly");
+        return 0;
+    }
+    string filepath = Value::check(lua, 1, "string").toString();
+    return ValuePack::ret(lua, utils::remove(path() + clean(filepath, true, false)));
 }

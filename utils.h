@@ -2,8 +2,10 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 using std::string;
 using std::vector;
+using std::function;
 
 namespace utils
 {
@@ -19,5 +21,9 @@ namespace utils
 
     size_t size(const string& path, bool recursive = false);
     uint64_t lastModified(const string& path);
+
+    bool remove(const string& path);
+
+    bool run_safely(function<void()> func, function<void(const string&)> onError = nullptr);
 };
 

@@ -14,6 +14,7 @@ public:
 
     string path() const;
     string src() const;
+    bool isReadOnly() const;
 
     int open(lua_State* lua);
     int read(lua_State* lua);
@@ -29,6 +30,7 @@ public:
     int lastModified(lua_State* lua);
     int spaceUsed(lua_State* lua);
     int spaceTotal(lua_State* lua);
+    int remove(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     static string clean(string arg, bool bAbs, bool removeEnd);
@@ -36,6 +38,7 @@ protected:
     void init(const string& loot);
     fstream* get_handle(lua_State* lua, int* pIndex = nullptr);
 private:
+    const bool _isReadOnly;
     map<int, fstream*> _handles;
     string _src;
 };

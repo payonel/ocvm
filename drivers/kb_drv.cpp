@@ -320,6 +320,7 @@ struct KBData
         }
         add_alt_sequence('-');
         add_alt_sequence('=');
+        add_alt_sequence('[');
         add_alt_sequence(']');
         add_alt_sequence('\\');
         add_alt_sequence(';');
@@ -454,10 +455,6 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
     pkey->bControl = (_modifier_state & KBData::Control);
     pkey->bAlt = (_modifier_state & KBData::Alt);
     pkey->bNumLock = (_modifier_state & KBData::NumLock);
-
-    // weird zero keycode for backslash
-    if (keycode == 43)
-        pkey->keycode = 0;
 
     _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }

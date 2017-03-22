@@ -1,5 +1,6 @@
 #include "luaproxy.h"
 #include "log.h"
+#include "utils.h"
 #include <iostream>
 
 LuaProxy::LuaProxy(const string& name) :
@@ -21,26 +22,6 @@ void LuaProxy::name(const string& v)
     _name = v;
 }
 
-static string handle_exception(std::exception& exp)
-{
-    return exp.what();
-}
-
-static string handle_exception(std::exception_ptr&& p)
-{
-    try
-    {
-        if (p)
-            std::rethrow_exception(p);
-    }
-    catch (std::exception& exp)
-    {
-        return handle_exception(exp);
-    }
-
-    return "unknown exception";
-}
-
 int lua_proxy_static_caller(lua_State* lua)
 {
     lua_pushstring(lua, "instance");//+1
@@ -60,18 +41,23 @@ int lua_proxy_static_caller(lua_State* lua)
     lua_pop(lua, 1);//-1
 
     LuaProxy* p = reinterpret_cast<LuaProxy*>(_this);
-    string exception_message;
-    try
+    
+    int stacked = 0;
+    if (!utils::run_safely(
+            [&stacked, &p, &methodName, &lua]()
+            {
+                stacked = p->invoke(methodName, lua);
+            },
+            [&lua](const string& exception_message)
+            {
+                luaL_error(lua, exception_message.c_str());
+            }
+        ))
     {
-        return p->invoke(methodName, lua);
-    }
-    catch (...)
-    {
-        exception_message = handle_exception(std::current_exception());
+        stacked = 0;
     }
 
-    luaL_error(lua, exception_message.c_str());
-    return 0;
+    return stacked;
 }
 
 vector<LuaMethod> LuaProxy::methods() const
