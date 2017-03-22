@@ -210,7 +210,11 @@ void MouseTerminalDriver::enqueue(TermBuffer* buffer)
     buffer->get();
     buffer->get();
 
-    MouseDriverImpl::enqueue(buffer->get(), buffer->get(), buffer->get());
+    char b0 = buffer->get();
+    char b1 = buffer->get();
+    char b2 = buffer->get();
+
+    MouseDriverImpl::enqueue(b0, b1, b2);
 }
 
 bool KeyboardLocalRawTtyDriver::isAvailable()
