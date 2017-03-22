@@ -197,6 +197,15 @@ string utils::proc_root()
         }
         buf[len] = 0;
         path = buf;
+
+        // remove proc file name
+        size_t last_slash = path.find_last_of("/");
+        if (last_slash == string::npos)
+        {
+            cerr << "proc path had no dir slash, unexpected\n";
+            ::exit(1);
+        }
+        path = path.substr(0, last_slash + 1);
     }
     return path;
 }

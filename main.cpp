@@ -10,7 +10,7 @@ using std::cerr;
 
 int main(int argc, char** argv)
 {
-    string client_env_path = argc > 1 ? argv[1] : "tmp";
+    string client_env_path = (argc > 1 && string(argv[1]).size()) ? argv[1] : "tmp";
     string framer_type = argc > 2 ? argv[2] : "ansi";
     std::unique_ptr<Framer> framer(Factory::create_framer(framer_type));
 
