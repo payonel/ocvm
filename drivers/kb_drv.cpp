@@ -438,17 +438,6 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
             break;
     }
 
-    if (_modifier_state & (_Mod)ModBit::Shift)
-    {
-        switch (keycode) // keycodes shift
-        {
-            case  3: keycode = 145; break; // 2
-            case  7: keycode = 144; break; // 6
-            case 12: keycode = 147; break; // -
-            case 39: keycode = 146; break; // ;
-        }
-    }
-
     KeyEvent* pkey = new KeyEvent;
     pkey->bPressed = bPressed;
     pkey->keycode = keycode;
@@ -461,6 +450,18 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
     pkey->bControl = (_modifier_state & (_Mod)ModBit::Control);
     pkey->bAlt =     (_modifier_state & (_Mod)ModBit::Alt);
     pkey->bNumLock = (_modifier_state & (_Mod)ModBit::NumLock);
+
+    // unusual in-game shifted keycodes
+    if (_modifier_state & (_Mod)ModBit::Shift)
+    {
+        switch (keycode) // keycodes shift
+        {
+            case  3: pkey->keycode = 145; break; // 2
+            case  7: pkey->keycode = 144; break; // 6
+            case 12: pkey->keycode = 147; break; // -
+            case 39: pkey->keycode = 146; break; // ;
+        }
+    }
 
     _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
 }
