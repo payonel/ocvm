@@ -90,61 +90,61 @@ struct ValuePack : public vector<Value>
     inline static int ret(lua_State* lua, const Ts&... args)
     {
         ::lua_settop(lua, 0);
-        return push(lua, args...);
+        return push_ret(lua, args...);
     }
-
-    inline static int push(lua_State* lua, double arg)
+private:
+    inline static int push_ret(lua_State* lua, double arg)
     {
         lua_pushnumber(lua, arg);
         return 1;
     }
 
-    inline static int push(lua_State* lua, size_t arg)
+    inline static int push_ret(lua_State* lua, size_t arg)
     {
         lua_pushnumber(lua, arg);
         return 1;
     }
 
-    inline static int push(lua_State* lua, bool arg)
+    inline static int push_ret(lua_State* lua, bool arg)
     {
         lua_pushboolean(lua, arg);
         return 1;
     }
 
-    inline static int push(lua_State* lua, int arg)
+    inline static int push_ret(lua_State* lua, int arg)
     {
         lua_pushnumber(lua, arg);
         return 1;
     }
 
-    inline static int push(lua_State* lua, const string& arg)
+    inline static int push_ret(lua_State* lua, const string& arg)
     {
         lua_pushstring(lua, arg.c_str());
         return 1;
     }
 
-    inline static int push(lua_State* lua, const char* arg)
+    inline static int push_ret(lua_State* lua, const char* arg)
     {
         lua_pushstring(lua, arg);
         return 1;
     }
 
-    inline static int push(lua_State* lua, const void* arg)
+    inline static int push_ret(lua_State* lua, const void* arg)
     {
         lua_pushlightuserdata(lua, const_cast<void*>(arg));
         return 1;
     }
 
-    inline static int push(lua_State* lua, const Value& v)
+    inline static int push_ret(lua_State* lua, const Value& v)
     {
         v.push(lua);
         return 1;
     }
 
     template <typename T, typename ...Ts>
-    inline static int push(lua_State* lua, const T& arg, const Ts&... args)
+    inline static int push_ret(lua_State* lua, const T& arg, const Ts&... args)
     {
-        return push(lua, arg) + push(lua, args...);
+        return push_ret(lua, arg) + push_ret(lua, args...);
     }
 };
 ostream& operator << (ostream& os, const ValuePack& pack);

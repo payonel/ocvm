@@ -22,7 +22,7 @@ bool Framer::add(Frame* pframe, size_t index)
         }
     }
 
-    if (index >= 0 && index < _frames.size()) // reorder
+    if (index < _frames.size()) // reorder
     {
         _frames.insert(_frames.begin() + index, pframe);
     }
