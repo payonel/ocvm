@@ -9,7 +9,11 @@ using namespace std;
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+
+#ifdef __linux__
 #include <linux/kd.h>
+#endif
+
 #include <signal.h>
 #include <string.h> // memset
 
@@ -21,8 +25,10 @@ static struct sigaction sig_action_data;
 
 static inline void exit_function()
 {
+#ifdef __linux__
     // leave raw mode
     ioctl(0, KDSKBMODE, _original_kb_mode ? _original_kb_mode : K_UNICODE);
+#endif
 }
 
 static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
@@ -115,6 +121,7 @@ private:
         _master_tty = false;
         _terminal_out = false;
 
+#ifdef __linux__
         int ec = 0;
         ec = ioctl(0, KDGKBMODE, &_original_kb_mode);
         if (ec == 0) // success
@@ -122,6 +129,7 @@ private:
             ec = ioctl(0, KDSKBMODE, _original_kb_mode);
         }
         _master_tty = ec == 0 && errno == 0;
+#endif
 
         _terminal_out = (isatty(fileno(stdout)));
     }
@@ -138,6 +146,7 @@ private:
         ::cfmakeraw(&raw);
         ::tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 
+#ifdef __linux__
         if (_master_tty)
         {
             int ec = ioctl(0, KDGKBMODE, &_original_kb_mode);
@@ -153,6 +162,7 @@ private:
 
             atexit(&exit_function);
         }
+#endif
 
         //enable mouse tracking
         if (_terminal_out)
@@ -178,9 +188,10 @@ private:
 
     void onStop() override
     {
+#ifdef __linux__
         // leave raw mode
         ioctl(0, KDSKBMODE, _original_kb_mode);
-
+#endif
         // disable mouse tracking
         if (_terminal_out)
             cout << Ansi::mouse_prd_off;

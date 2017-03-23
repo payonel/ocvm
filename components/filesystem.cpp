@@ -34,7 +34,7 @@ bool Filesystem::onInitialize(Value& config)
     if (source_uri.type() == "string") // loot disk
     {
         _isReadOnly = true;
-        _src = source_uri.toString();
+        _src = utils::proc_root() + source_uri.toString();
         _tmpfs = false;
         if (!utils::exists(_src))
         {
@@ -116,9 +116,9 @@ string Filesystem::relative(const string& requested, const string& full)
 string Filesystem::path() const
 {
     if (_src.empty()) // use local path
-        return clean(client()->envPath(), false, true) + clean(address(), true, true);
+        return clean(client()->envPath(), true, true) + clean(address(), true, true);
     else // else loot path
-        return clean(_src, false, true);
+        return clean(_src, true, true);
 }
 
 string Filesystem::src() const
@@ -183,6 +183,7 @@ int Filesystem::open(lua_State* lua)
 
     fstream* pf = new fstream;
     string fullpath = path() + clean(filepath, true, false);
+
     pf->open(fullpath, mode);
 
     if (!pf->is_open())

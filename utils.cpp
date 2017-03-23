@@ -3,8 +3,9 @@
 #include "log.h"
 #include <iostream>
 #include <fstream>
-using std::ifstream;
-using std::ofstream;
+using namespace std;
+
+#include <unistd.h>
 
 #include <sys/stat.h>
 #include <experimental/filesystem>
@@ -179,4 +180,32 @@ bool utils::remove(const string& path)
             success = fs::remove(path, ec);
     });
     return success;
+}
+
+string utils::proc_root()
+{
+    static string path;
+    if (path.empty())
+    {
+        constexpr ssize_t size = 1024;
+        char buf[size];
+        ssize_t len = ::readlink("/proc/self/exe", buf, size);
+        if (len >= size) // yikes, abort
+        {
+            cerr << "proc path too long\n";
+            ::exit(1);
+        }
+        buf[len] = 0;
+        path = buf;
+
+        // remove proc file name
+        size_t last_slash = path.find_last_of("/");
+        if (last_slash == string::npos)
+        {
+            cerr << "proc path had no dir slash, unexpected\n";
+            ::exit(1);
+        }
+        path = path.substr(0, last_slash + 1);
+    }
+    return path;
 }

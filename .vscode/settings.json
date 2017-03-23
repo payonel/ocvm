@@ -26,7 +26,8 @@
         "chrono": "cpp",
         "iostream": "cpp",
         "mutex": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "filesystem": "cpp"
     },
     "files.exclude": {
         "**/.git": true,
