@@ -18,6 +18,8 @@ public:
     ~LogFrame()
     {
     }
+
+    void onResize(int, int) override {}
 } single_log_frame;
 
 Frame* Logger::getFrame()

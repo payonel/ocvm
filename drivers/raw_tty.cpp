@@ -82,18 +82,18 @@ public:
         return &one;
     }
 
-    static inline bool has_input()
+    static inline bool get(char* pOut)
     {
         struct timeval tv { 0L, 0L };
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(0, &fds);
-        return select(1, &fds, nullptr, nullptr, &tv);
-    }
-
-    static inline bool get(char* pOut)
-    {
-        return has_input() && read(0, pOut, sizeof(char)) > 0;
+        if (select(1, &fds, nullptr, nullptr, &tv))
+        {
+            return read(0, pOut, sizeof(char)) > 0;
+        }
+        
+        return false;
     }
 
     void flush_stdin()
@@ -164,10 +164,6 @@ private:
         }
 #endif
 
-        //enable mouse tracking
-        if (_terminal_out)
-            cout << Ansi::mouse_prd_on;
-
         cout << flush;
     }
 
@@ -180,7 +176,17 @@ private:
             for (auto driver : _drivers)
                 driver->enqueue(&_buffer);
             if (old_size == _buffer.size()) // nothing could read the buffer
+            {
+                if (_buffer.hasMouseCode())
+                {
+                    _buffer.get();
+                    _buffer.get();
+                    _buffer.get();
+                    _buffer.get();
+                    _buffer.get();
+                }
                 _buffer.get(); // pop one off
+            }
         }
 
         return true;
@@ -192,10 +198,6 @@ private:
         // leave raw mode
         ioctl(0, KDSKBMODE, _original_kb_mode);
 #endif
-        // disable mouse tracking
-        if (_terminal_out)
-            cout << Ansi::mouse_prd_off;
-
         if (_original)
         {
             ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
@@ -298,4 +300,23 @@ bool TermInputDriver::onStart()
 void TermInputDriver::onStop()
 {
     TtyReader::engine()->remove(this);
+}
+
+bool MouseTerminalDriver::onStart()
+{
+    if (TermInputDriver::onStart())
+    {
+        if (TtyReader::engine()->hasTerminalOut())
+        {
+            cout << Ansi::mouse_prd_on << flush;
+        }
+        return true;
+    }
+    return false;
+}
+
+void MouseTerminalDriver::onStop()
+{
+    TermInputDriver::onStop();
+    cout << Ansi::mouse_prd_off << flush;
 }

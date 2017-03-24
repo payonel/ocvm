@@ -49,9 +49,9 @@ bool Frame::setResolution(int width, int height, bool bQuiet)
 {
     if (width > 255 || height > 255)
         return false;
+    if (width == _width && height == _height)
+        return false;
 
-    _width = width;
-    _height = height;
     resizeBuffer(width, height);
 
     if (_framer && !bQuiet)
@@ -110,26 +110,20 @@ bool Frame::scrolling() const
 
 const Cell* Frame::get(int x, int y) const
 {
-    auto dim = getResolution();
-    int width = std::get<0>(dim);
-    int height = std::get<1>(dim);
     // positions are 1-based
-    if (x < 1 || x > width || y < 1 || y > height || _cells == nullptr)
+    if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
         return nullptr;
 
-    return &_cells[(y-1)*width + (x-1)];
+    return &_cells[(y-1)*_width + (x-1)];
 }
 
 void Frame::set(int x, int y, const Cell& cell)
 {
-    auto dim = getResolution();
-    int width = std::get<0>(dim);
-    int height = std::get<1>(dim);
     // positions are 1-based
-    if (x < 1 || x > width || y < 1 || y > height || _cells == nullptr)
+    if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
         return;
 
-    _cells[(y-1)*width + (x-1)] = cell;
+    _cells[(y-1)*_width + (x-1)] = cell;
     if (_framer)
         _framer->invalidate(this, x, y);
 }
@@ -187,24 +181,44 @@ vector<const Cell*> Frame::scan(int x, int y, int width) const
 
 void Frame::resizeBuffer(int width, int height)
 {
-    bool bad_dim = width <= 0 || height <= 0;
-    if (bad_dim || _cells)
+    Cell* ptr = nullptr;
+    if (width > 0 && height > 0)
+    {
+        size_t size = width * height;
+        ptr = new Cell[size];
+        Cell* it = ptr;
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                const auto& prev_cell = get(x, y);
+                if (prev_cell)
+                {
+                    *it = *prev_cell;
+                }
+                else
+                {
+                    it->value = {};
+                    it->fg = {};
+                    it->bg = {};
+                }
+            }
+            it++;
+        }
+    }
+    else
+    {
+        _width = 0;
+        _height = 0;
+    }
+
+    if (_cells)
     {
         delete [] _cells;
-        _cells = nullptr;
     }
-    if (bad_dim)
-        return;
 
-    size_t size = width * height;
-    Cell* ptr = new Cell[size];
-    for (size_t i = 0; i < size; i++)
-    {
-        Cell& c = ptr[i];
-        c.value = {};
-        c.fg = {};
-        c.bg = {};
-    }
+    _width = width;
+    _height = height;
     _cells = ptr;
 }
 

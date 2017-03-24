@@ -20,6 +20,9 @@ class MouseTerminalDriver : public TermInputDriver, public MouseDriverImpl
 public:
     void enqueue(TermBuffer* buffer) override;
     static bool isAvailable();
+protected:
+    bool onStart() override;
+    void onStop() override;
 };
 
 class KeyboardLocalRawTtyDriver : public TermInputDriver, public KeyboardDriverImpl

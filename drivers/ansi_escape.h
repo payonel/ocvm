@@ -14,6 +14,7 @@ struct AnsiFrameState
 class AnsiEscapeTerm : public Framer
 {
 public:
+    AnsiEscapeTerm();
     ~AnsiEscapeTerm();
     bool update() override;
     void onResolution(Frame* pWhichFrame) override;
@@ -25,4 +26,10 @@ protected:
     bool onAdd(Frame* pf) override;
 private:
     map<Frame*, AnsiFrameState> _states;
+    vector<string> _buffer;
+
+    int _x = 0;
+    int _y = 0;
+    int _fg_rgb = 0;
+    int _bg_rgb = 0;
 };

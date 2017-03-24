@@ -21,7 +21,6 @@ unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
             auto result = Factory::create_kb(name);
             if (result)
             {
-                cout << name << " kb created\r\n";
                 return result;
             }
         }

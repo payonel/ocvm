@@ -63,6 +63,7 @@ public:
     void set(int x, int y, const string& text);
     void set(int x, int y, const vector<const Cell*>& scanned);
 
+    virtual void onResize(int width, int height) = 0;
     bool setResolution(int width, int height, bool bQuiet = false);
     tuple<int, int> getResolution() const;
     bool scrolling() const;
