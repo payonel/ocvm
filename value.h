@@ -90,7 +90,7 @@ struct ValuePack : public vector<Value>
     inline static int ret(lua_State* lua, const Ts&... args)
     {
         ::lua_settop(lua, 0);
-        return push_ret(lua, args...);
+        return ValuePack::push_ret(lua, args...);
     }
 private:
     inline static int push_ret(lua_State* lua, double arg)
@@ -144,7 +144,7 @@ private:
     template <typename T, typename ...Ts>
     inline static int push_ret(lua_State* lua, const T& arg, const Ts&... args)
     {
-        return push_ret(lua, arg) + push_ret(lua, args...);
+        return ValuePack::push_ret(lua, arg) + push_ret(lua, args...);
     }
 };
 ostream& operator << (ostream& os, const ValuePack& pack);
