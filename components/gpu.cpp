@@ -7,6 +7,7 @@
 
 Gpu::Gpu()
 {
+    add("getResolution", &Gpu::getResolution);
     add("setResolution", &Gpu::setResolution);
     add("bind", &Gpu::bind);
     add("set", &Gpu::set);
@@ -21,6 +22,7 @@ Gpu::Gpu()
     add("getDepth", &Gpu::getDepth);
     add("getViewport", &Gpu::getViewport);
     add("getScreen", &Gpu::getScreen);
+    add("maxDepth", &Gpu::maxDepth);
 }
 
 Gpu::~Gpu()
@@ -60,6 +62,18 @@ int Gpu::bind(lua_State* lua)
     _screen = screen;
 
     return 0;
+}
+
+int Gpu::maxDepth(lua_State* lua)
+{
+    return ValuePack::ret(lua, 8);
+}
+
+int Gpu::getResolution(lua_State* lua)
+{
+    check(lua);
+    auto dim = _screen->getResolution();
+    return ValuePack::ret(lua, std::get<0>(dim), std::get<1>(dim));
 }
 
 int Gpu::setResolution(lua_State* lua)

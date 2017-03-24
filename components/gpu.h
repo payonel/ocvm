@@ -12,6 +12,7 @@ public:
     Gpu();
     ~Gpu();
 
+    int getResolution(lua_State* lua);
     int setResolution(lua_State* lua);
     int bind(lua_State* lua);
     int set(lua_State* lua);
@@ -26,6 +27,7 @@ public:
     int getDepth(lua_State* lua);
     int getViewport(lua_State* lua);
     int getScreen(lua_State* lua);
+    int maxDepth(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     void check(lua_State* lua) const; // throws if no screen

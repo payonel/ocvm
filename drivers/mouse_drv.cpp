@@ -1,10 +1,16 @@
 #include "mouse_drv.h"
+#include "term_buffer.h"
 
 #include <iostream>
 using std::cout;
 
-void MouseDriverImpl::enqueue(char b0, char b1, char b2)
+void MouseDriverImpl::enqueue(TermBuffer* buffer)
 {
+    if (buffer->size() < 3) return; // ignore
+    char b0 = buffer->get();
+    char b1 = buffer->get();
+    char b2 = buffer->get();
+
     EPressType press;
     int btn = b0 - 0x20;
     if (btn == 0x3)
@@ -54,7 +60,13 @@ void MouseDriverImpl::enqueue(char b0, char b1, char b2)
     if (press != EPressType::Drag)
         _pressed = btn;
 
-    pm->x = b1 - 32;
-    pm->y = b2 - 32;
+    pm->x = (unsigned char)b1 - 32;
+    pm->y = (unsigned char)b2 - 32;
+
+    if (pm->x < 0)
+        pm->x += 256;
+    if (pm->y < 0)
+        pm->y += 256;
+
     _source->push(std::move(unique_ptr<MouseEvent>(pm)));
 }

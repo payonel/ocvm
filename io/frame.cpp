@@ -47,7 +47,7 @@ Frame::~Frame(){}
 
 bool Frame::setResolution(int width, int height, bool bQuiet)
 {
-    if (width > 255 || height > 255)
+    if (width < 0 || height < 0)
         return false;
     if (width == _width && height == _height)
         return false;

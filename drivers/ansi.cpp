@@ -7,9 +7,13 @@ string Ansi::set_color(const int& fg_rgb, const int& bg_rgb, int depth)
     stringstream ss;
     if (depth == 8)
     {
+        // 33;1m
+        // 47m
     }
     else if (depth == 256)
     {
+        // 38;5;11m
+        // 48;5;7m
     }
     else // 24 bit rgb
     {
