@@ -66,7 +66,7 @@ int Gpu::bind(lua_State* lua)
 
 int Gpu::maxDepth(lua_State* lua)
 {
-    return ValuePack::ret(lua, 8);
+    return ValuePack::ret(lua, static_cast<int>(_screen->framer()->getDepth()));
 }
 
 int Gpu::getResolution(lua_State* lua)

@@ -82,6 +82,16 @@ void Framer::close()
     _frames.clear();
 }
 
+void Framer::setDepth(EDepthType depth)
+{
+    _depth = depth;
+}
+
+EDepthType Framer::getDepth() const
+{
+    return _depth;
+}
+
 tuple<int, int> Frame::getResolution() const
 {
     return std::make_tuple(_width, _height);

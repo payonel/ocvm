@@ -9,6 +9,8 @@ using std::tuple;
 using std::vector;
 using std::string;
 
+#include "common/depth_types.h"
+
 struct Color
 {
     int rgb;
@@ -33,8 +35,14 @@ public:
 
     bool open();
     void close();
-    virtual bool update() = 0;
     void invalidate(Frame* pf, int x = 0, int y = 0);
+
+    // virtuals
+    virtual void setDepth(EDepthType depth);
+    virtual EDepthType getDepth() const;
+
+    // pure virtuals
+    virtual bool update() = 0;
     virtual void onResolution(Frame*) = 0;
     virtual tuple<int, int> maxResolution() const = 0;
 protected:
@@ -43,6 +51,8 @@ protected:
     virtual void onWrite(Frame* pf, int x, int y, const Cell& cell) = 0;
     virtual bool onAdd(Frame* pf) { return true; }
     vector<Frame*> _frames;
+private:
+    EDepthType _depth;
 };
 
 class Frame

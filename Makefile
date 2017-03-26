@@ -1,5 +1,5 @@
 MAKEFLAGS+="-j 4"
-flags=-g --std=c++14 -Wl,--no-as-needed -Wall
+flags=-g --std=c++14 -Wall
 
 ifeq ($(prof),)
 libs=-llua5.2
@@ -20,6 +20,7 @@ deps = $(objs:%.o=%.d)
 
 ocvm$(bin): $(objs)
 	g++ $(flags) $(objs) $(libs) -o ocvm$(bin)
+	@echo done
 
 -include $(deps)
 bin/%$(bin).o : %.cpp

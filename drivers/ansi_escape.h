@@ -26,7 +26,6 @@ protected:
     bool onAdd(Frame* pf) override;
 private:
     map<Frame*, AnsiFrameState> _states;
-    vector<string> _buffer;
 
     int _x = 0;
     int _y = 0;

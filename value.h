@@ -144,7 +144,7 @@ private:
     template <typename T, typename ...Ts>
     inline static int push_ret(lua_State* lua, const T& arg, const Ts&... args)
     {
-        return ValuePack::push_ret(lua, arg) + push_ret(lua, args...);
+        return ValuePack::push_ret(lua, arg) + ValuePack::push_ret(lua, args...);
     }
 };
 ostream& operator << (ostream& os, const ValuePack& pack);

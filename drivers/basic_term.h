@@ -8,6 +8,7 @@ public:
     bool update() override;
     void onResolution(Frame* pWhichFrame) override;
     tuple<int, int> maxResolution() const override;
+    void setDepth(EDepthType) override { Framer::setDepth(EDepthType::_1); }
 protected:
     bool onOpen() override;
     void onClose() override;
