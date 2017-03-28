@@ -13,6 +13,7 @@
 Screen::Screen()
 {
     add("getKeyboards", &Screen::getKeyboards);
+    add("getAspectRatio", &Screen::getAspectRatio);
     scrolling(false);
 
     _mouse = new MouseInput;
@@ -68,6 +69,11 @@ int Screen::getKeyboards(lua_State* lua)
         list.insert(kb);
     }
     return ValuePack::ret(lua, list);
+}
+
+int Screen::getAspectRatio(lua_State* lua)
+{
+    return ValuePack::ret(lua, 1, 1);
 }
 
 void Screen::addKeyboard(const string& addr)

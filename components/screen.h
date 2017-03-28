@@ -13,6 +13,8 @@ public:
     RunState update() override;
 
     int getKeyboards(lua_State*);
+    int getAspectRatio(lua_State*);
+
     void addKeyboard(const string& addr);
     void onResize(int width, int height) override;
 protected:
