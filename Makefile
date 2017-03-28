@@ -9,6 +9,7 @@ $(info profile build)
 libs=-L../gperftools-2.5/.libs/ -ldl -lprofiler ../lua-5.3.4/src/liblua.a
 includes=-I../lua-5.3.4/src
 bin=-profiled
+flags+=-Wl,--no-as-needed
 endif
 
 includes+=-I.
