@@ -1,6 +1,7 @@
 #include "frame.h"
 #include "log.h"
 #include "apis/unicode.h"
+#include "color/color_map.h"
 #include <iostream>
 
 Framer::Framer()
@@ -98,8 +99,25 @@ EDepthType Frame::setDepth(EDepthType depth)
     EDepthType prev = _depth;
     if (_depth != depth)
     {
-        _depth = depth;
         // refresh screen (reinflate and deflate all cells)
+        _depth = depth;
+        for (int y = 0; y < _height; y++)
+        {
+            auto scan_line = scan(0, y, _width);
+            for (size_t x = 0; x < scan_line.size(); x++)
+            {
+                const auto& pCell = scan_line.at(x);
+                if (pCell)
+                {
+                    Cell reinflated = *pCell;
+                    ColorMap::redeflate(&reinflated.fg, prev, _depth);
+                    ColorMap::redeflate(&reinflated.bg, prev, _depth);
+                    set(static_cast<int>(x), y, reinflated);
+                }
+            }
+        }
+        ColorMap::redeflate(&_fg, prev, _depth);
+        ColorMap::redeflate(&_bg, prev, _depth);
     }
     return prev;
 }
@@ -118,7 +136,6 @@ void Frame::framer(Framer* pfr)
 {
     _framer = pfr;
     _depth = _framer->getInitialDepth();
-    _framer->invalidate(this);
 }
 
 Framer* Frame::framer() const

@@ -29,7 +29,7 @@ public:
 
     bool open();
     void close();
-    void invalidate(Frame* pf, int x = 0, int y = 0);
+    void invalidate(Frame* pf, int x, int y);
 
     // virtuals
     virtual void setInitialDepth(EDepthType depth);

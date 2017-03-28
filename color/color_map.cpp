@@ -199,3 +199,9 @@ int ColorMap::deflate(const Color& color, EDepthType depth)
     const ColorFormat* pf = toFormater(depth);
     return pf->deflate(color);
 }
+
+void ColorMap::redeflate(Color* pColor, EDepthType old_depth, EDepthType new_depth)
+{
+    pColor->rgb = inflate(pColor->rgb, old_depth);
+    pColor->rgb = deflate(*pColor, new_depth);
+}
