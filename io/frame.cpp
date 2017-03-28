@@ -5,6 +5,7 @@
 
 Framer::Framer()
 {
+    _initial_depth = EDepthType::_8;
 }
 
 Framer::~Framer()
@@ -82,12 +83,28 @@ void Framer::close()
     _frames.clear();
 }
 
-void Framer::setDepth(EDepthType depth)
+void Framer::setInitialDepth(EDepthType depth)
 {
-    _depth = depth;
+    _initial_depth = depth;
 }
 
-EDepthType Framer::getDepth() const
+EDepthType Framer::getInitialDepth() const
+{
+    return _initial_depth;
+}
+
+EDepthType Frame::setDepth(EDepthType depth)
+{
+    EDepthType prev = _depth;
+    if (_depth != depth)
+    {
+        _depth = depth;
+        // refresh screen (reinflate and deflate all cells)
+    }
+    return prev;
+}
+
+EDepthType Frame::getDepth() const
 {
     return _depth;
 }
@@ -100,6 +117,7 @@ tuple<int, int> Frame::getResolution() const
 void Frame::framer(Framer* pfr)
 {
     _framer = pfr;
+    _depth = _framer->getInitialDepth();
     _framer->invalidate(this);
 }
 

@@ -146,7 +146,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    framer->setDepth(depth);
+    framer->setInitialDepth(depth);
 
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem

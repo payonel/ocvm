@@ -3,7 +3,10 @@
 #include "client.h"
 #include "screen.h"
 #include "apis/unicode.h"
+#include "color/color_map.h"
 #include <iostream>
+
+using namespace std;
 
 Gpu::Gpu()
 {
@@ -20,6 +23,7 @@ Gpu::Gpu()
     add("fill", &Gpu::fill);
     add("copy", &Gpu::copy);
     add("getDepth", &Gpu::getDepth);
+    add("setDepth", &Gpu::setDepth);
     add("getViewport", &Gpu::getViewport);
     add("getScreen", &Gpu::getScreen);
     add("maxDepth", &Gpu::maxDepth);
@@ -27,7 +31,6 @@ Gpu::Gpu()
 
 Gpu::~Gpu()
 {
-    // lout << _buffer.size() << std::endl;
 }
 
 void Gpu::check(lua_State* lua) const
@@ -36,6 +39,25 @@ void Gpu::check(lua_State* lua) const
     {
         luaL_error(lua, "no screen");
     }
+}
+
+void Gpu::deflate(lua_State* lua, Color* pRawColor)
+{
+    check(lua);
+    EDepthType depth = _screen->getDepth();
+    if (pRawColor->paletted)
+    {
+        if (depth == EDepthType::_1)
+        {
+            luaL_error(lua, "color palette not supported");
+        }
+        if (pRawColor->rgb < 0 || (size_t)pRawColor->rgb >= PALETTE_SIZE) // palette size
+        {
+            luaL_error(lua, "invalid palette index");
+        }
+    }
+
+    pRawColor->rgb = ColorMap::deflate(*pRawColor, depth);
 }
 
 bool Gpu::onInitialize(Value& config)
@@ -66,7 +88,7 @@ int Gpu::bind(lua_State* lua)
 
 int Gpu::maxDepth(lua_State* lua)
 {
-    return ValuePack::ret(lua, static_cast<int>(_screen->framer()->getDepth()));
+    return ValuePack::ret(lua, static_cast<int>(EDepthType::_8));
 }
 
 int Gpu::getResolution(lua_State* lua)
@@ -116,10 +138,12 @@ int Gpu::get(lua_State* lua)
         return 0;
     }
 
-    Value fgp = pc->fg.paletted ? Value(true) : Value::nil;
-    Value bgp = pc->bg.paletted ? Value(true) : Value::nil;
+    auto fg_ctx = makeColorContext(pc->fg);
+    auto bg_ctx = makeColorContext(pc->bg);
 
-    return ValuePack::ret(lua, pc->value, pc->fg.rgb, pc->bg.rgb, fgp, bgp);
+    return ValuePack::ret(lua, pc->value, 
+        std::get<0>(fg_ctx), std::get<0>(bg_ctx), 
+        std::get<1>(fg_ctx), std::get<1>(bg_ctx));
 }
 
 int Gpu::maxResolution(lua_State* lua)
@@ -131,42 +155,22 @@ int Gpu::maxResolution(lua_State* lua)
 
 int Gpu::setBackground(lua_State* lua)
 {
-    check(lua);
-    Color old = _screen->background();
-    int rgb = Value::check(lua, 1, "number").toNumber();
-    bool p = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
-    _screen->background({rgb, p});
-    Value vp = old.paletted ? Value(true) : Value::nil;
-    lua_settop(lua, 0);
-    return ValuePack::ret(lua, old.rgb, vp);
+    return setColorContext(lua, true);
 }
 
 int Gpu::getBackground(lua_State* lua)
 {
-    check(lua);
-    const Color& old = _screen->background();
-    Value vp = old.paletted ? Value(true) : Value::nil;
-    return ValuePack::ret(lua, old.rgb, vp);
+    return getColorContext(lua, true);
 }
 
 int Gpu::setForeground(lua_State* lua)
 {
-    check(lua);
-    Color old = _screen->foreground();
-    int rgb = Value::check(lua, 1, "number").toNumber();
-    bool p = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
-    _screen->foreground({rgb, p});
-    Value vp = old.paletted ? Value(true) : Value::nil;
-    lua_settop(lua, 0);
-    return ValuePack::ret(lua, old.rgb, vp);
+    return setColorContext(lua, false);
 }
 
 int Gpu::getForeground(lua_State* lua)
 {
-    check(lua);
-    const Color& old = _screen->foreground();
-    Value vp = old.paletted ? Value(true) : Value::nil;
-    return ValuePack::ret(lua, old.rgb, vp);
+    return getColorContext(lua, false);
 }
 
 int Gpu::fill(lua_State* lua)
@@ -269,7 +273,33 @@ int Gpu::copy(lua_State* lua)
 
 int Gpu::getDepth(lua_State* lua)
 {
-    return ValuePack::ret(lua, 8);
+    check(lua);
+    return ValuePack::ret(lua, static_cast<int>(_screen->getDepth()));
+}
+
+int Gpu::setDepth(lua_State* lua)
+{
+    check(lua);
+    double dbits = Value::check(lua, 1, "number").toNumber();
+
+    string depth_identifier;
+    switch (_screen->getDepth())
+    {
+        case EDepthType::_1: depth_identifier = "OneBit"; break;
+        case EDepthType::_4: depth_identifier = "FourBit"; break;
+        case EDepthType::_8: depth_identifier = "EightBit"; break;
+    }
+
+    int bits = dbits == 1.0 ? 1 : dbits == 4.0 ? 4 : dbits == 8.0 ? 8 : 0;
+    switch (bits)
+    {
+        case 1: _screen->setDepth(EDepthType::_1); break;
+        case 4: _screen->setDepth(EDepthType::_4); break;
+        case 8: _screen->setDepth(EDepthType::_8); break;
+        default: luaL_error(lua, "invalid depth");
+    }
+
+    return ValuePack::ret(lua, depth_identifier);
 }
 
 int Gpu::getViewport(lua_State* lua)
@@ -281,4 +311,45 @@ int Gpu::getScreen(lua_State* lua)
 {
     check(lua);
     return ValuePack::ret(lua, _screen->address());
+}
+
+int Gpu::setColorContext(lua_State* lua, bool bBack)
+{
+    check(lua);
+    
+    int rgb = Value::check(lua, 1, "number").toNumber();
+    bool p = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
+
+    int stack = getColorContext(lua, bBack);
+
+    Color color {rgb, p};
+    deflate(lua, &color);
+
+    if (bBack)
+        _screen->background(color);
+    else
+        _screen->foreground(color);
+
+    return stack;
+}
+
+int Gpu::getColorContext(lua_State* lua, bool bBack)
+{
+    check(lua);
+    const Color& color = bBack ? _screen->background() : _screen->foreground();
+    auto ctx = makeColorContext(color);
+
+    return ValuePack::ret(lua, std::get<0>(ctx), std::get<1>(ctx));
+}
+
+tuple<int, Value> Gpu::makeColorContext(const Color& color)
+{
+    int value;
+    if (color.paletted)
+        value = color.rgb;
+    else
+        value = ColorMap::inflate(color.rgb, _screen->getDepth());
+    Value vp = color.paletted ? Value(true) : Value::nil;
+
+    return make_tuple(value, vp);
 }

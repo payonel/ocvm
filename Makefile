@@ -14,7 +14,12 @@ endif
 includes+=-I.
 libs+=-lstdc++ -lstdc++fs -pthread
 
-files = $(wildcard *.cpp) $(wildcard apis/*.cpp) $(wildcard components/*.cpp) $(wildcard io/*.cpp) $(wildcard drivers/*.cpp)
+files=$(wildcard *.cpp)
+files+=$(wildcard apis/*.cpp)
+files+=$(wildcard components/*.cpp)
+files+=$(wildcard io/*.cpp)
+files+=$(wildcard drivers/*.cpp)
+files+=$(wildcard color/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 

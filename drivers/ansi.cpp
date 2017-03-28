@@ -1,30 +1,21 @@
 #include "ansi.h"
-#include "common/depth_types.h"
+#include "color/color_types.h"
+#include "color/color_map.h"
+#include "log.h"
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 #include <iostream>
 using namespace std;
 
-struct RgbToAsni
+int to_ansi_code(int oc_rgb)
 {
-    int rgb;
-    unsigned char ansi_color;
-};
-
-int nearest(int rgb, EDepthType depth)
-{
-    static bool sorted = false;
-    // 16 and 0 should both be black, but in gnome-terminal 0 is gray
-    // so as a hack, i'm just leaving 0 out
-    static vector<RgbToAsni> color_table_2 {{0x000000, 16},{0xffffff, 15}};
-    static vector<RgbToAsni> color_table_16 {
+    static const map<int, int> ansi_colors = {
         {0x800000, 1},{0x008000, 2},{0x808000, 3},{0x000080, 4},{0x800080, 5},{0x008080, 6},{0xc0c0c0, 7},
-        {0x808080, 8},{0xff0000, 9},{0x00ff00, 10},{0xffff00, 11},{0x0000ff, 12},{0xff00ff, 13},{0x00ffff, 14}
-    };
-    static vector<RgbToAsni> color_table_256 {
-        /*{0x000000, 16},*/{0x00005f, 17},{0x000087, 18},{0x0000af, 19},{0x0000d7, 20},{0x0000ff, 21},{0x005f00, 22},{0x005f5f, 23},
+        {0x808080, 8},{0xff0000, 9},{0x00ff00, 10},{0xffff00, 11},{0x0000ff, 12},{0xff00ff, 13},{0x00ffff, 14},{0xffffff, 15},
+        {0x000000, 16},{0x00005f, 17},{0x000087, 18},{0x0000af, 19},{0x0000d7, 20},{0x0000ff, 21},{0x005f00, 22},{0x005f5f, 23},
         {0x005f87, 24},{0x005faf, 25},{0x005fd7, 26},{0x005fff, 27},{0x008700, 28},{0x00875f, 29},{0x008787, 30},{0x0087af, 31},
         {0x0087d7, 32},{0x0087ff, 33},{0x00af00, 34},{0x00af5f, 35},{0x00af87, 36},{0x00afaf, 37},{0x00afd7, 38},{0x00afff, 39},
         {0x00d700, 40},{0x00d75f, 41},{0x00d787, 42},{0x00d7af, 43},{0x00d7d7, 44},{0x00d7ff, 45},{0x00ff00, 46},{0x00ff5f, 47},
@@ -46,7 +37,8 @@ int nearest(int rgb, EDepthType depth)
         {0xd75f87, 168},{0xd75faf, 169},{0xd75fd7, 170},{0xd75fff, 171},{0xd78700, 172},{0xd7875f, 173},{0xd78787, 174},{0xd787af, 175},
         {0xd787d7, 176},{0xd787ff, 177},{0xd7af00, 178},{0xd7af5f, 179},{0xd7af87, 180},{0xd7afaf, 181},{0xd7afd7, 182},{0xd7afff, 183},
         {0xd7d700, 184},{0xd7d75f, 185},{0xd7d787, 186},{0xd7d7af, 187},{0xd7d7d7, 188},{0xd7d7ff, 189},{0xd7ff00, 190},{0xd7ff5f, 191},
-        {0xd7ff87, 192},{0xd7ffaf, 193},{0xd7ffd7, 194},{0xd7ffff, 195},/*{0xff0000, 196},*/{0xff005f, 197},{0xff0087, 198},{0xff00af, 199},
+        {0xd7ff87, 192},{0xd7ffaf, 193},{0xd7ffd7, 194},{0xd7ffff, 195},{0xff005f, 197},{0xff0087, 198},{0xff00af, 199},
+        //{0xff0000, 196}, // removed because 9 already has it
         {0xff00d7, 200},{0xff00ff, 201},{0xff5f00, 202},{0xff5f5f, 203},{0xff5f87, 204},{0xff5faf, 205},{0xff5fd7, 206},{0xff5fff, 207},
         {0xff8700, 208},{0xff875f, 209},{0xff8787, 210},{0xff87af, 211},{0xff87d7, 212},{0xff87ff, 213},{0xffaf00, 214},{0xffaf5f, 215},
         {0xffaf87, 216},{0xffafaf, 217},{0xffafd7, 218},{0xffafff, 219},{0xffd700, 220},{0xffd75f, 221},{0xffd787, 222},{0xffd7af, 223},
@@ -55,57 +47,34 @@ int nearest(int rgb, EDepthType depth)
         {0x585858, 240},{0x626262, 241},{0x6c6c6c, 242},{0x767676, 243},{0x808080, 244},{0x8a8a8a, 245},{0x949494, 246},{0x9e9e9e, 247},
         {0xa8a8a8, 248},{0xb2b2b2, 249},{0xbcbcbc, 250},{0xc6c6c6, 251},{0xd0d0d0, 252},{0xdadada, 253},{0xe4e4e4, 254},{0xeeeeee, 255}
     };
-
-    if (!sorted)
+    const auto& color_iterator = ansi_colors.find(oc_rgb);
+    if (color_iterator == ansi_colors.end())
     {
-        sorted = true;
-        color_table_16.insert(color_table_16.end(), color_table_2.begin(), color_table_2.end());
-        color_table_256.insert(color_table_256.end(), color_table_16.begin(), color_table_16.end());
-        std::sort(color_table_16.begin(), color_table_16.end(), [](RgbToAsni& a, RgbToAsni& b){return a.rgb < b.rgb;});
-        std::sort(color_table_256.begin(), color_table_256.end(), [](RgbToAsni& a, RgbToAsni& b){return a.rgb < b.rgb;});
+        lout << "unknown oc color: " << oc_rgb << endl;
+        return oc_rgb == 0 ? 16 : 15; // unknown
     }
-
-    const vector<RgbToAsni>& ctable =
-        depth == EDepthType::_1 ? color_table_2 :
-        depth == EDepthType::_4 ? color_table_16 :
-        color_table_256;
-
-    const RgbToAsni* pNearest = nullptr;
-    int nearest_distance = numeric_limits<int>::max();
-    int r0 = (rgb >> 16) & 0xff;
-    int g0 = (rgb >> 8) & 0xff;
-    int b0 = rgb & 0xff;
-    for (size_t index = 0; index < ctable.size(); index++)
-    {
-        const RgbToAsni* pNext = &ctable.at(index);
-
-        int rgb1 = pNext->rgb;
-        int r1 = (rgb1 >> 16) & 0xff;
-        int g1 = (rgb1 >> 8) & 0xff;
-        int b1 = rgb1 & 0xff;
-
-        int distance = (r1 - r0) * (r1 - r0);
-        distance += (g1 - g0) * (g1 - g0);
-        distance += (b1 - b0) * (b1 - b0);
-
-        if (distance < nearest_distance)
-        {
-            nearest_distance = distance;
-            pNearest = pNext;
-        }
-    }
-    return pNearest->ansi_color;
+    else
+        return color_iterator->second;
 }
 
-string Ansi::set_color(const int& fg_rgb, const int& bg_rgb, EDepthType depth)
+string to_ansi(int rgb, EDepthType depth, bool foreground)
 {
-    stringstream ss;
-    // find nearest
-    int fg_ansi = nearest(fg_rgb, depth);
-    int bg_ansi = nearest(bg_rgb, depth);
-    ss << esc << "38;5;" << fg_ansi << ";48;5;" << bg_ansi << "m";
+    int ansi_code = to_ansi_code(rgb);
 
+    stringstream ss;
+    ss << (foreground ? "3" : "4") << "8;5;" << ansi_code;
     return ss.str();
+}
+
+string Ansi::set_color(const Color& fg, const Color& bg, EDepthType depth)
+{
+    int fg_rgb = ColorMap::inflate(fg.rgb, depth);
+    int bg_rgb = ColorMap::inflate(bg.rgb, depth);
+
+    string fg_txt = to_ansi(fg_rgb, depth, true);
+    string bg_txt = to_ansi(bg_rgb, depth, false);
+
+    return esc + fg_txt + ";" + bg_txt + "m";
 }
 
 string Ansi::set_pos(int x, int y)

@@ -9,13 +9,7 @@ using std::tuple;
 using std::vector;
 using std::string;
 
-#include "common/depth_types.h"
-
-struct Color
-{
-    int rgb;
-    bool paletted;
-};
+#include "color/color_types.h"
 
 struct Cell
 {
@@ -38,8 +32,8 @@ public:
     void invalidate(Frame* pf, int x = 0, int y = 0);
 
     // virtuals
-    virtual void setDepth(EDepthType depth);
-    virtual EDepthType getDepth() const;
+    virtual void setInitialDepth(EDepthType depth);
+    virtual EDepthType getInitialDepth() const;
 
     // pure virtuals
     virtual bool update() = 0;
@@ -52,7 +46,7 @@ protected:
     virtual bool onAdd(Frame* pf) { return true; }
     vector<Frame*> _frames;
 private:
-    EDepthType _depth;
+    EDepthType _initial_depth;
 };
 
 class Frame
@@ -78,6 +72,9 @@ public:
     tuple<int, int> getResolution() const;
     bool scrolling() const;
     void scrolling(bool enable);
+
+    EDepthType setDepth(EDepthType depth);
+    EDepthType getDepth() const;
 protected:
     void resizeBuffer(int width, int height);
 private:
@@ -91,6 +88,7 @@ private:
     Cell* _cells = nullptr;
     Color _bg;
     Color _fg;
+    EDepthType _depth;
 };
 
 namespace Factory

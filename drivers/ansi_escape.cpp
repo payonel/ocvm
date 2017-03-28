@@ -86,7 +86,6 @@ static void register_winch(bool doit)
 
 AnsiEscapeTerm::AnsiEscapeTerm()
 {
-    setDepth(EDepthType::_8);
     register_winch(true);
 }
 
@@ -159,7 +158,7 @@ void AnsiEscapeTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
                 cmd += Ansi::set_pos(x, y);
         }
         if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
-            cmd += Ansi::set_color(cell.fg.rgb, cell.bg.rgb, getDepth());
+            cmd += Ansi::set_color(cell.fg, cell.bg, pf->getDepth());
 
         cout << cmd << cell.value;
         _x = x + 1;
@@ -177,3 +176,4 @@ tuple<int, int> AnsiEscapeTerm::maxResolution() const
 {
     return current_resolution();
 }
+

@@ -5,8 +5,7 @@
 using std::string;
 
 enum class EDepthType;
-
-int nearest(int rgb, EDepthType depth);
+class Color;
 
 namespace Ansi
 {
@@ -29,7 +28,7 @@ namespace Ansi
     static const string restore_pos= esc + "u";
     static const string color_reset= esc + "0m";
 
-    string set_color(const int& fg_rgb, const int& bg_rgb, EDepthType depth);
+    string set_color(const Color& fg, const Color& bg, EDepthType depth);
     string set_pos(int x, int y);
 };
 
