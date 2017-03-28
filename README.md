@@ -39,5 +39,6 @@ There are some requirements for building:
 **Future Scope**
 
 I plan to add support for building ocvm on Mac using boost filesystem and clang+llvm
+
 I do not plan to add support for non-ansi terminals nor windows. If this works in cygwin it wasn't on purpose
 
