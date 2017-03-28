@@ -121,8 +121,13 @@ bool AnsiEscapeTerm::onOpen()
     // cout << esc << "47h";
 
     cout << Ansi::cursor_off;
-    cout << Ansi::clear_term << Ansi::set_pos(1, 1) << flush;
+    clear();
     return true;
+}
+
+void AnsiEscapeTerm::clear()
+{
+    cout << Ansi::clear_term << Ansi::set_pos(1, 1) << flush;
 }
 
 void AnsiEscapeTerm::onClose()
@@ -166,10 +171,6 @@ void AnsiEscapeTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
         _fg_rgb = cell.fg.rgb;
         _bg_rgb = cell.bg.rgb;
     }
-}
-
-void AnsiEscapeTerm::onResolution(Frame* pWhichFrame)
-{
 }
 
 tuple<int, int> AnsiEscapeTerm::maxResolution() const

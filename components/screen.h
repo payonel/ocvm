@@ -14,9 +14,9 @@ public:
 
     int getKeyboards(lua_State*);
     void addKeyboard(const string& addr);
+    void onResize(int width, int height) override;
 protected:
     bool onInitialize(Value& config) override;
-    void onResize(int width, int height) override;
 private:
     vector<string> _keyboards;
     MouseInput* _mouse = nullptr;

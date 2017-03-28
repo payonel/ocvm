@@ -17,8 +17,8 @@ public:
     AnsiEscapeTerm();
     ~AnsiEscapeTerm();
     bool update() override;
-    void onResolution(Frame* pWhichFrame) override;
     tuple<int, int> maxResolution() const override;
+    void clear() override;
 protected:
     bool onOpen() override;
     void onClose() override;

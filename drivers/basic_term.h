@@ -6,7 +6,6 @@ class BasicTerm : public Framer
 {
 public:
     bool update() override;
-    void onResolution(Frame* pWhichFrame) override;
     tuple<int, int> maxResolution() const override;
 protected:
     bool onOpen() override;

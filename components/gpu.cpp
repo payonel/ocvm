@@ -25,6 +25,7 @@ Gpu::Gpu()
     add("getDepth", &Gpu::getDepth);
     add("setDepth", &Gpu::setDepth);
     add("getViewport", &Gpu::getViewport);
+    add("setViewport", &Gpu::setViewport);
     add("getScreen", &Gpu::getScreen);
     add("maxDepth", &Gpu::maxDepth);
 }
@@ -112,7 +113,7 @@ int Gpu::setResolution(lua_State* lua)
         return 0;
     }
 
-    _screen->setResolution(width, height);
+    _screen->onResize(width, height);
     return ValuePack::ret(lua, true);
 }
 
@@ -304,7 +305,16 @@ int Gpu::setDepth(lua_State* lua)
 
 int Gpu::getViewport(lua_State* lua)
 {
-    return maxResolution(lua);
+    return getResolution(lua);
+}
+
+// setting viewport must always fit <= resolution
+// setting resolution always resets viewport
+// returns true if changed
+// setting viewport > resolution throws unsupported size
+int Gpu::setViewport(lua_State* lua)
+{
+    return setResolution(lua);
 }
 
 int Gpu::getScreen(lua_State* lua)

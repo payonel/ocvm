@@ -72,7 +72,7 @@ double Computer::trace(lua_State* coState, bool bForce)
     double thenow = now();
     if (_nexttrace < thenow || bForce)
     {
-        _nexttrace = thenow + .5; // trace frequency
+        _nexttrace = thenow + 1; // trace frequency
         if (!coState)
         {
             lua_Debug ar;

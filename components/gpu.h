@@ -29,6 +29,7 @@ public:
     int getDepth(lua_State* lua);
     int setDepth(lua_State* lua);
     int getViewport(lua_State* lua);
+    int setViewport(lua_State* lua);
     int getScreen(lua_State* lua);
     int maxDepth(lua_State* lua);
 protected:

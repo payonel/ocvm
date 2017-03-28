@@ -29,15 +29,16 @@ public:
 
     bool open();
     void close();
+    void invalidate(Frame* pf);
     void invalidate(Frame* pf, int x, int y);
 
     // virtuals
     virtual void setInitialDepth(EDepthType depth);
     virtual EDepthType getInitialDepth() const;
+    virtual void clear() {}
 
     // pure virtuals
     virtual bool update() = 0;
-    virtual void onResolution(Frame*) = 0;
     virtual tuple<int, int> maxResolution() const = 0;
 protected:
     virtual bool onOpen() { return true; }
@@ -68,8 +69,10 @@ public:
     void set(int x, int y, const vector<const Cell*>& scanned);
 
     virtual void onResize(int width, int height) = 0;
+
     bool setResolution(int width, int height, bool bQuiet = false);
-    tuple<int, int> getResolution() const;
+    tuple<int, int> getResolution() const; // actual buffer size
+
     bool scrolling() const;
     void scrolling(bool enable);
 

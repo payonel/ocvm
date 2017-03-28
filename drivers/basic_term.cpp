@@ -21,10 +21,6 @@ void BasicTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
     cout << cell.value << flush;
 }
 
-void BasicTerm::onResolution(Frame* pWhichFrame)
-{
-}
-
 tuple<int, int> BasicTerm::maxResolution() const
 {
     return std::make_tuple(40, 10);

@@ -58,10 +58,25 @@ bool Frame::setResolution(int width, int height, bool bQuiet)
 
     if (_framer && !bQuiet)
     {
-        _framer->onResolution(this);
+        _framer->invalidate(this);
     }
 
     return true;
+}
+
+void Framer::invalidate(Frame* pf)
+{
+    clear();
+    auto dim = pf->getResolution();
+    int width = std::get<0>(dim);
+    int height = std::get<1>(dim);
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            invalidate(pf, x + 1, y + 1);
+        }
+    }
 }
 
 void Framer::invalidate(Frame* pf, int x, int y)
@@ -101,23 +116,16 @@ EDepthType Frame::setDepth(EDepthType depth)
     {
         // refresh screen (reinflate and deflate all cells)
         _depth = depth;
-        for (int y = 0; y < _height; y++)
-        {
-            auto scan_line = scan(0, y, _width);
-            for (size_t x = 0; x < scan_line.size(); x++)
-            {
-                const auto& pCell = scan_line.at(x);
-                if (pCell)
-                {
-                    Cell reinflated = *pCell;
-                    ColorMap::redeflate(&reinflated.fg, prev, _depth);
-                    ColorMap::redeflate(&reinflated.bg, prev, _depth);
-                    set(static_cast<int>(x), y, reinflated);
-                }
-            }
-        }
         ColorMap::redeflate(&_fg, prev, _depth);
         ColorMap::redeflate(&_bg, prev, _depth);
+        size_t size = _width * _height;
+        for (size_t i = 0; i < size; i++)
+        {
+            auto& cell = _cells[i];
+            ColorMap::redeflate(&cell.fg, prev, _depth);
+            ColorMap::redeflate(&cell.bg, prev, _depth);
+        }
+        _framer->invalidate(this);
     }
     return prev;
 }
@@ -236,7 +244,7 @@ void Frame::resizeBuffer(int width, int height)
         {
             for (int x = 0; x < width; x++)
             {
-                const auto& prev_cell = get(x, y);
+                const auto& prev_cell = get(x + 1, y + 1); // positions are 1-based
                 if (prev_cell)
                 {
                     *it = *prev_cell;
@@ -247,8 +255,8 @@ void Frame::resizeBuffer(int width, int height)
                     it->fg = {};
                     it->bg = {};
                 }
+                it++;
             }
-            it++;
         }
     }
     else
