@@ -24,7 +24,7 @@ files+=$(wildcard color/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 
-ocvm$(bin): $(objs)
+ocvm$(bin): $(objs) system
 	g++ $(flags) $(objs) $(libs) -o ocvm$(bin)
 	@echo done
 
@@ -32,6 +32,14 @@ ocvm$(bin): $(objs)
 bin/%$(bin).o : %.cpp
 	@mkdir -p $@D
 	g++ $(flags) $(includes) -MMD -c $< -o $@
+
+system:
+	@echo downloading OpenComputers system files
+	mkdir system
+	svn checkout https://github.com/MightyPirates/OpenComputers/trunk/src/main/resources/assets/opencomputers/loot system/loot
+	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/machine.lua -O system/machine.lua
+	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/bios.lua -O system/bios.lua
+	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/font.hex -O system/font.hex
 
 .PHONY : clean
 clean:
