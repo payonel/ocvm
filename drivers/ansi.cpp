@@ -1,7 +1,9 @@
 #include "ansi.h"
 #include "color/color_types.h"
 #include "color/color_map.h"
-#include "log.h"
+#if __has_include("log.h")
+    #include "log.h"
+#endif
 #include <sstream>
 #include <vector>
 #include <algorithm>
@@ -10,69 +12,50 @@
 #include <iostream>
 using namespace std;
 
-int to_ansi_code(int oc_rgb)
+static const unsigned char oc_to_ansi[256] =
 {
-    static const map<int, int> ansi_colors = {
-        {0x800000, 1},{0x008000, 2},{0x808000, 3},{0x000080, 4},{0x800080, 5},{0x008080, 6},{0xc0c0c0, 7},
-        {0x808080, 8},{0xff0000, 9},{0x00ff00, 10},{0xffff00, 11},{0x0000ff, 12},{0xff00ff, 13},{0x00ffff, 14},{0xffffff, 15},
-        {0x000000, 16},{0x00005f, 17},{0x000087, 18},{0x0000af, 19},{0x0000d7, 20},{0x0000ff, 21},{0x005f00, 22},{0x005f5f, 23},
-        {0x005f87, 24},{0x005faf, 25},{0x005fd7, 26},{0x005fff, 27},{0x008700, 28},{0x00875f, 29},{0x008787, 30},{0x0087af, 31},
-        {0x0087d7, 32},{0x0087ff, 33},{0x00af00, 34},{0x00af5f, 35},{0x00af87, 36},{0x00afaf, 37},{0x00afd7, 38},{0x00afff, 39},
-        {0x00d700, 40},{0x00d75f, 41},{0x00d787, 42},{0x00d7af, 43},{0x00d7d7, 44},{0x00d7ff, 45},{0x00ff00, 46},{0x00ff5f, 47},
-        {0x00ff87, 48},{0x00ffaf, 49},{0x00ffd7, 50},{0x00ffff, 51},{0x5f0000, 52},{0x5f005f, 53},{0x5f0087, 54},{0x5f00af, 55},
-        {0x5f00d7, 56},{0x5f00ff, 57},{0x5f5f00, 58},{0x5f5f5f, 59},{0x5f5f87, 60},{0x5f5faf, 61},{0x5f5fd7, 62},{0x5f5fff, 63},
-        {0x5f8700, 64},{0x5f875f, 65},{0x5f8787, 66},{0x5f87af, 67},{0x5f87d7, 68},{0x5f87ff, 69},{0x5faf00, 70},{0x5faf5f, 71},
-        {0x5faf87, 72},{0x5fafaf, 73},{0x5fafd7, 74},{0x5fafff, 75},{0x5fd700, 76},{0x5fd75f, 77},{0x5fd787, 78},{0x5fd7af, 79},
-        {0x5fd7d7, 80},{0x5fd7ff, 81},{0x5fff00, 82},{0x5fff5f, 83},{0x5fff87, 84},{0x5fffaf, 85},{0x5fffd7, 86},{0x5fffff, 87},
-        {0x870000, 88},{0x87005f, 89},{0x870087, 90},{0x8700af, 91},{0x8700d7, 92},{0x8700ff, 93},{0x875f00, 94},{0x875f5f, 95},
-        {0x875f87, 96},{0x875faf, 97},{0x875fd7, 98},{0x875fff, 99},{0x878700, 100},{0x87875f, 101},{0x878787, 102},{0x8787af, 103},
-        {0x8787d7, 104},{0x8787ff, 105},{0x87af00, 106},{0x87af5f, 107},{0x87af87, 108},{0x87afaf, 109},{0x87afd7, 110},{0x87afff, 111},
-        {0x87d700, 112},{0x87d75f, 113},{0x87d787, 114},{0x87d7af, 115},{0x87d7d7, 116},{0x87d7ff, 117},{0x87ff00, 118},{0x87ff5f, 119},
-        {0x87ff87, 120},{0x87ffaf, 121},{0x87ffd7, 122},{0x87ffff, 123},{0xaf0000, 124},{0xaf005f, 125},{0xaf0087, 126},{0xaf00af, 127},
-        {0xaf00d7, 128},{0xaf00ff, 129},{0xaf5f00, 130},{0xaf5f5f, 131},{0xaf5f87, 132},{0xaf5faf, 133},{0xaf5fd7, 134},{0xaf5fff, 135},
-        {0xaf8700, 136},{0xaf875f, 137},{0xaf8787, 138},{0xaf87af, 139},{0xaf87d7, 140},{0xaf87ff, 141},{0xafaf00, 142},{0xafaf5f, 143},
-        {0xafaf87, 144},{0xafafaf, 145},{0xafafd7, 146},{0xafafff, 147},{0xafd700, 148},{0xafd75f, 149},{0xafd787, 150},{0xafd7af, 151},
-        {0xafd7d7, 152},{0xafd7ff, 153},{0xafff00, 154},{0xafff5f, 155},{0xafff87, 156},{0xafffaf, 157},{0xafffd7, 158},{0xafffff, 159},
-        {0xd70000, 160},{0xd7005f, 161},{0xd70087, 162},{0xd700af, 163},{0xd700d7, 164},{0xd700ff, 165},{0xd75f00, 166},{0xd75f5f, 167},
-        {0xd75f87, 168},{0xd75faf, 169},{0xd75fd7, 170},{0xd75fff, 171},{0xd78700, 172},{0xd7875f, 173},{0xd78787, 174},{0xd787af, 175},
-        {0xd787d7, 176},{0xd787ff, 177},{0xd7af00, 178},{0xd7af5f, 179},{0xd7af87, 180},{0xd7afaf, 181},{0xd7afd7, 182},{0xd7afff, 183},
-        {0xd7d700, 184},{0xd7d75f, 185},{0xd7d787, 186},{0xd7d7af, 187},{0xd7d7d7, 188},{0xd7d7ff, 189},{0xd7ff00, 190},{0xd7ff5f, 191},
-        {0xd7ff87, 192},{0xd7ffaf, 193},{0xd7ffd7, 194},{0xd7ffff, 195},{0xff005f, 197},{0xff0087, 198},{0xff00af, 199},
-        //{0xff0000, 196}, // removed because 9 already has it
-        {0xff00d7, 200},{0xff00ff, 201},{0xff5f00, 202},{0xff5f5f, 203},{0xff5f87, 204},{0xff5faf, 205},{0xff5fd7, 206},{0xff5fff, 207},
-        {0xff8700, 208},{0xff875f, 209},{0xff8787, 210},{0xff87af, 211},{0xff87d7, 212},{0xff87ff, 213},{0xffaf00, 214},{0xffaf5f, 215},
-        {0xffaf87, 216},{0xffafaf, 217},{0xffafd7, 218},{0xffafff, 219},{0xffd700, 220},{0xffd75f, 221},{0xffd787, 222},{0xffd7af, 223},
-        {0xffd7d7, 224},{0xffd7ff, 225},{0xffff00, 226},{0xffff5f, 227},{0xffff87, 228},{0xffffaf, 229},{0xffffd7, 230},{0xffffff, 231},
-        {0x080808, 232},{0x121212, 233},{0x1c1c1c, 234},{0x262626, 235},{0x303030, 236},{0x3a3a3a, 237},{0x444444, 238},{0x4e4e4e, 239},
-        {0x585858, 240},{0x626262, 241},{0x6c6c6c, 242},{0x767676, 243},{0x808080, 244},{0x8a8a8a, 245},{0x949494, 246},{0x9e9e9e, 247},
-        {0xa8a8a8, 248},{0xb2b2b2, 249},{0xbcbcbc, 250},{0xc6c6c6, 251},{0xd0d0d0, 252},{0xdadada, 253},{0xe4e4e4, 254},{0xeeeeee, 255}
-    };
-    const auto& color_iterator = ansi_colors.find(oc_rgb);
-    if (color_iterator == ansi_colors.end())
+    232,234,236,237,239,240,242,243,245,246,248,249,251,252,254,255, // grays
+     16, 17, 18, 19, 21,  16, 17, 18, 19, 21,  22, 23, 24, 25, 27,  22, 23, 24, 25, 27,
+     28, 29, 30, 31, 33,  34, 35, 36, 37, 39,  40, 41, 42, 43, 45,  46, 47, 48, 49, 51,
+
+     52, 53, 54, 55, 57,  52, 53, 54, 55, 57,  58, 59, 60, 61, 63,  58, 59, 60, 61, 63,
+     64, 65, 66, 67, 69,  70, 71, 72, 73, 75,  76, 77, 78, 79, 81,  82, 83, 84, 85, 87,
+
+     52, 53, 54, 55, 57,  52, 53, 54, 55, 57,  58, 59, 60, 61, 63,  58, 59, 60, 61, 63,
+     64, 65, 66, 67, 69,  70, 71, 72, 73, 75,  76, 77, 78, 79, 81,  82, 83, 84, 85, 87,
+
+     88, 89, 90, 91, 93,  88, 89, 90, 91, 93,  94, 95, 96, 97, 99,  94, 95, 96, 97, 99,
+    100,101,102,103,105, 106,107,108,109,111, 112,113,114,115,117, 118,119,120,121,123,
+
+    160,161,162,163,165, 160,161,162,163,165, 166,167,168,169,171, 166,167,168,169,171,
+    172,173,174,175,177, 178,179,180,181,183, 184,185,186,187,189, 190,191,192,193,195,
+
+      1,197,198,199,201, 196,197,198,199,201, 202,203,204,205,207, 202,203,204,205,207,
+    208,209,210,211,213, 214,215,216,217,219, 220,221,222,223,225, 226,227,228,229,255,
+};
+
+string to_ansi(int depth_encoded_rgb, EDepthType depth, bool foreground)
+{
+    unsigned char deflated_rgb;
+    if (depth == EDepthType::_8)
     {
-        lout << "unknown oc color: " << oc_rgb << endl;
-        return oc_rgb == 0 ? 16 : 15; // unknown
+        deflated_rgb = depth_encoded_rgb;
     }
     else
-        return color_iterator->second;
-}
-
-string to_ansi(int rgb, EDepthType depth, bool foreground)
-{
-    int ansi_code = to_ansi_code(rgb);
+    {
+        int rgb = ColorMap::inflate(depth_encoded_rgb, depth);
+        deflated_rgb = ColorMap::deflate(rgb);
+    }
 
     stringstream ss;
-    ss << (foreground ? "3" : "4") << "8;5;" << ansi_code;
+    ss << (foreground ? "3" : "4") << "8;5;" << (int)oc_to_ansi[deflated_rgb];
     return ss.str();
 }
 
 string Ansi::set_color(const Color& fg, const Color& bg, EDepthType depth)
 {
-    int fg_rgb = ColorMap::inflate(fg.rgb, depth);
-    int bg_rgb = ColorMap::inflate(bg.rgb, depth);
-
-    string fg_txt = to_ansi(fg_rgb, depth, true);
-    string bg_txt = to_ansi(bg_rgb, depth, false);
+    string fg_txt = to_ansi(fg.rgb, depth, true);
+    string bg_txt = to_ansi(bg.rgb, depth, false);
 
     return esc + fg_txt + ";" + bg_txt + "m";
 }

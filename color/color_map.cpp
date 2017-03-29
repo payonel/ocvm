@@ -24,14 +24,6 @@ class ColorFormat
 public:
     virtual int inflate(int value) const = 0;
     virtual int deflate(const Color& color) const = 0;
-
-    static tuple<int, int, int> extract(int rgb)
-    {
-        int r = (rgb >> CShift::RShift32) & 0xff;
-        int g = (rgb >> CShift::GShift32) & 0xff;
-        int b = (rgb >> CShift::BShift32) & 0xff;
-        return make_tuple(r, g, b);
-    }
 };
 
 
@@ -162,11 +154,7 @@ public:
             return paletteIndex;
         }
 
-        auto rgb = extract(color.rgb);
-        int idxR = (int)(std::get<0>(rgb) * (CBits::Reds - 1.0) / 0xFF + 0.5);
-        int idxG = (int)(std::get<1>(rgb) * (CBits::Greens - 1.0) / 0xFF + 0.5);
-        int idxB = (int)(std::get<2>(rgb) * (CBits::Blues - 1.0) / 0xFF + 0.5);
-        int deflated = (PALETTE_SIZE + idxR * CBits::Greens * CBits::Blues + idxG * CBits::Blues + idxB) & 0xFF;
+        int deflated = ColorMap::deflate(color.rgb);
         if (delta(inflate(deflated), color.rgb) < delta(inflate(paletteIndex), color.rgb))
         {
             return deflated;
@@ -204,4 +192,17 @@ void ColorMap::redeflate(Color* pColor, EDepthType old_depth, EDepthType new_dep
 {
     pColor->rgb = inflate(pColor->rgb, old_depth);
     pColor->rgb = deflate(*pColor, new_depth);
+}
+
+int ColorMap::deflate(int rgb)
+{
+    int r = (rgb >> CShift::RShift32) & 0xff;
+    int g = (rgb >> CShift::GShift32) & 0xff;
+    int b = (rgb >> CShift::BShift32) & 0xff;
+
+    int idxR = (int)(r * (CBits::Reds - 1.0) / 0xFF + 0.5);
+    int idxG = (int)(g * (CBits::Greens - 1.0) / 0xFF + 0.5);
+    int idxB = (int)(b * (CBits::Blues - 1.0) / 0xFF + 0.5);
+    int deflated = (PALETTE_SIZE + idxR * CBits::Greens * CBits::Blues + idxG * CBits::Blues + idxB) & 0xFF;
+    return deflated;
 }
