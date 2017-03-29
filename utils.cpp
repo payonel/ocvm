@@ -101,7 +101,8 @@ void utils::mkdir(const string& path)
 bool utils::exists(const string& path)
 {
     bool result = false;
-    return run_safely([&result, &path](){result = fs::exists(path);}) && result;
+    run_safely([&result, &path](){result = fs::exists(path);});
+    return result;
 }
 
 vector<string> utils::list(const string& path)
@@ -124,20 +125,20 @@ vector<string> utils::list(const string& path)
 bool utils::isDirectory(const string& path)
 {
     bool result = false;
-    return run_safely([&result, &path]()
+    run_safely([&result, &path]()
     {
         result = utils::exists(path) && fs::is_directory(path);
-    }) && result;
+    });
+    return result;
 }
 
 size_t utils::size(const string& path, bool recursive)
 {
-    size_t total;
+    size_t total = 0;
     run_safely([&total, &path, &recursive]()
     {
         if (utils::isDirectory(path))
         {
-            size_t total = 0;
             if (recursive)
             {
                 for (const auto& item : list(path))
@@ -173,11 +174,14 @@ bool utils::remove(const string& path)
     bool success = false;
     run_safely([&success, &path]()
     {
-        std::error_code ec;
-        if (utils::isDirectory(path))
-            success = fs::remove_all(path, ec);
-        else
-            success = fs::remove(path, ec);
+        error_code ec;
+        auto info = fs::symlink_status(path, ec);
+        if (ec.value() == 0 && info.type() == fs::file_type::directory)
+            for (fs::directory_iterator d(path, ec), end; ec.value() == 0 && d != end; ++d)
+                success = success && utils::remove(d->path());
+        if (ec.value())
+            return -1;
+        success = success && fs::remove(path, ec);
     });
     return success;
 }
