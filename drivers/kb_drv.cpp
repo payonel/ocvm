@@ -1,5 +1,6 @@
 #include "kb_drv.h"
 #include "ansi.h"
+#include "log.h"
 
 #include <bitset>
 #include <iostream>
@@ -83,10 +84,10 @@ public:
             sequence += sym;
             if (it == pLinks->end())
             {
-                cout << "unknown sequence: ";
+                lout << "unknown sequence: ";
                 for (auto ch : sequence)
-                    cout << (int)ch << ' ';
-                cout << "\r\n";
+                    lout << (int)ch << ' ';
+                lout << endl;
                 break; // unknown sequence
             }
             const auto& data = it->second;
