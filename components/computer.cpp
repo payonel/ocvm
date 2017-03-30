@@ -18,8 +18,6 @@ Computer::Computer()
 {
     _start_time = now();
 
-    add("address", &Computer::get_address);
-
     add("setArchitecture", &Computer::setArchitecture);
     add("getArchitecture", &Computer::getArchitecture);
     add("getArchitectures", &Computer::getArchitectures);
@@ -37,6 +35,7 @@ Computer::Computer()
     add("maxEnergy", &Computer::maxEnergy);
     add("realTime", &Computer::realTime);
     add("uptime", &Computer::uptime);
+    add("isRunning", &Computer::isRunning);
 }
 
 Computer::~Computer()
@@ -113,6 +112,10 @@ int Computer::uptime(lua_State* lua)
 void Computer::injectCustomLua()
 {
     lua_getglobal(_state, name().c_str()); // +1
+
+    string code = "return [=====[" + address() + "]=====]";
+    luaL_loadstring(_state, code.c_str()); // (function) +1
+    lua_setfield(_state, -2, "address"); // computer.address = function, pops loadstring -1
 
     //stringstream ss;
     //ss << _start_time;
@@ -470,4 +473,9 @@ bool Computer::newlib(LuaProxy* proxy)
 int Computer::get_address(lua_State* lua)
 {
     return ValuePack::ret(lua, address());
+}
+
+int Computer::isRunning(lua_State* lua)
+{
+    return ValuePack::ret(lua, true);
 }

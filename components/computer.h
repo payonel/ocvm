@@ -18,6 +18,7 @@ public:
     void pushSignal(const ValuePack& pack);
     bool postInit() override;
 
+    int isRunning(lua_State* lua);
     int setArchitecture(lua_State* lua);
     int getArchitecture(lua_State* lua);
     int getArchitectures(lua_State* lua);
