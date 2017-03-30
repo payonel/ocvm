@@ -33,6 +33,7 @@ public:
     int spaceTotal(lua_State* lua);
     int remove(lua_State* lua);
     int makeDirectory(lua_State* lua);
+    int rename(lua_State* lua);
 protected:
     bool onInitialize(Value& config) override;
     static string clean(string arg, bool bAbs, bool removeEnd);

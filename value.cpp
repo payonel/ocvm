@@ -219,9 +219,9 @@ Value& Value::insert(const Value& value)
 
 int Value::len() const
 {
-    if (type() == "string")
+    if (_id == LUA_TSTRING)
         return (int)_string.size();
-    else if (type() == "table")
+    else if (_id == LUA_TTHREAD || _id == LUA_TTABLE)
     {
         int max = 0;
         for (const auto& pair : _ntable)
@@ -249,15 +249,15 @@ string Value::serialize(int spacey) const
     stringstream ss;
     string sp = spacey > 0 ? "\n" : "";
     string tab = spacey > 0 ? "\t" : "";
-    if (_type == "string")
+    if (_id == LUA_TSTRING)
     {
         ss << "\"" + _string + "\"";
     }
-    else if (_type == "boolean")
+    else if (_id == LUA_TBOOLEAN)
     {
         ss << (_bool ? "true" : "false");
     }
-    else if (_type == "number")
+    else if (_id == LUA_TNUMBER)
     {
         bool neg = _number < 0;
         if ((neg ? -_number : _number) >= std::numeric_limits<double>::max())
@@ -265,12 +265,17 @@ string Value::serialize(int spacey) const
         else
             ss << _number;
     }
-    else if (_type == "nil")
+    else if (_id == LUA_TNIL)
     {
         ss << "nil";
     }
-    else if (_type == "table")
+    else if (_id == LUA_TTABLE || _id == LUA_TTHREAD)
     {
+        if (_id == LUA_TTHREAD)
+        {
+            ss << "[thread]";
+        }
+
         ss << "{" << sp;
         bool skipped_index = false;
         int count = len();

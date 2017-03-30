@@ -306,12 +306,34 @@ RunState Computer::resume(int nargs)
     if (status_id == LUA_OK)
     {
         Value thread(_state);
-        if (!thread.get(2)) // [1] should be the thread itself, [2] is the pcall return
+        int thread_index = 0;
+        int size = thread.len();
+        // [1] should be the thread itself, [2] is the pcall return
+        for (int index = 0; index < size; index++)
         {
-            lout << "kernel panic: " << thread.get(3).toString() << endl;
+            if (thread.get(index).type_id() == LUA_TTHREAD)
+            {
+                thread_index = index;
+                break;
+            }
+        }
+        if (thread_index == 0)
+        {
+            lout << "kernal panic, failed to detect thread in stack\n";
         }
         else
-            lout << "lua env SHUTDOWN\n";
+        {
+            Value yield_value = thread.get(thread_index + 1);
+            if (!yield_value)
+            {
+                lout << "kernel panic: " << thread.toString() << endl;
+            }
+            else
+            {
+                lout << "lua env SHUTDOWN\n";
+            }
+        }
+
         return RunState::Halt;
     }
     else if (status_id == LUA_YIELD)

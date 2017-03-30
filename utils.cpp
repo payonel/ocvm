@@ -75,10 +75,9 @@ bool utils::copy(const string& src, const string& dst)
         return false;
     }
 
-    return run_safely([&src, &dst]()
-    {
-        fs::copy(src, dst, fs::copy_options::recursive);
-    });
+    error_code ec;
+    fs::copy(src, dst, fs::copy_options::recursive, ec);
+    return ec.value() == 0;
 }
 
 bool utils::write(const string& data, const string& dst)
@@ -95,14 +94,15 @@ bool utils::write(const string& data, const string& dst)
 
 void utils::mkdir(const string& path)
 {
-    run_safely([&path](){fs::create_directories(path);});
+    error_code ec;
+    fs::create_directories(path, ec);
 }
 
 bool utils::exists(const string& path)
 {
-    bool result = false;
-    run_safely([&result, &path](){result = fs::exists(path);});
-    return result;
+    error_code ec;
+    bool result = fs::exists(path, ec);
+    return result && ec.value() == 0;
 }
 
 vector<string> utils::list(const string& path)
@@ -111,79 +111,72 @@ vector<string> utils::list(const string& path)
     if (!utils::exists(path))
         return result;
 
-    run_safely([&path, &result]()
+    error_code ec;
+    for (const auto& ele : fs::directory_iterator(path, ec))
     {
-        for (const auto& ele : fs::directory_iterator(path))
-        {
-            result.push_back(ele.path());
-        }
-    });
+        if (ec.value() != 0)
+            return {};
+
+        result.push_back(ele.path());
+    }
 
     return result;
 }
 
 bool utils::isDirectory(const string& path)
 {
-    bool result = false;
-    run_safely([&result, &path]()
-    {
-        result = utils::exists(path) && fs::is_directory(path);
-    });
-    return result;
+    error_code ec;
+    bool result = fs::is_directory(path, ec);
+    return result && ec.value() == 0;
 }
 
 size_t utils::size(const string& path, bool recursive)
 {
-    size_t total = 0;
-    run_safely([&total, &path, &recursive]()
+    error_code ec;
+    size_t result = 0;
+    if (!utils::isDirectory(path))
     {
-        if (utils::isDirectory(path))
-        {
-            if (recursive)
-            {
-                for (const auto& item : list(path))
-                {
-                    total += size(item, true);
-                }
-            }
-        }
-        else
-        {
-            total = fs::file_size(path);
-        }
-    });
-
-    return total;
+        result = fs::file_size(path, ec);
+        if (ec.value() != 0)
+            result = 0;
+    }
+    return result;
 }
 
 uint64_t utils::lastModified(const string& filepath)
 {
+    error_code ec;
     uint64_t result = 0;
-    run_safely([&result, &filepath]()
-    {
-        auto ftime = fs::last_write_time(filepath);
-        std::time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
-        result = static_cast<uint64_t>(cftime);
-    });
+
+    auto ftime = fs::last_write_time(filepath, ec);
+    if (ec.value() != 0)
+        return 0;
+    
+    std::time_t cftime = decltype(ftime)::clock::to_time_t(ftime);
+    result = static_cast<uint64_t>(cftime);
 
     return result;
 }
 
 bool utils::remove(const string& path)
 {
-    bool success = false;
-    run_safely([&success, &path]()
-    {
-        error_code ec;
-        auto info = fs::symlink_status(path, ec);
-        if (ec.value() == 0 && info.type() == fs::file_type::directory)
-            for (fs::directory_iterator d(path, ec), end; ec.value() == 0 && d != end; ++d)
-                success = success && utils::remove(d->path());
-        if (ec.value())
-            return -1;
-        success = success && fs::remove(path, ec);
-    });
-    return success;
+    bool success = true;
+    error_code ec;
+    auto info = fs::symlink_status(path, ec);
+    if (ec.value() == 0 && info.type() == fs::file_type::directory)
+        for (fs::directory_iterator d(path, ec), end; ec.value() == 0 && d != end; ++d)
+            success = success && utils::remove(d->path());
+    if (ec.value())
+        return -1;
+    success = success && fs::remove(path, ec);
+    return success && ec.value() == 0;
+}
+
+bool utils::rename(const string& from, const string& to)
+{
+    error_code ec;
+    fs::rename(from, to, ec);
+    return ec.value() == 0;
 }
 
 string utils::proc_root()

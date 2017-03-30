@@ -20,4 +20,5 @@ private:
     Value _data;
     string _path;
     string _name;
+    string _cache;
 };

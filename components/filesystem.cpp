@@ -26,11 +26,12 @@ Filesystem::Filesystem() :
     add("spaceTotal" ,&Filesystem::spaceTotal);
     add("remove" ,&Filesystem::remove);
     add("makeDirectory", &Filesystem::makeDirectory);
+    add("rename" ,&Filesystem::rename);
 }
 
 bool Filesystem::onInitialize(Value& config)
 {
-    Value source_uri = config.get(3).Or(false);
+    Value source_uri = static_cast<const Value&>(config).get(3).Or(false);
     if (source_uri.type() == "string") // loot disk
     {
         _isReadOnly = true;
@@ -270,7 +271,7 @@ int Filesystem::list(lua_State* lua)
     Value t = Value::table();
     for (const auto& item : listing)
     {
-        string relative_item = clean(relative(request_path, item), false, false);
+        string relative_item = clean(relative(request_path, item), false, true);
         t.insert(relative_item);
     }
 
@@ -390,4 +391,19 @@ int Filesystem::makeDirectory(lua_State* lua)
     }
     utils::mkdir(dirpath);
     return ValuePack::ret(lua, true);
+}
+
+int Filesystem::rename(lua_State* lua)
+{
+    string from = path() + clean(Value::check(lua, 1, "string").toString(), true, true);
+    string to = path() + clean(Value::check(lua, 2, "string").toString(), true, true);
+    if (isReadOnly())
+    {
+        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
+    }
+    else if (utils::exists(to))
+    {
+        return ValuePack::ret(lua, Value::nil, "destination exists");
+    }
+    return ValuePack::ret(lua, utils::rename(from, to));
 }

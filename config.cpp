@@ -70,6 +70,7 @@ bool Config::load(const string& path, const string& name)
             return false;
         }
         _data = tmpData;
+        _cache = _data.serialize(2);
     }
     else
     {
@@ -114,8 +115,12 @@ bool Config::save() const
 {
     if (_data)
     {
-        lout << "saving " << _name << ": config\n";
-        return utils::write(_data.serialize(2), savePath());
+        string updated_config = _data.serialize(2);
+        if (updated_config != _cache)
+        {
+            lout << "saving " << _name << ": config\n";
+            return utils::write(updated_config, savePath());
+        }
     }
     return true;
 }

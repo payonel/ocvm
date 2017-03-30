@@ -23,6 +23,7 @@ namespace utils
     uint64_t lastModified(const string& path);
 
     bool remove(const string& path);
+    bool rename(const string& from, const string& to);
 
     bool run_safely(function<void()> func, function<void(const string&)> onError = nullptr);
     string proc_root();

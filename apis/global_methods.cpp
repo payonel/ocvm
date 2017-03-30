@@ -30,10 +30,6 @@ int GlobalMethods::print(lua_State* lua)
 
 int GlobalMethods::error(lua_State* lua)
 {
-    string msg = Value(lua, 1).toString();
-    string stack = Value::stack(lua);
-    lout << "[--vm--] [ERROR] " << msg << endl;
-    lout << stack << endl;
-    luaL_error(lua, stack.c_str());
-    return 0;
+    lua_settop(lua, 1);
+    return lua_error(lua);
 }
