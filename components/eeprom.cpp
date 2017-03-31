@@ -14,6 +14,7 @@ Eeprom::Eeprom()
     add("getSize", &Eeprom::getSize);
     add("getDataSize", &Eeprom::getDataSize);
     add("getLabel", &Eeprom::getLabel);
+    add("setLabel", &Eeprom::setLabel);
 }
 
 bool Eeprom::onInitialize()
@@ -60,11 +61,6 @@ int Eeprom::getDataSize(lua_State* lua)
     return ValuePack::ret(lua, _data_size_limit);
 }
 
-int Eeprom::getLabel(lua_State* lua)
-{
-    return ValuePack::ret(lua, "EEPROM");
-}
-
 int Eeprom::setData(lua_State* lua)
 {
     string value = Value::check(lua, 1, "string", "nil").Or("").toString();
@@ -90,4 +86,15 @@ string Eeprom::load(const string& path) const
     string buffer;
     utils::read(path, &buffer);
     return buffer;
+}
+
+int Eeprom::getLabel(lua_State* lua)
+{
+    return ValuePack::ret(lua, config().get(ConfigIndex::Label));
+}
+
+int Eeprom::setLabel(lua_State* lua)
+{
+    update(ConfigIndex::Label, Value::check(lua, 1, "string"));
+    return 0;
 }

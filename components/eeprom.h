@@ -11,7 +11,8 @@ public:
     {
         BiosPath = Component::ConfigIndex::Next,
         BiosSize,
-        DataSize
+        DataSize,
+        Label
     };
 
     int get(lua_State* lua);
@@ -20,6 +21,7 @@ public:
     int getSize(lua_State* lua);
     int getDataSize(lua_State* lua);
     int getLabel(lua_State* lua);
+    int setLabel(lua_State* lua);
 protected:
     bool onInitialize() override;
     string biosPath() const;
