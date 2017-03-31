@@ -4,6 +4,7 @@
 
 #include <bitset>
 #include <iostream>
+#include <stack>
 using namespace std;
 
 struct KeyCodeData
@@ -74,37 +75,53 @@ public:
 
     bool lookup(TermBuffer* buffer, _Code* pCode, _Mod* pMod)
     {
+        *pCode = 0;
         auto* pLinks = &_root;
-        string sequence;
+        stack<const KeySymData*> dataStack;
 
-        while (buffer->size())
+        for (size_t buffer_index = 0; buffer_index < buffer->size(); buffer_index++)
         {
-            auto sym = buffer->get();
+            auto sym = buffer->peek(buffer_index);
             const auto& it = pLinks->find(sym);
-            sequence += sym;
             if (it == pLinks->end())
             {
-                lout << "unknown sequence: ";
-                for (auto ch : sequence)
-                    lout << (int)ch << ' ';
-                lout << endl;
-                break; // unknown sequence
+                break;
             }
-            const auto& data = it->second;
-
-            if (!buffer->size())
-            {
-                *pCode = data->code;
-                *pMod = (_Mod)data->mod;
-                return true;
-            }
-            else
-            {
-                pLinks = &(data->links);
-            }
+            dataStack.push(it->second.get());
+            pLinks = &(it->second->links);
         }
 
-        return false;
+        // now search back until we find a code
+        while (dataStack.size())
+        {
+            const auto* pData = dataStack.top();
+            if (pData->code)
+            {
+                *pCode = pData->code;
+                *pMod = (_Mod)pData->mod;
+                break;
+            }
+            dataStack.pop();
+        }
+
+        if (dataStack.empty())
+        {
+            lout << "unknown sequence: ";
+            while (buffer->size())
+            {
+                lout << (int)buffer->get() << ' ';
+            }
+            lout << endl;
+        }
+
+        // now clear buffer up to stack height
+        while (dataStack.size())
+        {
+            buffer->get();
+            dataStack.pop();
+        }
+
+        return *pCode; // non-zero is success
     }
 
     void add_code_sym(_Code code, _Sym s0, _Sym s1, _Sym s2, _Sym s3, _Sym s4, _Sym s5, _Sym s6, _Sym s7)
