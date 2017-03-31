@@ -15,6 +15,7 @@ Filesystem::Filesystem() :
     add("write", &Filesystem::write);
     add("close", &Filesystem::close);
     add("getLabel", &Filesystem::getLabel);
+    add("setLabel", &Filesystem::setLabel);
     add("list", &Filesystem::list);
     add("isDirectory", &Filesystem::isDirectory);
     add("exists", &Filesystem::exists);
@@ -29,9 +30,9 @@ Filesystem::Filesystem() :
     add("rename" ,&Filesystem::rename);
 }
 
-bool Filesystem::onInitialize(Value& config)
+bool Filesystem::onInitialize()
 {
-    Value source_uri = static_cast<const Value&>(config).get(3).Or(false);
+    Value source_uri = config().get(ConfigIndex::SourceUri).Or(false);
     if (source_uri.type() == "string") // loot disk
     {
         _isReadOnly = true;
@@ -260,7 +261,13 @@ int Filesystem::close(lua_State* lua)
 
 int Filesystem::getLabel(lua_State* lua)
 {
-    return ValuePack::ret(lua, "label stub");
+    return ValuePack::ret(lua, config().get(ConfigIndex::Label));
+}
+
+int Filesystem::setLabel(lua_State* lua)
+{
+    update(ConfigIndex::Label, Value::check(lua, 1, "string"));
+    return 0;
 }
 
 int Filesystem::list(lua_State* lua)
@@ -274,6 +281,8 @@ int Filesystem::list(lua_State* lua)
         string relative_item = clean(relative(request_path, item), false, true);
         t.insert(relative_item);
     }
+
+    t.set("n", listing.size());
 
     return ValuePack::ret(lua, t);
 }

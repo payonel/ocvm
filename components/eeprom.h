@@ -7,6 +7,13 @@ class Eeprom : public Component
 public:
     Eeprom();
 
+    enum ConfigIndex
+    {
+        BiosPath = Component::ConfigIndex::Next,
+        BiosSize,
+        DataSize
+    };
+
     int get(lua_State* lua);
     int getData(lua_State* lua);
     int setData(lua_State* lua);
@@ -14,7 +21,7 @@ public:
     int getDataSize(lua_State* lua);
     int getLabel(lua_State* lua);
 protected:
-    bool onInitialize(Value& config) override;
+    bool onInitialize() override;
     string biosPath() const;
     string dataPath() const;
     string load(const string& path) const;

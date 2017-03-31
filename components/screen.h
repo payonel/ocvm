@@ -18,7 +18,7 @@ public:
     void addKeyboard(const string& addr);
     void onResize(int width, int height) override;
 protected:
-    bool onInitialize(Value& config) override;
+    bool onInitialize() override;
 private:
     vector<string> _keyboards;
     MouseInput* _mouse = nullptr;

@@ -12,6 +12,12 @@ class Filesystem : public Component
 public:
     Filesystem();
 
+    enum ConfigIndex
+    {
+        SourceUri = Component::ConfigIndex::Next,
+        Label
+    };
+
     string path() const;
     string src() const;
     bool isReadOnly() const;
@@ -22,6 +28,7 @@ public:
     int write(lua_State* lua);
     int close(lua_State* lua);
     int getLabel(lua_State* lua);
+    int setLabel(lua_State* lua);
     int list(lua_State* lua);
     int isDirectory(lua_State* lua);
     int exists(lua_State* lua);
@@ -35,7 +42,7 @@ public:
     int makeDirectory(lua_State* lua);
     int rename(lua_State* lua);
 protected:
-    bool onInitialize(Value& config) override;
+    bool onInitialize() override;
     static string clean(string arg, bool bAbs, bool removeEnd);
     static string relative(const string& requested, const string& full);
     void init(const string& loot);

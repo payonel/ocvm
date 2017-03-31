@@ -43,7 +43,7 @@ Computer::~Computer()
     close();
 }
 
-bool Computer::onInitialize(Value& config)
+bool Computer::onInitialize()
 {
     this->client()->computer(this);
 

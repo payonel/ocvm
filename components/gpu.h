@@ -33,7 +33,7 @@ public:
     int getScreen(lua_State* lua);
     int maxDepth(lua_State* lua);
 protected:
-    bool onInitialize(Value& config) override;
+    bool onInitialize() override;
     void check(lua_State* lua) const; // throws if no screen
     void deflate(lua_State* lua, Color* pRawColor);
 

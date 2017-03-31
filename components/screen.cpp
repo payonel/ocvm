@@ -25,7 +25,7 @@ Screen::~Screen()
     _mouse = nullptr;
 }
 
-bool Screen::onInitialize(Value& config)
+bool Screen::onInitialize()
 {
     // we now have a client and can add ourselves to the framer
     if (!client()->host()->getFramer()->add(this, 0))

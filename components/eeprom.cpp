@@ -16,12 +16,12 @@ Eeprom::Eeprom()
     add("getLabel", &Eeprom::getLabel);
 }
 
-bool Eeprom::onInitialize(Value& config)
+bool Eeprom::onInitialize()
 {
-    string originalBiosPath = config.get(3).toString();
+    string originalBiosPath = config().get(ConfigIndex::BiosPath).toString();
 
-    int config_bios_size = config.get(4).toNumber();
-    int config_data_size = config.get(5).toNumber();
+    int config_bios_size = config().get(ConfigIndex::BiosSize).toNumber();
+    int config_data_size = config().get(ConfigIndex::DataSize).toNumber();
 
     _bios_size_limit = config_bios_size == 0 ? _bios_size_limit : config_bios_size;
     _data_size_limit = config_data_size == 0 ? _data_size_limit : config_data_size;

@@ -61,7 +61,7 @@ void Gpu::deflate(lua_State* lua, Color* pRawColor)
     pRawColor->rgb = ColorMap::deflate(*pRawColor, depth);
 }
 
-bool Gpu::onInitialize(Value& config)
+bool Gpu::onInitialize()
 {
     return true;
 }

@@ -16,9 +16,9 @@ Keyboard::~Keyboard()
     _keyboard = nullptr;
 }
 
-bool Keyboard::onInitialize(Value& config)
+bool Keyboard::onInitialize()
 {
-    _preferredScreen = config.get(3).Or("").toString();
+    _preferredScreen = config().get(ConfigIndex::ScreenAddress).Or("").toString();
     return _keyboard->open(Factory::create_kb());
 }
 

@@ -18,10 +18,11 @@ Component::Component() :
 
 bool Component::initialize(Client* client, Value& config)
 {
-    this->name(config.get(1).toString());
+    _config = &config;
+    this->name(config.get(ConfigIndex::Type).toString());
     _client = client;
 
-    Value& vaddr = config.get(2);
+    Value& vaddr = config.get(ConfigIndex::Address);
     if (vaddr.type() != "string" || vaddr.toString().empty())
     {
         vaddr = _address;
@@ -31,7 +32,7 @@ bool Component::initialize(Client* client, Value& config)
         _address =  vaddr.toString();
     }
 
-    return onInitialize(config);
+    return onInitialize();
 }
 
 string Component::type() const
@@ -85,4 +86,14 @@ string Component::make_address()
 Client* Component::client() const
 {
     return _client;
+}
+
+const Value& Component::config() const
+{
+    return *static_cast<const Value*>(_config);
+}
+
+void Component::update(int key, const Value& value)
+{
+    _config->set(key, value);
 }

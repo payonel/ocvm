@@ -37,7 +37,7 @@ public:
     int realTime(lua_State* lua);
     int uptime(lua_State* lua);
 protected:
-    bool onInitialize(Value& config) override;
+    bool onInitialize() override;
     RunState resume(int nargs);
     double trace(lua_State* coState = nullptr, bool bForce = false);
 
