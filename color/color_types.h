@@ -6,6 +6,7 @@ struct Color
 {
     int rgb;
     bool paletted;
+    unsigned code;
 };
 
 constexpr std::size_t PALETTE_SIZE = 16;

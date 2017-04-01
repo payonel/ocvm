@@ -54,7 +54,6 @@ class FrameGpu
 {
 public:
     virtual void winched(int width, int height) = 0;
-    virtual EDepthType getDepth() const = 0;
 };
 
 class Frame
@@ -69,7 +68,6 @@ public:
     void scrolling(bool enable);
 
     void winched(int width, int height);
-    EDepthType getDepth() const;
     void set_gpu(FrameGpu* gpu);
 
     bool write(int x, int y, const Cell& cell);

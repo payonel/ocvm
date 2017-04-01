@@ -60,11 +60,12 @@ protected:
     int getColorContext(lua_State* lua, bool bBack);
     tuple<int, Value> makeColorContext(const Color& color);
 
-    EDepthType setDepth(EDepthType depth);
-    EDepthType getDepth() const override;
-
     void resizeBuffer(int width, int height);
     void invalidate();
+
+    // color mapping to oc 256 codes
+    void redeflate(Color& color, EDepthType oldDepth);
+    unsigned char encode(int rgb);
 
     // FrameGpu overrides
     void winched(int width, int height) override;

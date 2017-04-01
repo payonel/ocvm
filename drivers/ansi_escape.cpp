@@ -163,7 +163,7 @@ void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
                 cmd += Ansi::set_pos(x, y);
         }
         if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
-            cmd += Ansi::set_color(cell.fg, cell.bg, pf->getDepth());
+            cmd += Ansi::set_color(cell.fg, cell.bg);
 
         cout << cmd << cell.value;
         _x = x + 1;

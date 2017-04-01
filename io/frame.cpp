@@ -1,7 +1,5 @@
 #include "frame.h"
 #include "log.h"
-#include "apis/unicode.h"
-#include "color/color_map.h"
 #include <iostream>
 
 Framer::Framer()
@@ -92,13 +90,6 @@ void Frame::winched(int width, int height)
 {
     if (_gpu)
         _gpu->winched(width, height);
-}
-
-EDepthType Frame::getDepth() const
-{
-    if (!_gpu)
-        return EDepthType::_1;
-    return _gpu->getDepth();
 }
 
 bool Frame::write(int x, int y, const Cell& cell)

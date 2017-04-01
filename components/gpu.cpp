@@ -60,6 +60,7 @@ void Gpu::deflate(lua_State* lua, Color* pRawColor)
     }
 
     pRawColor->rgb = ColorMap::deflate(*pRawColor, _depth);
+    pRawColor->code = encode(pRawColor->rgb);
 }
 
 bool Gpu::onInitialize()
@@ -305,12 +306,28 @@ int Gpu::setDepth(lua_State* lua)
     }
 
     int bits = dbits == 1.0 ? 1 : dbits == 4.0 ? 4 : dbits == 8.0 ? 8 : 0;
+    EDepthType oldDepth = _depth;
     switch (bits)
     {
         case 1: _depth = EDepthType::_1; break;
         case 4: _depth = EDepthType::_4; break;
         case 8: _depth = EDepthType::_8; break;
-        default: luaL_error(lua, "invalid depth");
+        default: return luaL_error(lua, "invalid depth");
+    }
+
+    if (_depth != oldDepth)
+    {
+        // refresh screen (reinflate and deflate all cells)
+        redeflate(_fg, oldDepth);
+        redeflate(_bg, oldDepth);
+        size_t size = _width * _height;
+        for (size_t i = 0; i < size; i++)
+        {
+            auto& cell = _cells[i];
+            redeflate(cell.fg, oldDepth);
+            redeflate(cell.bg, oldDepth);
+        }
+        invalidate();
     }
 
     return ValuePack::ret(lua, depth_identifier);
@@ -387,32 +404,6 @@ int Gpu::setPaletteColor(lua_State* lua)
 {
     lua_settop(lua, 0);
     return 0;
-}
-
-EDepthType Gpu::setDepth(EDepthType depth)
-{
-    EDepthType prev = _depth;
-    if (_depth != depth)
-    {
-        // refresh screen (reinflate and deflate all cells)
-        _depth = depth;
-        ColorMap::redeflate(&_fg, prev, _depth);
-        ColorMap::redeflate(&_bg, prev, _depth);
-        size_t size = _width * _height;
-        for (size_t i = 0; i < size; i++)
-        {
-            auto& cell = _cells[i];
-            ColorMap::redeflate(&cell.fg, prev, _depth);
-            ColorMap::redeflate(&cell.bg, prev, _depth);
-        }
-        invalidate();
-    }
-    return prev;
-}
-
-EDepthType Gpu::getDepth() const
-{
-    return _depth;
 }
 
 const Cell* Gpu::get(int x, int y) const
@@ -520,9 +511,7 @@ void Gpu::invalidate()
     {
         for (int x = 1; x <= _width; x++)
         {
-            const auto* pCell = get(x, y);
-            if (pCell)
-                _screen->write(x, y, *pCell);
+            _screen->write(x, y, *get(x, y));
         }
     }
 }
@@ -530,4 +519,21 @@ void Gpu::invalidate()
 void Gpu::winched(int width, int height)
 {
     setResolution(width, height);
+}
+
+void Gpu::redeflate(Color& color, EDepthType oldDepth)
+{
+    ColorMap::redeflate(&color, oldDepth, _depth);
+    color.code = encode(color.rgb);
+}
+
+unsigned char Gpu::encode(int rgb)
+{
+    if (_depth == EDepthType::_8)
+    {
+        return static_cast<unsigned char>(rgb & 0xFF);
+    }
+
+    rgb = ColorMap::inflate(rgb, _depth);
+    return static_cast<unsigned char>(ColorMap::deflate(rgb) & 0xFF);
 }

@@ -1,6 +1,5 @@
 #include "ansi.h"
 #include "color/color_types.h"
-#include "color/color_map.h"
 #if __has_include("log.h")
     #include "log.h"
 #endif
@@ -34,28 +33,17 @@ static const unsigned char oc_to_ansi[256] =
     208,209,210,211,213, 214,215,216,217,219, 220,221,222,223,225, 226,227,228,229,255,
 };
 
-string to_ansi(int depth_encoded_rgb, EDepthType depth, bool foreground)
+string to_ansi(unsigned char deflated_rgb, bool foreground)
 {
-    unsigned char deflated_rgb;
-    if (depth == EDepthType::_8)
-    {
-        deflated_rgb = depth_encoded_rgb;
-    }
-    else
-    {
-        int rgb = ColorMap::inflate(depth_encoded_rgb, depth);
-        deflated_rgb = ColorMap::deflate(rgb);
-    }
-
     stringstream ss;
     ss << (foreground ? "3" : "4") << "8;5;" << (int)oc_to_ansi[deflated_rgb];
     return ss.str();
 }
 
-string Ansi::set_color(const Color& fg, const Color& bg, EDepthType depth)
+string Ansi::set_color(const Color& fg, const Color& bg)
 {
-    string fg_txt = to_ansi(fg.rgb, depth, true);
-    string bg_txt = to_ansi(bg.rgb, depth, false);
+    string fg_txt = to_ansi(fg.code, true);
+    string bg_txt = to_ansi(bg.code, false);
 
     return esc + fg_txt + ";" + bg_txt + "m";
 }
