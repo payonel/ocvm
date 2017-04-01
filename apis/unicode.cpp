@@ -78,6 +78,9 @@ void UnicodeApi::configure(const Value& settings)
 
         file.close();
     }
+
+    // custom overrides
+    font_width[9] = 2;
 }
 
 string UnicodeApi::wtrunc(const string& text, const size_t width)
@@ -86,7 +89,7 @@ string UnicodeApi::wtrunc(const string& text, const size_t width)
     string result;
     for (const auto& sub : subs(text))
     {
-        current_width += charWidth(sub);
+        current_width += charWidth(sub, true);
         if (current_width >= width)
         {
             break;
@@ -223,7 +226,7 @@ size_t UnicodeApi::wlen(const string& text)
     size_t width = 0;
     for (const auto& sub : subs(text))
     {
-        width += charWidth(sub);
+        width += charWidth(sub, true);
     }
 
     return width;
@@ -282,10 +285,9 @@ string UnicodeApi::sub(const string& text, int from, int to)
     return result;
 }
 
-int UnicodeApi::charWidth(const string& text)
+int UnicodeApi::charWidth(const string& text, bool bAlreadySingle)
 {
-    string single = UnicodeApi::sub(text, 1, 1);
-    uint32_t codepoint = UnicodeApi::tocodepoint(single);
+    uint32_t codepoint = UnicodeApi::tocodepoint(bAlreadySingle ? text : UnicodeApi::sub(text, 1, 1));
     const auto& it = font_width.find(codepoint);
     if (it == font_width.end())
         return 1;

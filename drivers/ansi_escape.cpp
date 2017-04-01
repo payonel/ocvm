@@ -144,6 +144,32 @@ bool AnsiEscapeTerm::onAdd(Frame* pf)
     return true;
 }
 
+static string replace_all(const string& src, const string& match, const string& replacement)
+{
+    size_t index = 0;
+    string result = "";
+    while (index < src.size())
+    {
+        size_t next = src.find(match, index);
+        result += src.substr(index, next - index);
+        index = next;
+        if (next != string::npos)
+        {
+            result += replacement;
+            index += match.size() + 1;
+        }
+    }
+    return result;
+}
+
+string AnsiEscapeTerm::scrub(const string& value) const
+{
+    // replace tabs with (U+2409 for HT symbol)
+    // I could use the ht unicode symbol in the source file
+    // but i prefer to keep the source files in ascii
+    return replace_all(value, "\t", string{(char)226, (char)144, (char)137});
+}
+
 void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
 {
     if (pf->scrolling())
@@ -165,7 +191,7 @@ void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
         if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
             cmd += Ansi::set_color(cell.fg, cell.bg);
 
-        cout << cmd << cell.value;
+        cout << cmd << scrub(cell.value);
         _x = x + 1;
         _y = y;
         _fg_rgb = cell.fg.rgb;

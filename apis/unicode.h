@@ -38,7 +38,7 @@ public:
     static size_t wlen(const string& text);
     static size_t len(const string& text);
     static string sub(const string& text, int from, int to);
-    static int charWidth(const string& text);
+    static int charWidth(const string& text, bool bAlreadySingle = false);
     static string reverse(const string& text);
     static string lower(const string& text);
 

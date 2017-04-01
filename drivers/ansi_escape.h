@@ -24,6 +24,7 @@ protected:
     bool onOpen() override;
     void onClose() override;
     bool onAdd(Frame* pf) override;
+    string scrub(const string& value) const;
 private:
     map<Frame*, AnsiFrameState> _states;
 

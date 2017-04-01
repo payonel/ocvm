@@ -428,10 +428,12 @@ void Gpu::set(int x, int y, const Cell& cell)
 
 void Gpu::set(int x, int y, const string& text)
 {
-    int i = 0;
     for (const auto& sub : UnicodeApi::subs(text))
     {
-        set(x + i++, y, {sub, _fg, _bg});
+        int step = UnicodeApi::charWidth(sub, true);
+        set(x++, y, {sub, _fg, _bg});
+        while (--step > 0)
+            set(x++, y, {" ", _fg, _bg});
     }
 }
 
@@ -441,7 +443,9 @@ void Gpu::set(int x, int y, const vector<const Cell*>& scanned)
     {
         const Cell* pc = scanned.at(i);
         if (pc)
+        {
             set(x + i, y, *pc);
+        }
     }
 }
 
