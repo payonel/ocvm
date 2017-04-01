@@ -107,7 +107,7 @@ bool AnsiEscapeTerm::update()
         for (auto pair : _states)
         {
             Frame* pFrame = pair.first;
-            pFrame->onResize(width, height);
+            pFrame->winched(width, height);
         }
     }
     cout << flush;
@@ -144,7 +144,7 @@ bool AnsiEscapeTerm::onAdd(Frame* pf)
     return true;
 }
 
-void AnsiEscapeTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
+void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
 {
     if (pf->scrolling())
     {

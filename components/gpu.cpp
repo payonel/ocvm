@@ -28,6 +28,8 @@ Gpu::Gpu()
     add("setViewport", &Gpu::setViewport);
     add("getScreen", &Gpu::getScreen);
     add("maxDepth", &Gpu::maxDepth);
+    add("getPaletteColor", &Gpu::getPaletteColor);
+    add("setPaletteColor", &Gpu::setPaletteColor);
 }
 
 Gpu::~Gpu()
@@ -45,10 +47,9 @@ void Gpu::check(lua_State* lua) const
 void Gpu::deflate(lua_State* lua, Color* pRawColor)
 {
     check(lua);
-    EDepthType depth = _screen->getDepth();
     if (pRawColor->paletted)
     {
-        if (depth == EDepthType::_1)
+        if (_depth == EDepthType::_1)
         {
             luaL_error(lua, "color palette not supported");
         }
@@ -58,11 +59,12 @@ void Gpu::deflate(lua_State* lua, Color* pRawColor)
         }
     }
 
-    pRawColor->rgb = ColorMap::deflate(*pRawColor, depth);
+    pRawColor->rgb = ColorMap::deflate(*pRawColor, _depth);
 }
 
 bool Gpu::onInitialize()
 {
+    ColorMap::set_monochrome(config().get(ConfigIndex::MonochromeColor).Or(0xffffff).toNumber());
     return true;
 }
 
@@ -82,7 +84,13 @@ int Gpu::bind(lua_State* lua)
     {
         return ValuePack::ret(lua, Value::nil, "not a screen");
     }
+    if (_screen) // previously a different screen
+    {
+        _screen->set_gpu(nullptr);
+    }
     _screen = screen;
+    _screen->set_gpu(this);
+    _depth = _screen->framer()->getInitialDepth();
 
     return 0;
 }
@@ -95,8 +103,7 @@ int Gpu::maxDepth(lua_State* lua)
 int Gpu::getResolution(lua_State* lua)
 {
     check(lua);
-    auto dim = _screen->getResolution();
-    return ValuePack::ret(lua, std::get<0>(dim), std::get<1>(dim));
+    return ValuePack::ret(lua, _width, _height);
 }
 
 int Gpu::setResolution(lua_State* lua)
@@ -106,15 +113,25 @@ int Gpu::setResolution(lua_State* lua)
     int height = (int)Value::check(lua, 2, "number").toNumber();
 
     tuple<int, int> max = _screen->framer()->maxResolution();
-    if (width < 1 || width > std::get<0>(max) ||
-        height < 1 || height > std::get<1>(max))
+    if (width < 1 || width > std::get<0>(max) || height < 1 || height > std::get<1>(max))
     {
-        luaL_error(lua, "unsupported resolution");
-        return 0;
+        return luaL_error(lua, "unsupported resolution");
     }
 
-    _screen->onResize(width, height);
+    setResolution(width, height);
     return ValuePack::ret(lua, true);
+}
+
+void Gpu::setResolution(int width, int height)
+{
+    if (!_screen || !_screen->framer())
+        return;
+
+    if (width == _width && height == _height)
+        return;
+
+    resizeBuffer(width, height);
+    client()->pushSignal({"screen_resized", _screen->address(), width, height});
 }
 
 int Gpu::set(lua_State* lua)
@@ -123,7 +140,7 @@ int Gpu::set(lua_State* lua)
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
     string text = Value::check(lua, 3, "string").toString();
-    _screen->set(x, y, text);
+    set(x, y, text);
     return ValuePack::ret(lua, true);
 }
 
@@ -132,7 +149,7 @@ int Gpu::get(lua_State* lua)
     check(lua);
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
-    const Cell* pc = _screen->get(x, y);
+    const Cell* pc = get(x, y);
     if (!pc)
     {
         luaL_error(lua, "index out of bounds");
@@ -190,13 +207,13 @@ int Gpu::fill(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "invalid fill value");
     }
 
-    Cell fill_cell { text, _screen->foreground(), _screen->background() };
+    Cell fill_cell { text, _fg, _bg };
 
     for (int row = 0; row < height; row++)
     {
         for (int col = 0; col < width; col++)
         {
-            _screen->set(x + col, y + row, fill_cell);
+            set(x + col, y + row, fill_cell);
         }
     }
 
@@ -213,23 +230,19 @@ int Gpu::copy(lua_State* lua)
     int dx = Value::check(lua, 5, "number").toNumber();
     int dy = Value::check(lua, 6, "number").toNumber();
 
-    auto dim = _screen->getResolution();
-    int real_width = std::get<0>(dim);
-    int real_height = std::get<1>(dim);
-
     int tx = x + dx;
     int ty = y + dy;
 
     if (width <= 0 || height <= 0)
         return ValuePack::ret(lua, true);
 
-    if (tx > real_width || ty > real_height)
+    if (tx > _width || ty > _height)
         return ValuePack::ret(lua, true);
 
     if ((tx + width) < 1 || (ty + height) < 1)
         return ValuePack::ret(lua, true);
 
-    if (x > real_width || y > real_height)
+    if (x > _width || y > _height)
         return ValuePack::ret(lua, true);
 
     if ((x + width) < 1 || (y + height) < 1)
@@ -238,7 +251,7 @@ int Gpu::copy(lua_State* lua)
     vector<vector<const Cell*>> scans;
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        auto given_scan = _screen->scan(x, y + yoffset, width);
+        auto given_scan = scan(x, y + yoffset, width);
         vector<const Cell*> next;
         for (const auto* pc : given_scan)
         {
@@ -258,7 +271,7 @@ int Gpu::copy(lua_State* lua)
 
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        _screen->set(tx, ty + yoffset, scans.at(yoffset));
+        set(tx, ty + yoffset, scans.at(yoffset));
     }
 
     for (const auto& scan : scans)
@@ -275,7 +288,7 @@ int Gpu::copy(lua_State* lua)
 int Gpu::getDepth(lua_State* lua)
 {
     check(lua);
-    return ValuePack::ret(lua, static_cast<int>(_screen->getDepth()));
+    return ValuePack::ret(lua, static_cast<int>(_depth));
 }
 
 int Gpu::setDepth(lua_State* lua)
@@ -284,7 +297,7 @@ int Gpu::setDepth(lua_State* lua)
     double dbits = Value::check(lua, 1, "number").toNumber();
 
     string depth_identifier;
-    switch (_screen->getDepth())
+    switch (_depth)
     {
         case EDepthType::_1: depth_identifier = "OneBit"; break;
         case EDepthType::_4: depth_identifier = "FourBit"; break;
@@ -294,9 +307,9 @@ int Gpu::setDepth(lua_State* lua)
     int bits = dbits == 1.0 ? 1 : dbits == 4.0 ? 4 : dbits == 8.0 ? 8 : 0;
     switch (bits)
     {
-        case 1: _screen->setDepth(EDepthType::_1); break;
-        case 4: _screen->setDepth(EDepthType::_4); break;
-        case 8: _screen->setDepth(EDepthType::_8); break;
+        case 1: _depth = EDepthType::_1; break;
+        case 4: _depth = EDepthType::_4; break;
+        case 8: _depth = EDepthType::_8; break;
         default: luaL_error(lua, "invalid depth");
     }
 
@@ -336,9 +349,9 @@ int Gpu::setColorContext(lua_State* lua, bool bBack)
     deflate(lua, &color);
 
     if (bBack)
-        _screen->background(color);
+        _bg = color;
     else
-        _screen->foreground(color);
+        _fg = color;
 
     return stack;
 }
@@ -346,7 +359,7 @@ int Gpu::setColorContext(lua_State* lua, bool bBack)
 int Gpu::getColorContext(lua_State* lua, bool bBack)
 {
     check(lua);
-    const Color& color = bBack ? _screen->background() : _screen->foreground();
+    const Color& color = bBack ? _bg : _fg;
     auto ctx = makeColorContext(color);
 
     return ValuePack::ret(lua, std::get<0>(ctx), std::get<1>(ctx));
@@ -358,8 +371,163 @@ tuple<int, Value> Gpu::makeColorContext(const Color& color)
     if (color.paletted)
         value = color.rgb;
     else
-        value = ColorMap::inflate(color.rgb, _screen->getDepth());
+        value = ColorMap::inflate(color.rgb, _depth);
     Value vp = color.paletted ? Value(true) : Value::nil;
 
     return make_tuple(value, vp);
+}
+
+int Gpu::getPaletteColor(lua_State* lua)
+{
+    lua_settop(lua, 0);
+    return 0;
+}
+
+int Gpu::setPaletteColor(lua_State* lua)
+{
+    lua_settop(lua, 0);
+    return 0;
+}
+
+EDepthType Gpu::setDepth(EDepthType depth)
+{
+    EDepthType prev = _depth;
+    if (_depth != depth)
+    {
+        // refresh screen (reinflate and deflate all cells)
+        _depth = depth;
+        ColorMap::redeflate(&_fg, prev, _depth);
+        ColorMap::redeflate(&_bg, prev, _depth);
+        size_t size = _width * _height;
+        for (size_t i = 0; i < size; i++)
+        {
+            auto& cell = _cells[i];
+            ColorMap::redeflate(&cell.fg, prev, _depth);
+            ColorMap::redeflate(&cell.bg, prev, _depth);
+        }
+        invalidate();
+    }
+    return prev;
+}
+
+EDepthType Gpu::getDepth() const
+{
+    return _depth;
+}
+
+const Cell* Gpu::get(int x, int y) const
+{
+    // positions are 1-based
+    if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
+        return nullptr;
+
+    return &_cells[(y-1)*_width + (x-1)];
+}
+
+void Gpu::set(int x, int y, const Cell& cell)
+{
+    // positions are 1-based
+    if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
+        return;
+
+    _cells[(y-1)*_width + (x-1)] = cell;
+    if (_screen)
+        _screen->write(x, y, cell);
+}
+
+void Gpu::set(int x, int y, const string& text)
+{
+    int i = 0;
+    for (const auto& sub : UnicodeApi::subs(text))
+    {
+        set(x + i++, y, {sub, _fg, _bg});
+    }
+}
+
+void Gpu::set(int x, int y, const vector<const Cell*>& scanned)
+{
+    for (size_t i = 0; i < scanned.size(); i++)
+    {
+        const Cell* pc = scanned.at(i);
+        if (pc)
+            set(x + i, y, *pc);
+    }
+}
+
+vector<const Cell*> Gpu::scan(int x, int y, int width) const
+{
+    vector<const Cell*> result;
+    for (int i = 0; i < width; i++)
+    {
+        const Cell* pCell = get(x + i, y);
+        result.push_back(pCell);
+    }
+
+    return result;
+}
+
+void Gpu::resizeBuffer(int width, int height)
+{
+    Cell* ptr = nullptr;
+    if (width > 0 && height > 0)
+    {
+        size_t size = width * height;
+        ptr = new Cell[size];
+        Cell* it = ptr;
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                const auto& prev_cell = get(x + 1, y + 1); // positions are 1-based
+                if (prev_cell)
+                {
+                    *it = *prev_cell;
+                }
+                else
+                {
+                    it->value = {};
+                    it->fg = {};
+                    it->bg = {};
+                }
+                it++;
+            }
+        }
+    }
+    else
+    {
+        _width = 0;
+        _height = 0;
+    }
+
+    if (_cells)
+    {
+        delete [] _cells;
+    }
+
+    _width = width;
+    _height = height;
+    _cells = ptr;
+}
+
+void Gpu::invalidate()
+{
+    if (!_screen || !_screen->framer())
+        return;
+
+    _screen->framer()->clear();
+
+    for (int y = 1; y <= _height; y++)
+    {
+        for (int x = 1; x <= _width; x++)
+        {
+            const auto* pCell = get(x, y);
+            if (pCell)
+                _screen->write(x, y, *pCell);
+        }
+    }
+}
+
+void Gpu::winched(int width, int height)
+{
+    setResolution(width, height);
 }

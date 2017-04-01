@@ -16,7 +16,6 @@ public:
     int getAspectRatio(lua_State*);
 
     void addKeyboard(const string& addr);
-    void onResize(int width, int height) override;
 protected:
     bool onInitialize() override;
 private:

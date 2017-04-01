@@ -40,53 +40,12 @@ bool Framer::add(Frame* pframe, size_t index)
 
 Frame::Frame() :
     _framer(nullptr),
-    _width(0),
-    _height(0)
+    _gpu(nullptr),
+    _scrolling(false)
 {
 }
 
 Frame::~Frame(){}
-
-bool Frame::setResolution(int width, int height, bool bQuiet)
-{
-    if (width < 0 || height < 0)
-        return false;
-    if (width == _width && height == _height)
-        return false;
-
-    resizeBuffer(width, height);
-
-    if (_framer && !bQuiet)
-    {
-        _framer->invalidate(this);
-    }
-
-    return true;
-}
-
-void Framer::invalidate(Frame* pf)
-{
-    clear();
-    auto dim = pf->getResolution();
-    int width = std::get<0>(dim);
-    int height = std::get<1>(dim);
-    for (int y = 0; y < height; y++)
-    {
-        for (int x = 0; x < width; x++)
-        {
-            invalidate(pf, x + 1, y + 1);
-        }
-    }
-}
-
-void Framer::invalidate(Frame* pf, int x, int y)
-{
-    const Cell* pCell = pf->get(x, y);
-    if (pCell)
-    {
-        onWrite(pf, x, y, *pCell);
-    }
-}
 
 bool Framer::open()
 {
@@ -109,41 +68,9 @@ EDepthType Framer::getInitialDepth() const
     return _initial_depth;
 }
 
-EDepthType Frame::setDepth(EDepthType depth)
-{
-    EDepthType prev = _depth;
-    if (_depth != depth)
-    {
-        // refresh screen (reinflate and deflate all cells)
-        _depth = depth;
-        ColorMap::redeflate(&_fg, prev, _depth);
-        ColorMap::redeflate(&_bg, prev, _depth);
-        size_t size = _width * _height;
-        for (size_t i = 0; i < size; i++)
-        {
-            auto& cell = _cells[i];
-            ColorMap::redeflate(&cell.fg, prev, _depth);
-            ColorMap::redeflate(&cell.bg, prev, _depth);
-        }
-        _framer->invalidate(this);
-    }
-    return prev;
-}
-
-EDepthType Frame::getDepth() const
-{
-    return _depth;
-}
-
-tuple<int, int> Frame::getResolution() const
-{
-    return std::make_tuple(_width, _height);
-}
-
 void Frame::framer(Framer* pfr)
 {
     _framer = pfr;
-    _depth = _framer->getInitialDepth();
 }
 
 Framer* Frame::framer() const
@@ -161,117 +88,29 @@ bool Frame::scrolling() const
     return _scrolling;
 }
 
-const Cell* Frame::get(int x, int y) const
+void Frame::winched(int width, int height)
 {
-    // positions are 1-based
-    if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
-        return nullptr;
-
-    return &_cells[(y-1)*_width + (x-1)];
+    if (_gpu)
+        _gpu->winched(width, height);
 }
 
-void Frame::set(int x, int y, const Cell& cell)
+EDepthType Frame::getDepth() const
 {
-    // positions are 1-based
-    if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
-        return;
-
-    _cells[(y-1)*_width + (x-1)] = cell;
-    if (_framer)
-        _framer->invalidate(this, x, y);
+    if (!_gpu)
+        return EDepthType::_1;
+    return _gpu->getDepth();
 }
 
-void Frame::set(int x, int y, const string& text)
+bool Frame::write(int x, int y, const Cell& cell)
 {
-    int i = 0;
-    for (const auto& sub : UnicodeApi::subs(text))
-    {
-        set(x + i++, y, {sub, _fg, _bg});
-    }
+    if (!_framer)
+        return false;
+    
+    _framer->write(this, x, y, cell);
+    return true;
 }
 
-void Frame::set(int x, int y, const vector<const Cell*>& scanned)
+void Frame::set_gpu(FrameGpu* gpu)
 {
-    for (size_t i = 0; i < scanned.size(); i++)
-    {
-        const Cell* pc = scanned.at(i);
-        if (pc)
-            set(x + i, y, *pc);
-    }
+    _gpu = gpu;
 }
-
-void Frame::foreground(const Color& color)
-{
-    _fg = color;
-}
-
-const Color& Frame::foreground() const
-{
-    return _fg;
-}
-
-void Frame::background(const Color& color)
-{
-    _bg = color;
-}
-
-const Color& Frame::background() const
-{
-    return _bg;
-}
-
-vector<const Cell*> Frame::scan(int x, int y, int width) const
-{
-    vector<const Cell*> result;
-    for (int i = 0; i < width; i++)
-    {
-        const Cell* pCell = get(x + i, y);
-        result.push_back(pCell);
-    }
-
-    return result;
-}
-
-void Frame::resizeBuffer(int width, int height)
-{
-    Cell* ptr = nullptr;
-    if (width > 0 && height > 0)
-    {
-        size_t size = width * height;
-        ptr = new Cell[size];
-        Cell* it = ptr;
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                const auto& prev_cell = get(x + 1, y + 1); // positions are 1-based
-                if (prev_cell)
-                {
-                    *it = *prev_cell;
-                }
-                else
-                {
-                    it->value = {};
-                    it->fg = {};
-                    it->bg = {};
-                }
-                it++;
-            }
-        }
-    }
-    else
-    {
-        _width = 0;
-        _height = 0;
-    }
-
-    if (_cells)
-    {
-        delete [] _cells;
-    }
-
-    _width = width;
-    _height = height;
-    _cells = ptr;
-}
-

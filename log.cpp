@@ -13,13 +13,10 @@ public:
     LogFrame()
     {
         scrolling(true);
-        setResolution(1, 1);
     }
     ~LogFrame()
     {
     }
-
-    void onResize(int, int) override {}
 } single_log_frame;
 
 Frame* Logger::getFrame()
@@ -35,7 +32,7 @@ Logger::Logger(int priority) :
 Logger& operator<< (Logger& logger, const string& text)
 {
     Frame* pf = Logger::getFrame();
-    pf->set(1, 1, {text, pf->foreground(), pf->background()});
+    pf->write(1, 1, {text, {}, {}});
     return logger;
 }
 

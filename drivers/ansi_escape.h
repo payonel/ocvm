@@ -19,10 +19,10 @@ public:
     bool update() override;
     tuple<int, int> maxResolution() const override;
     void clear() override;
+    void write(Frame* pf, int x, int y, const Cell& cell) override;
 protected:
     bool onOpen() override;
     void onClose() override;
-    void onWrite(Frame* pf, int x, int y, const Cell& cell) override;
     bool onAdd(Frame* pf) override;
 private:
     map<Frame*, AnsiFrameState> _states;

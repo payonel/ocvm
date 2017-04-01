@@ -3,7 +3,7 @@
 #include <limits>
 using namespace std;
 
-int ColorMap::monochrome_color = 0x00af00;
+static int monochrome_color = 0xffffff;
 
 enum CShift
 {
@@ -35,7 +35,7 @@ public:
         if (value == 0)
             return 0;
         else
-            return ColorMap::monochrome_color;
+            return monochrome_color;
     }
 
     int deflate(const Color& color) const override
@@ -205,4 +205,9 @@ int ColorMap::deflate(int rgb)
     int idxB = (int)(b * (CBits::Blues - 1.0) / 0xFF + 0.5);
     int deflated = (PALETTE_SIZE + idxR * CBits::Greens * CBits::Blues + idxG * CBits::Blues + idxB) & 0xFF;
     return deflated;
+}
+
+void ColorMap::set_monochrome(int rgb)
+{
+    monochrome_color = rgb;
 }

@@ -104,7 +104,7 @@ public:
             dataStack.pop();
         }
 
-        if (dataStack.empty())
+        if (dataStack.empty() && buffer->size())
         {
             lout << "unknown sequence: ";
             while (buffer->size())

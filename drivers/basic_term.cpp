@@ -16,7 +16,7 @@ void BasicTerm::onClose()
 {
 }
 
-void BasicTerm::onWrite(Frame* pf, int x, int y, const Cell& cell)
+void BasicTerm::write(Frame* pf, int x, int y, const Cell& cell)
 {
     cout << cell.value << flush;
 }

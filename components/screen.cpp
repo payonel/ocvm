@@ -81,8 +81,3 @@ void Screen::addKeyboard(const string& addr)
     _keyboards.push_back(addr);
 }
 
-void Screen::onResize(int width, int height)
-{
-    if (setResolution(width, height))
-        client()->pushSignal({"screen_resized", address(), width, height});
-}

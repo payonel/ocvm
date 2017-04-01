@@ -10,5 +10,5 @@ public:
 protected:
     bool onOpen() override;
     void onClose() override;
-    void onWrite(Frame* pf, int x, int y, const Cell& cell) override;
+    void write(Frame* pf, int x, int y, const Cell& cell) override;
 };
