@@ -44,25 +44,6 @@ void Gpu::check(lua_State* lua) const
     }
 }
 
-void Gpu::deflate(lua_State* lua, Color* pRawColor)
-{
-    check(lua);
-    if (pRawColor->paletted)
-    {
-        if (_depth == EDepthType::_1)
-        {
-            luaL_error(lua, "color palette not supported");
-        }
-        if (pRawColor->rgb < 0 || (size_t)pRawColor->rgb >= PALETTE_SIZE) // palette size
-        {
-            luaL_error(lua, "invalid palette index");
-        }
-    }
-
-    pRawColor->rgb = ColorMap::deflate(*pRawColor, _depth);
-    pRawColor->code = encode(pRawColor->rgb);
-}
-
 bool Gpu::onInitialize()
 {
     ColorMap::set_monochrome(config().get(ConfigIndex::MonochromeColor).Or(0xffffff).toNumber());
@@ -91,7 +72,7 @@ int Gpu::bind(lua_State* lua)
     }
     _screen = screen;
     _screen->set_gpu(this);
-    _depth = _screen->framer()->getInitialDepth();
+    ColorMap::initialize_color_state(_color_state, _screen->framer()->getInitialDepth());
 
     return 0;
 }
@@ -289,7 +270,7 @@ int Gpu::copy(lua_State* lua)
 int Gpu::getDepth(lua_State* lua)
 {
     check(lua);
-    return ValuePack::ret(lua, static_cast<int>(_depth));
+    return ValuePack::ret(lua, static_cast<int>(_color_state.depth));
 }
 
 int Gpu::setDepth(lua_State* lua)
@@ -298,7 +279,7 @@ int Gpu::setDepth(lua_State* lua)
     double dbits = Value::check(lua, 1, "number").toNumber();
 
     string depth_identifier;
-    switch (_depth)
+    switch (_color_state.depth)
     {
         case EDepthType::_1: depth_identifier = "OneBit"; break;
         case EDepthType::_4: depth_identifier = "FourBit"; break;
@@ -306,26 +287,35 @@ int Gpu::setDepth(lua_State* lua)
     }
 
     int bits = dbits == 1.0 ? 1 : dbits == 4.0 ? 4 : dbits == 8.0 ? 8 : 0;
-    EDepthType oldDepth = _depth;
+    EDepthType newDepth;
     switch (bits)
     {
-        case 1: _depth = EDepthType::_1; break;
-        case 4: _depth = EDepthType::_4; break;
-        case 8: _depth = EDepthType::_8; break;
+        case 1: newDepth = EDepthType::_1; break;
+        case 4: newDepth = EDepthType::_4; break;
+        case 8: newDepth = EDepthType::_8; break;
         default: return luaL_error(lua, "invalid depth");
     }
 
-    if (_depth != oldDepth)
+    if (_color_state.depth != newDepth)
     {
         // refresh screen (reinflate and deflate all cells)
-        redeflate(_fg, oldDepth);
-        redeflate(_bg, oldDepth);
+        _fg.rgb = ColorMap::inflate(_color_state, _fg.rgb);
+        _bg.rgb = ColorMap::inflate(_color_state, _bg.rgb);
         size_t size = _width * _height;
         for (size_t i = 0; i < size; i++)
         {
             auto& cell = _cells[i];
-            redeflate(cell.fg, oldDepth);
-            redeflate(cell.bg, oldDepth);
+            cell.fg.rgb = ColorMap::inflate(_color_state, cell.fg.rgb);
+            cell.bg.rgb = ColorMap::inflate(_color_state, cell.bg.rgb);
+        }
+        ColorMap::initialize_color_state(_color_state, newDepth);
+        deflate(_fg);
+        deflate(_bg);
+        for (size_t i = 0; i < size; i++)
+        {
+            auto& cell = _cells[i];
+            deflate(cell.fg);
+            deflate(cell.bg);
         }
         invalidate();
     }
@@ -360,10 +350,22 @@ int Gpu::setColorContext(lua_State* lua, bool bBack)
     int rgb = Value::check(lua, 1, "number").toNumber();
     bool p = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
 
-    int stack = getColorContext(lua, bBack);
+    if (p)
+    {
+        if (_color_state.depth == EDepthType::_1)
+        {
+            luaL_error(lua, "color palette not supported");
+        }
+        if (rgb < 0 || (size_t)rgb >= ColorState::PALETTE_SIZE) // palette size
+        {
+            luaL_error(lua, "invalid palette index");
+        }
+    }
 
     Color color {rgb, p};
-    deflate(lua, &color);
+    deflate(color);
+
+    int stack = getColorContext(lua, bBack);
 
     if (bBack)
         _bg = color;
@@ -388,7 +390,7 @@ tuple<int, Value> Gpu::makeColorContext(const Color& color)
     if (color.paletted)
         value = color.rgb;
     else
-        value = ColorMap::inflate(color.rgb, _depth);
+        value = ColorMap::inflate(_color_state, color.rgb);
     Value vp = color.paletted ? Value(true) : Value::nil;
 
     return make_tuple(value, vp);
@@ -525,19 +527,19 @@ void Gpu::winched(int width, int height)
     setResolution(width, height);
 }
 
-void Gpu::redeflate(Color& color, EDepthType oldDepth)
+void Gpu::deflate(Color& color)
 {
-    ColorMap::redeflate(&color, oldDepth, _depth);
+    color.rgb = ColorMap::deflate(_color_state, color);
     color.code = encode(color.rgb);
 }
 
 unsigned char Gpu::encode(int rgb)
 {
-    if (_depth == EDepthType::_8)
+    if (_color_state.depth == EDepthType::_8)
     {
         return static_cast<unsigned char>(rgb & 0xFF);
     }
 
-    rgb = ColorMap::inflate(rgb, _depth);
+    rgb = ColorMap::inflate(_color_state, rgb);
     return static_cast<unsigned char>(ColorMap::deflate(rgb) & 0xFF);
 }

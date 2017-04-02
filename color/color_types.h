@@ -9,8 +9,6 @@ struct Color
     unsigned code;
 };
 
-constexpr std::size_t PALETTE_SIZE = 16;
-
 enum class EDepthType
 {
     _1 = 1,
@@ -18,3 +16,9 @@ enum class EDepthType
     _8 = 8
 };
 
+struct ColorState
+{
+    enum { PALETTE_SIZE = 16 };
+    int palette[PALETTE_SIZE];
+    EDepthType depth;
+};

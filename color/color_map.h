@@ -5,11 +5,11 @@
 class ColorMap
 {
 public:
-    static int inflate(int value, EDepthType depth);
-    static int deflate(const Color& color, EDepthType depth);
+    static int inflate(const ColorState& state, int value);
+    static int deflate(const ColorState& state, const Color& color);
 
-    static void redeflate(Color* pColor, EDepthType old_depth, EDepthType new_depth);
     static int deflate(int rgb);
 
+    static void initialize_color_state(ColorState& state, EDepthType depth);
     static void set_monochrome(int rgb);
 };

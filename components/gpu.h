@@ -64,7 +64,7 @@ protected:
     void invalidate();
 
     // color mapping to oc 256 codes
-    void redeflate(Color& color, EDepthType oldDepth);
+    void deflate(Color& color);
     unsigned char encode(int rgb);
 
     // FrameGpu overrides
@@ -78,5 +78,5 @@ private:
     Cell* _cells = nullptr;
     Color _bg;
     Color _fg;
-    EDepthType _depth;
+    ColorState _color_state;
 };
