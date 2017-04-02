@@ -299,24 +299,9 @@ int Gpu::setDepth(lua_State* lua)
     if (_color_state.depth != newDepth)
     {
         // refresh screen (reinflate and deflate all cells)
-        _fg.rgb = ColorMap::inflate(_color_state, _fg.rgb);
-        _bg.rgb = ColorMap::inflate(_color_state, _bg.rgb);
-        size_t size = _width * _height;
-        for (size_t i = 0; i < size; i++)
-        {
-            auto& cell = _cells[i];
-            cell.fg.rgb = ColorMap::inflate(_color_state, cell.fg.rgb);
-            cell.bg.rgb = ColorMap::inflate(_color_state, cell.bg.rgb);
-        }
+        inflate_all();
         ColorMap::initialize_color_state(_color_state, newDepth);
-        deflate(_fg);
-        deflate(_bg);
-        for (size_t i = 0; i < size; i++)
-        {
-            auto& cell = _cells[i];
-            deflate(cell.fg);
-            deflate(cell.bg);
-        }
+        deflate_all();
         invalidate();
     }
 
@@ -398,14 +383,33 @@ tuple<int, Value> Gpu::makeColorContext(const Color& color)
 
 int Gpu::getPaletteColor(lua_State* lua)
 {
-    lua_settop(lua, 0);
-    return 0;
+    int index = Value::check(lua, 1, "number").toNumber();
+    if (_color_state.depth == EDepthType::_1)
+        return ValuePack::ret(lua, Value::nil, "palette not available");
+    if (index < 0 || index > 15)
+        return luaL_error(lua, "invalid palette index");
+    
+    return ValuePack::ret(lua, _color_state.palette[index]);
 }
 
 int Gpu::setPaletteColor(lua_State* lua)
 {
-    lua_settop(lua, 0);
-    return 0;
+    int index = Value::check(lua, 1, "number").toNumber();
+    int rgb = Value::check(lua, 2, "number").toNumber();
+    if (_color_state.depth == EDepthType::_1)
+        return ValuePack::ret(lua, Value::nil, "palette not available");
+    if (index < 0 || index > 15)
+        return luaL_error(lua, "invalid palette index");
+    int prev = _color_state.palette[index];
+    if (prev != rgb)
+    {
+        // refresh screen (reinflate and deflate all cells)
+        inflate_all();
+        _color_state.palette[index] = rgb;
+        deflate_all();
+        invalidate();
+    }
+    return ValuePack::ret(lua, prev);
 }
 
 const Cell* Gpu::get(int x, int y) const
@@ -543,3 +547,30 @@ unsigned char Gpu::encode(int rgb)
     rgb = ColorMap::inflate(_color_state, rgb);
     return static_cast<unsigned char>(ColorMap::deflate(rgb) & 0xFF);
 }
+
+void Gpu::inflate_all()
+{
+    _fg.rgb = ColorMap::inflate(_color_state, _fg.rgb);
+    _bg.rgb = ColorMap::inflate(_color_state, _bg.rgb);
+    size_t size = _width * _height;
+    for (size_t i = 0; i < size; i++)
+    {
+        auto& cell = _cells[i];
+        cell.fg.rgb = ColorMap::inflate(_color_state, cell.fg.rgb);
+        cell.bg.rgb = ColorMap::inflate(_color_state, cell.bg.rgb);
+    }
+}
+
+void Gpu::deflate_all()
+{
+    deflate(_fg);
+    deflate(_bg);
+    size_t size = _width * _height;
+    for (size_t i = 0; i < size; i++)
+    {
+        auto& cell = _cells[i];
+        deflate(cell.fg);
+        deflate(cell.bg);
+    }
+}
+

@@ -19,7 +19,6 @@ public:
 
     enum ConfigIndex
     {
-        Palette = Component::ConfigIndex::Next,
         MonochromeColor
     };
 
@@ -54,7 +53,6 @@ protected:
 
     bool onInitialize() override;
     void check(lua_State* lua) const; // throws if no screen
-    void deflate(lua_State* lua, Color* pRawColor);
 
     int setColorContext(lua_State* lua, bool bBack);
     int getColorContext(lua_State* lua, bool bBack);
@@ -65,6 +63,8 @@ protected:
 
     // color mapping to oc 256 codes
     void deflate(Color& color);
+    void inflate_all();
+    void deflate_all();
     unsigned char encode(int rgb);
 
     // FrameGpu overrides

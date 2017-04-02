@@ -168,7 +168,7 @@ public:
         }
 
         int deflated = ColorMap::deflate(color.rgb);
-        if (delta(inflate(state, deflated), color.rgb) < delta(inflate(state, paletteIndex), color.rgb))
+        if (delta(inflate(state, deflated), color.rgb) <= delta(inflate(state, paletteIndex), color.rgb))
         {
             return deflated;
         }
