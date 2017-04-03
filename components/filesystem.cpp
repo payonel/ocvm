@@ -266,8 +266,13 @@ int Filesystem::getLabel(lua_State* lua)
 
 int Filesystem::setLabel(lua_State* lua)
 {
+    // labels can be readonly
+    if (isTmpfs())
+        return luaL_error(lua, "label is readonly");
+
+    int stack = getLabel(lua);
     update(ConfigIndex::Label, Value::check(lua, 1, "string"));
-    return 0;
+    return stack;
 }
 
 int Filesystem::list(lua_State* lua)
@@ -396,7 +401,7 @@ int Filesystem::makeDirectory(lua_State* lua)
     }
     else if (utils::exists(dirpath))
     {
-        return ValuePack::ret(lua, Value::nil, "file exists");
+        return ValuePack::ret(lua, false);
     }
     utils::mkdir(dirpath);
     return ValuePack::ret(lua, true);
@@ -411,6 +416,10 @@ int Filesystem::rename(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
     }
     else if (utils::exists(to))
+    {
+        return ValuePack::ret(lua, false);
+    }
+    else if (!utils::exists(from))
     {
         return ValuePack::ret(lua, Value::nil, "destination exists");
     }

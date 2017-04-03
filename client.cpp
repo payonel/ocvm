@@ -32,6 +32,7 @@ Client::Client(Host* host, const string& env_path) :
     add("methods", &Client::component_methods);
     add("type", &Client::component_type);
     add("slot", &Client::component_slot);
+    add("doc", &Client::component_doc);
 
     // adjust env path if it is relative
     if (env_path.find("/") != 0)
@@ -281,6 +282,17 @@ int Client::component_slot(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "no such component");
 
     return ValuePack::ret(lua, pc->slot());
+}
+
+int Client::component_doc(lua_State* lua)
+{
+    string address = Value::check(lua, 1, "string").toString();
+    string methodName = Value::check(lua, 2, "string").toString();
+    Component* pc = component(address);
+    if (!pc)
+        return ValuePack::ret(lua, Value::nil, "no such component");
+
+    return ValuePack::ret(lua, pc->doc(methodName));
 }
 
 const string& Client::envPath() const

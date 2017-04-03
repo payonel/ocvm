@@ -74,9 +74,19 @@ vector<LuaMethod> LuaProxy::methods() const
     return result;
 }
 
-void LuaProxy::add(const string& methodName, ProxyMethod method)
+const string& LuaProxy::doc(const string& methodName) const
+{
+    static const string no_docs = "";
+    const auto& it = _docs.find(methodName);
+    if (it == _docs.end())
+        return no_docs;
+    return it->second;
+}
+
+void LuaProxy::add(const string& methodName, ProxyMethod method, const string& doc)
 {
     _methods[methodName] = method;
+    _docs[methodName] = doc;
 }
 
 void LuaProxy::cadd(const string& methodName, lua_CFunction cfunction)

@@ -35,6 +35,7 @@ public:
     int component_methods(lua_State* lua);
     int component_type(lua_State* lua);
     int component_slot(lua_State* lua);
+    int component_doc(lua_State* lua);
 protected:
     bool createComponents();
     bool postInit();
