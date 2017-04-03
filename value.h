@@ -61,7 +61,7 @@ public:
     bool contains(int key) const;
     bool contains(const string& key) const;
 
-    string serialize(int spacey = 0) const;
+    string serialize(bool pretty = false, int depth = 0) const;
     explicit operator bool() const;
     bool operator< (const Value& rhs) const;
 private:

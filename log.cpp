@@ -3,6 +3,7 @@
 
 #include <iostream>
 using std::cout;
+using std::cerr;
 
 Logger lout(1);
 Logger lerr(0);
@@ -32,6 +33,8 @@ Logger::Logger(int priority) :
 Logger& operator<< (Logger& logger, const string& text)
 {
     Frame* pf = Logger::getFrame();
+    if (!logger.priority())
+        cerr << text;
     pf->write(1, 1, {text, {}, {}});
     return logger;
 }

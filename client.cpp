@@ -64,7 +64,7 @@ bool Client::load()
 
     if (!_config->load(envPath(), "client"))
     {
-        lout << "failed to load client config\n";
+        lerr << "failed to load client config\n";
         return false;
     }
 

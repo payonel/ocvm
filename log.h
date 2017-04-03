@@ -14,6 +14,7 @@ class Logger
 public:
     Logger(int priority);
     static Frame* getFrame();
+    int priority() const { return _priority; }
 private:
     Logger();
     int _priority;

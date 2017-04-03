@@ -70,12 +70,12 @@ bool Config::load(const string& path, const string& name)
             return false;
         }
         _data = tmpData;
-        _cache = _data.serialize(2);
+        _cache = _data.serialize(true);
     }
     else
     {
-        lout << "Configuration could not load\n";
-        lout << lua_tostring(lua, -1) << endl;
+        lerr << "\nConfiguration could not load\n";
+        lerr << lua_tostring(lua, -1) << endl;
         return false;
     }
     lua_close(lua);
@@ -115,7 +115,7 @@ bool Config::save() const
 {
     if (_data)
     {
-        string updated_config = _data.serialize(2);
+        string updated_config = _data.serialize(true);
         if (updated_config != _cache)
         {
             lout << "saving " << _name << ": config\n";

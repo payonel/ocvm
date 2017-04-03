@@ -244,14 +244,19 @@ int Value::type_id() const
     return _id;
 }
 
-string Value::serialize(int spacey) const
+static string quote_string(const string& raw_string)
+{
+    if (raw_string.find("\"") == string::npos)
+        return "\"" + raw_string + "\"";
+    return "[=[" + raw_string + "]=]";
+}
+
+string Value::serialize(bool pretty, int depth) const
 {
     stringstream ss;
-    string sp = spacey > 0 ? "\n" : "";
-    string tab = spacey > 0 ? "\t" : "";
     if (_id == LUA_TSTRING)
     {
-        ss << "\"" + _string + "\"";
+        ss << quote_string(_string);
     }
     else if (_id == LUA_TBOOLEAN)
     {
@@ -276,37 +281,64 @@ string Value::serialize(int spacey) const
             ss << "[thread]";
         }
 
-        ss << "{" << sp;
+        vector<string> kvs;
         bool skipped_index = false;
         int count = len();
         for (int n = 1; n <= count; n++)
         {
-            ss << tab;
             if (_ntable.find(n) == _ntable.end())
             {
                 skipped_index = true;
                 continue;
             }
+            string key = "";
             if (skipped_index)
-                ss << "[" << n << "]=";
-            ss << _ntable.at(n).serialize(spacey - 1);
-            ss << "," << sp;
+            {
+                stringstream number_ss;
+                number_ss << "[" << n << "]=";
+                key = number_ss.str();
+            }
+            kvs.push_back(key + _ntable.at(n).serialize(pretty, depth + 1));
         }
-        vector<string> ks = keys();
-        for (const string& key : ks)
+        for (const string& key : keys())
         {
-            ss << tab << "[\"";
-            ss << key;
-            ss << "\"]=";
-            ss << _stable.at(key).serialize(spacey - 1);
-            ss << "," << sp;
+            string keytext = "[" + quote_string(key) + "]=";
+            string value = _stable.at(key).serialize(pretty, depth + 1);
+            kvs.push_back(keytext + value);
         }
-        ss << "}" << sp;
+
+        string newline = pretty ? "\n" : "";
+        string indent = pretty ? "  " : "";
+        string tab = "";
+        for (int repeat = 0; pretty && repeat < depth; repeat++)
+            tab += indent;
+
+        ss << "{";
+        bool any_linenew = false;
+
+        for (const auto& entry : kvs)
+        {
+            bool linenew = entry.find_first_of("{}") != string::npos;
+            any_linenew |= linenew;
+
+            if (linenew)
+                ss << newline << tab << indent;
+
+            ss << entry << ",";
+        }
+
+        if (any_linenew)
+            ss << newline << tab;
+
+        ss << "}";
     }
     else
     {
         ss << "[" << _type << "]";
     }
+    if (pretty && !depth)
+        ss << "\n";
+
     return ss.str();
 }
 
