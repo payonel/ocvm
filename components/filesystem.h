@@ -7,10 +7,6 @@
 using std::map;
 using std::fstream;
 
-class FileHandle
-{
-};
-
 class Filesystem : public Component
 {
 public:

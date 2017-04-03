@@ -206,7 +206,9 @@ int Filesystem::open(lua_State* lua)
     // OR the is sequentially full, but index is now beyond size
     // either way, index is available
     _handles[index] = pf;
-    return ValuePack::ret(lua, index);
+    Value handle = Value::table();
+    handle.set("index", index);
+    return ValuePack::ret(lua, handle);
 }
 
 int Filesystem::read(lua_State* lua)
@@ -353,17 +355,25 @@ int Filesystem::lastModified(lua_State* lua)
 
 fstream* Filesystem::get_handle(lua_State* lua, int* pIndex)
 {
-    int index = (int)Value::check(lua, 1, "number").toNumber(); // handle
-    const auto& it = _handles.find(index);
-    fstream* fs = it->second;
-    if (it == _handles.end() || (!fs->eof() && fs->fail()))
+    const Value& handle = Value::check(lua, 1, "table");
+    const Value& index_value = handle.get("index");
+    if (index_value.type() == "number")
     {
-        ValuePack::ret(lua, Value::nil, "bad file handle");
-        return nullptr;
+        int index = index_value.toNumber();
+        const auto& it = _handles.find(index);
+        if (it != _handles.end())
+        {
+            fstream* fs = it->second;
+            if (fs->eof() || !fs->fail())
+            {
+                if (pIndex)
+                    *pIndex = index;
+                return fs;
+            }
+        }
     }
-    if (pIndex)
-        *pIndex = index;
-    return fs;
+    ValuePack::ret(lua, Value::nil, "bad file handle");
+    return nullptr;
 }
 
 int Filesystem::spaceUsed(lua_State* lua)
@@ -409,8 +419,11 @@ int Filesystem::makeDirectory(lua_State* lua)
 
 int Filesystem::rename(lua_State* lua)
 {
-    string from = path() + clean(Value::check(lua, 1, "string").toString(), true, true);
-    string to = path() + clean(Value::check(lua, 2, "string").toString(), true, true);
+    string raw_from = Value::check(lua, 1, "string").toString();
+    string raw_to = Value::check(lua, 2, "string").toString();
+
+    string from = path() + clean(raw_from, true, true);
+    string to = path() + clean(raw_to, true, true);
     if (isReadOnly())
     {
         return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
@@ -421,7 +434,7 @@ int Filesystem::rename(lua_State* lua)
     }
     else if (!utils::exists(from))
     {
-        return ValuePack::ret(lua, Value::nil, "destination exists");
+        return ValuePack::ret(lua, Value::nil, raw_from);
     }
     return ValuePack::ret(lua, utils::rename(from, to));
 }
