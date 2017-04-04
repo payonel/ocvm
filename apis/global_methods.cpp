@@ -4,7 +4,7 @@
 GlobalMethods::GlobalMethods() : LuaProxy("")
 {
     cadd("print", &GlobalMethods::print);
-    cadd("error", &GlobalMethods::error);
+    // cadd("error", &GlobalMethods::error);
 }
 
 GlobalMethods* GlobalMethods::get()
