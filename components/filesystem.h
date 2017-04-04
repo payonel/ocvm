@@ -25,7 +25,7 @@ public:
     bool isReadOnly() const;
     bool isTmpfs() const;
 
-    void close(FileHandle*);
+    void release(FileHandle*);
 
     int open(lua_State* lua);
     int read(lua_State* lua);
@@ -50,8 +50,8 @@ protected:
     static string clean(string arg, bool bAbs, bool removeEnd);
     static string relative(const string& requested, const string& full);
 
-    void* create(lua_State* lua, fstream* pstream);
-    fstream* get_stream(lua_State* lua, FileHandle** ppfh = nullptr) const;
+    FileHandle* create(lua_State* lua, const string& uri, fstream::openmode mode);
+    FileHandle* getFileHandle(lua_State* lua) const;
 private:
     bool _isReadOnly;
     set<FileHandle*> _handles;
