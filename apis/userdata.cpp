@@ -4,6 +4,12 @@ UserDataApi::UserDataApi() : LuaProxy("userdata")
 {
     cadd("methods", &UserDataApi::methods);
     cadd("dispose", &UserDataApi::dispose);
+    cadd("apply", &UserDataApi::apply);
+    cadd("unapply", &UserDataApi::unapply);
+    cadd("call", &UserDataApi::call);
+    cadd("save", &UserDataApi::save);
+    cadd("load", &UserDataApi::load);
+    cadd("doc", &UserDataApi::doc);
 }
 
 static UserData* check(lua_State* lua)
@@ -39,8 +45,39 @@ int UserDataApi::dispose(lua_State* lua)
     return 0;
 }
 
+int UserDataApi::apply(lua_State* lua)
+{
+    return luaL_error(lua, "userdata.apply is not implemented");
+}
+
+int UserDataApi::unapply(lua_State* lua)
+{
+    return luaL_error(lua, "userdata.unapply is not implemented");
+}
+
+int UserDataApi::call(lua_State* lua)
+{
+    return luaL_error(lua, "userdata.call is not implemented");
+}
+
+int UserDataApi::save(lua_State* lua)
+{
+    return luaL_error(lua, "userdata.save is not implemented");
+}
+
+int UserDataApi::load(lua_State* lua)
+{
+    return luaL_error(lua, "userdata.load is not implemented");
+}
+
+int UserDataApi::doc(lua_State* lua)
+{
+    return luaL_error(lua, "userdata.doc is not implemented");
+}
+
 UserDataApi* UserDataApi::get()
 {
     static UserDataApi api;
     return &api;
 }
+
