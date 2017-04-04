@@ -2,9 +2,31 @@
 #include "client.h"
 #include "log.h"
 #include "utils.h"
+#include "apis/userdata.h"
 #include <fstream>
 #include <limits>
 using namespace std;
+
+class FileHandle : public UserData
+{
+public:
+    FileHandle(Filesystem* fs, fstream* stream) :
+        _fs(fs),
+        _stream(stream)
+    {
+    }
+
+    const Filesystem* fs() const { return _fs; }
+    fstream* stream() const { return _stream; }
+
+    void dispose() override
+    {
+        _fs->close(this);
+    }
+private:
+    Filesystem* _fs;
+    fstream* _stream;
+};
 
 Filesystem::Filesystem() :
     _isReadOnly(true),
@@ -193,27 +215,15 @@ int Filesystem::open(lua_State* lua)
         delete pf;
         return ValuePack::ret(lua, Value::nil, filepath);
     }
-    // find next open handle index
-    size_t index = 0;
-    for (; index < _handles.size(); index++)
-    {
-        if (_handles.find(index) == _handles.end())
-        {
-            break;
-        }
-    }
-    // either we found an open index and used break
-    // OR the is sequentially full, but index is now beyond size
-    // either way, index is available
-    _handles[index] = pf;
-    Value handle = Value::table();
-    handle.set("index", index);
-    return ValuePack::ret(lua, handle);
+
+    lua_settop(lua, 0);
+    (void)create(lua, pf);
+    return 1;
 }
 
 int Filesystem::read(lua_State* lua)
 {
-    fstream* fs = get_handle(lua);
+    fstream* fs = get_stream(lua);
     if (fs == nullptr) return 2;
     if (fs->eof()) return 0;
 
@@ -239,7 +249,7 @@ int Filesystem::read(lua_State* lua)
 
 int Filesystem::write(lua_State* lua)
 {
-    fstream* fs = get_handle(lua);
+    fstream* fs = get_stream(lua);
     if (fs == nullptr) return 2;
 
     string data = Value::check(lua, 2, "string").toString();
@@ -251,13 +261,11 @@ int Filesystem::write(lua_State* lua)
 
 int Filesystem::close(lua_State* lua)
 {
-    int index;
-    fstream* fs = get_handle(lua, &index);
-    if (fs == nullptr) return 2;
+    FileHandle* pfh = nullptr;
+    (void)get_stream(lua, &pfh);
+    if (pfh == nullptr) return 2;
     
-    fs->close();
-    _handles.erase(index);
-
+    close(pfh);
     return 0;
 }
 
@@ -289,8 +297,6 @@ int Filesystem::list(lua_State* lua)
         t.insert(relative_item);
     }
 
-    t.set("n", listing.size());
-
     return ValuePack::ret(lua, t);
 }
 
@@ -312,7 +318,7 @@ int Filesystem::isReadOnly(lua_State* lua)
 
 int Filesystem::seek(lua_State* lua)
 {
-    fstream* fs = get_handle(lua);
+    fstream* fs = get_stream(lua);
     if (fs == nullptr) return 2;
 
     string whence = Value::check(lua, 2, "string").toString();    
@@ -353,23 +359,18 @@ int Filesystem::lastModified(lua_State* lua)
     return ValuePack::ret(lua, utils::lastModified(path() + clean(filepath, true, false)));
 }
 
-fstream* Filesystem::get_handle(lua_State* lua, int* pIndex)
+fstream* Filesystem::get_stream(lua_State* lua, FileHandle** ppfh) const
 {
-    const Value& handle = Value::check(lua, 1, "table");
-    const Value& index_value = handle.get("index");
-    if (index_value.type() == "number")
+    const Value& handle = Value::check(lua, 1, "userdata");
+    FileHandle* pfh = reinterpret_cast<FileHandle*>(handle.toPointer());
+    if (pfh && pfh->fs() == this)
     {
-        int index = index_value.toNumber();
-        const auto& it = _handles.find(index);
-        if (it != _handles.end())
+        fstream* fs = pfh->stream();
+        if (fs->eof() || !fs->fail())
         {
-            fstream* fs = it->second;
-            if (fs->eof() || !fs->fail())
-            {
-                if (pIndex)
-                    *pIndex = index;
-                return fs;
-            }
+            if (ppfh)
+                *ppfh = pfh;
+            return fs;
         }
     }
     ValuePack::ret(lua, Value::nil, "bad file handle");
@@ -438,3 +439,23 @@ int Filesystem::rename(lua_State* lua)
     }
     return ValuePack::ret(lua, utils::rename(from, to));
 }
+
+void* Filesystem::create(lua_State* lua, fstream* pstream)
+{
+    // find next open handle index
+    void* pAlloc = lua_newuserdata(lua, sizeof(FileHandle));
+    FileHandle* pfh = new(pAlloc) FileHandle(this, pstream);
+    _handles.insert(pfh);
+
+    return pAlloc;
+}
+
+void Filesystem::close(FileHandle* pfh)
+{
+    if (pfh)
+    {
+        pfh->stream()->close();
+        _handles.erase(pfh);
+    }
+}
+

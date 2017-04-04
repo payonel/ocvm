@@ -12,6 +12,7 @@
 #include "apis/global_methods.h"
 #include "apis/system.h"
 #include "apis/unicode.h"
+#include "apis/userdata.h"
 #include "apis/sandbox_methods.h"
 
 #include <string>
@@ -159,6 +160,7 @@ bool Client::loadLuaComponentApi()
     _computer->newlib(GlobalMethods::get());
     _computer->newlib(SystemApi::get());
     _computer->newlib(UnicodeApi::get());
+    _computer->newlib(UserDataApi::get());
     return true;
 }
 

@@ -78,10 +78,10 @@ Value::Value(lua_State* lua, int index)
         case LUA_TNIL:
         break;
         case LUA_TLIGHTUSERDATA:
-            _pointer = lua_touserdata(lua, -1);
+            _pointer = const_cast<void*>(lua_topointer(lua, -1));
         break;
         case LUA_TUSERDATA:
-            _pointer = (void*)lua_topointer(lua, -1);
+            _pointer = lua_touserdata(lua, -1);
         break;
         case LUA_TTHREAD:
             _thread = lua_tothread(lua, -1);
@@ -192,6 +192,7 @@ Value& Value::set(const string& key, const Value& value)
 Value& Value::set(int key, const Value& value)
 {
     _ntable[key] = value;
+    set("n", len());
     return *this;
 }
 bool Value::contains(int key) const

@@ -2,10 +2,12 @@
 #include "component.h"
 #include "value.h"
 
-#include <map>
+#include <set>
 #include <fstream>
-using std::map;
+using std::set;
 using std::fstream;
+
+class FileHandle;
 
 class Filesystem : public Component
 {
@@ -22,6 +24,8 @@ public:
     string src() const;
     bool isReadOnly() const;
     bool isTmpfs() const;
+
+    void close(FileHandle*);
 
     int open(lua_State* lua);
     int read(lua_State* lua);
@@ -45,11 +49,12 @@ protected:
     bool onInitialize() override;
     static string clean(string arg, bool bAbs, bool removeEnd);
     static string relative(const string& requested, const string& full);
-    void init(const string& loot);
-    fstream* get_handle(lua_State* lua, int* pIndex = nullptr);
+
+    void* create(lua_State* lua, fstream* pstream);
+    fstream* get_stream(lua_State* lua, FileHandle** ppfh = nullptr) const;
 private:
     bool _isReadOnly;
-    map<int, fstream*> _handles;
+    set<FileHandle*> _handles;
     string _src;
     bool _tmpfs;
 };

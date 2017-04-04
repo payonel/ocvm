@@ -3,8 +3,8 @@
 
 GlobalMethods::GlobalMethods() : LuaProxy("")
 {
-    add("print", &GlobalMethods::print);
-    add("error", &GlobalMethods::error);
+    cadd("print", &GlobalMethods::print);
+    cadd("error", &GlobalMethods::error);
 }
 
 GlobalMethods* GlobalMethods::get()
@@ -30,14 +30,16 @@ int GlobalMethods::print(lua_State* lua)
 
 int GlobalMethods::error(lua_State* lua)
 {
-    int level = luaL_optint(lua, 2, 1);
-    lua_settop(lua, 1);
-    if (lua_isstring(lua, 1) && level > 0)
-    {
-        luaL_where(lua, level);
-        lua_pushvalue(lua, 1);
-        lua_concat(lua, 2);
-    }
+    // TODO this doesn't compile in 5.3 (luaL_optint not defined)
+    // int level = luaL_optint(lua, 2, 1);
+    // lua_settop(lua, 1);
+    // if (lua_isstring(lua, 1) && level > 0)
+    // {
+    //     luaL_where(lua, level);
+    //     lua_pushvalue(lua, 1);
+    //     lua_concat(lua, 2);
+    // }
+
     // string msg = Value(lua, 1).toString();
     // lout << "[--vm--] [ERROR] " << msg << endl;
     
