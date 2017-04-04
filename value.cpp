@@ -6,7 +6,7 @@
 
 const Value Value::nil; // the nil
 
-Value::Value(const string& v)
+Value::Value(const vector<char>& v)
 {
     _type = "string";
     _id = LUA_TSTRING;
@@ -64,10 +64,19 @@ Value::Value(lua_State* lua, int index)
     _id = lua_type(lua, -1);
     _type = lua_typename(lua, _id);
 
+    const char* p;
+    size_t len;
+
     switch (_id)
     {
         case LUA_TSTRING:
-            _string = lua_tostring(lua, -1);
+            p = lua_tostring(lua, -1);
+#if LUA_VERSION_NUM>502
+            len = lua_strlen(lua, -1);
+#else
+            len = lua_rawlen(lua, -1);
+#endif
+            _string = vector<char>(p, p+len);
         break;
         case LUA_TBOOLEAN:
             _bool = lua_toboolean(lua, -1);
@@ -95,7 +104,7 @@ Value::Value(lua_State* lua, int index)
                 Value key(lua, -2);
                 if (key._id == LUA_TSTRING)
                 {
-                    set(key._string, value);
+                    set(key.toString(), value);
                 }
                 else if (key._id == LUA_TNUMBER)
                 {
@@ -126,9 +135,14 @@ Value Value::table()
 string Value::toString() const
 {
     if (type() == "string")
-        return _string;
+        return string(_string.begin(), _string.end());
     else
         return serialize();
+}
+
+vector<char> Value::toRawString() const
+{
+    return _string;
 }
 
 bool Value::toBool() const
@@ -257,7 +271,7 @@ string Value::serialize(bool pretty, int depth) const
     stringstream ss;
     if (_id == LUA_TSTRING)
     {
-        ss << quote_string(_string);
+        ss << quote_string(string(_string.begin(), _string.end()));
     }
     else if (_id == LUA_TBOOLEAN)
     {
@@ -368,7 +382,7 @@ void Value::push(lua_State* lua) const
     switch (_id)
     {
         case LUA_TSTRING:
-            lua_pushstring(lua, _string.c_str());
+            lua_pushlstring(lua, _string.data(), _string.size());
         break;
         case LUA_TBOOLEAN:
             lua_pushboolean(lua, _bool);

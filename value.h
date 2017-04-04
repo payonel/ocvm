@@ -15,7 +15,8 @@ using std::ostream;
 class Value
 {
 public:
-    Value(const string& v);
+    Value(const vector<char>& v);
+    Value(const string& v) : Value(vector<char>(v.begin(), v.end())) {}
     Value(bool b);
     Value(double d);
     Value(const void* p, bool bLight);
@@ -41,6 +42,7 @@ public:
     string type() const;
     int type_id() const;
     string toString() const;
+    vector<char> toRawString() const;
     double toNumber() const;
     bool toBool() const;
     void* toPointer() const;
@@ -67,7 +69,7 @@ public:
 private:
     string _type;
     int _id;
-    string _string;
+    vector<char> _string;
     bool _bool = false;
     double _number = 0;
     void* _pointer = nullptr;
@@ -132,6 +134,12 @@ private:
     inline static int push_ret(lua_State* lua, const void* arg)
     {
         lua_pushlightuserdata(lua, const_cast<void*>(arg));
+        return 1;
+    }
+
+    inline static int push_ret(lua_State* lua, const vector<char>& arg)
+    {
+        lua_pushlstring(lua, arg.data(), arg.size());
         return 1;
     }
 

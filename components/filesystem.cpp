@@ -57,10 +57,69 @@ public:
         return isOpen() && !canRead();
     }
 
+    vector<char> read(streamsize size)
+    {
+        vector<char> buffer;
+
+        while (size > 0)
+        {
+            char c = _stream.get();
+            if (!_stream.good())
+            {
+                break;
+            }
+            size--;
+            buffer.push_back(c);
+        }
+
+        return buffer;
+    }
+
+    streamsize write(const vector<char>& data)
+    {
+        _stream.write(data.data(), data.size());
+        return data.size();
+    }
+
+    bool seek(streamoff to, std::ios_base::seekdir way)
+    {
+        // we may have read past the eof
+        if (fault())
+            clear();
+
+        _stream.seekg(to, way);
+
+        if (fault())
+        {
+            clear();
+            return false;
+        }
+
+        return true;
+    }
+
+    bool fault() const
+    {
+        return _stream.fail() || _stream.bad();
+    }
+
+    void clear()
+    {
+        _stream.clear();
+    }
+
+    streamoff tell()
+    {
+        return _stream.tellg();
+    }
+
 private:
     Filesystem* _fs;
     fstream _stream;
     fstream::openmode _mode;
+
+    // negative position hack
+    int32_t _position;
 };
 
 Filesystem::Filesystem() :
@@ -256,30 +315,21 @@ int Filesystem::read(lua_State* lua)
     {
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
     }
-    else if (pfh->isEof())
+
+    static const double max_size = std::numeric_limits<int32_t>::max();
+    static const double min_size = std::numeric_limits<int32_t>::min();
+
+    double dsize = Value::check(lua, 2, "number").toNumber();
+    dsize = std::max(min_size, std::min(max_size, dsize));
+
+    vector<char> data = pfh->read(static_cast<int32_t>(dsize));
+
+    if (data.empty() && (dsize > 0 || pfh->isEof()))
     {
         return ValuePack::ret(lua, Value::nil);
     }
 
-    fstream* fs = pfh->stream();
-    double dsize = Value::check(lua, 2, "number").toNumber();
-    static const streamsize max_read = (1024*1024*1024);
-    streamsize size = (dsize > (double)max_read) ? max_read : static_cast<streamsize>(dsize);
-
-    string buffer;
-
-    while (size > 0)
-    {
-        char c = fs->get();
-        if (!fs->good())
-        {
-            break;
-        }
-        size--;
-        buffer += c;
-    }
-
-    return ValuePack::ret(lua, buffer);
+    return ValuePack::ret(lua, data);
 }
 
 int Filesystem::write(lua_State* lua)
@@ -294,11 +344,10 @@ int Filesystem::write(lua_State* lua)
         return ValuePack::ret(lua, 0);
     }
 
-    string data = Value::check(lua, 2, "string").toString();
+    vector<char> data = Value::check(lua, 2, "string").toRawString();
+    pfh->write(data);
 
-    (*pfh->stream()) << data;
-
-    return ValuePack::ret(lua, data.size());
+    return ValuePack::ret(lua, true);
 }
 
 int Filesystem::close(lua_State* lua)
@@ -368,10 +417,9 @@ int Filesystem::seek(lua_State* lua)
     {
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
     }
-    fstream* fs = pfh->stream();
 
-    string whence = Value::check(lua, 2, "string").toString();    
-    size_t to = (size_t)Value::check(lua, 3, "number", "nil").Or(0).toNumber();
+    string whence = Value::check(lua, 2, "string").toString(); 
+    streamoff to = (streamoff)Value::check(lua, 3, "number", "nil").Or(0).toNumber();
 
     std::ios_base::seekdir way;
     if (whence == "cur")
@@ -392,8 +440,12 @@ int Filesystem::seek(lua_State* lua)
         return 0;
     }
 
-    fs->seekg(static_cast<fstream::pos_type>(to), way);
-    return ValuePack::ret(lua, static_cast<double>(fs->tellg()));
+    if (!pfh->seek(to, way))
+    {
+        return ValuePack::ret(lua, Value::nil, "invalid offset");
+    }
+
+    return ValuePack::ret(lua, static_cast<double>(pfh->tell()));
 }
 
 int Filesystem::size(lua_State* lua)
