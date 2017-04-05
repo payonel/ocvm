@@ -10,20 +10,11 @@ using namespace std;
 class FileHandle : public UserData
 {
 public:
-    FileHandle(Filesystem* fs, const string& uri, fstream::openmode mode) :
-        _fs(fs),
-        _mode(mode)
+    FileHandle(Filesystem* fs) : _fs(fs)
     {
-        _stream.open(uri, mode);
     }
 
     const Filesystem* fs() const { return _fs; }
-    fstream* stream() { return &_stream; }
-
-    void close()
-    {
-        _stream.close();
-    }
 
     void dispose() override
     {
@@ -31,95 +22,175 @@ public:
         _fs->release(this);
     }
 
-    bool isOpen() const
+    virtual bool isOpen() const
     {
         if (this == nullptr || _fs == nullptr)
             return false;
 
-        return _stream.is_open();
-    }
-
-    bool isEof() const
-    {
-        return canRead() && (_stream.eof() || _stream.fail());
+        return _isOpen;
     }
 
     bool canRead() const
     {
-        if (!isOpen())
-            return false;
-
-        return (_mode & fstream::in) == fstream::in;
+        return isOpen() && _isReader();
     }
 
     bool canWrite() const
     {
-        return isOpen() && !canRead();
+        return isOpen() && !_isReader();
     }
 
-    vector<char> read(streamsize size)
+    void close()
     {
-        vector<char> buffer;
+        _close();
+        _isOpen = false;
+    }
 
-        while (size > 0)
+    virtual vector<char> read(streamsize size) {return {};}
+    virtual void write(const vector<char>& data) {}
+    virtual bool eof() const { return false; }
+
+    virtual bool seek(int32_t to, std::ios_base::seekdir way) = 0;
+    virtual int32_t tell() = 0;
+
+protected:
+    virtual void _close() = 0;
+    virtual bool _isReader() const = 0;
+    bool _isOpen;
+
+private:
+    Filesystem* _fs;
+};
+
+class FileHandleReader : public FileHandle
+{
+public:
+    FileHandleReader(Filesystem* fs, const string& filepath) :
+        FileHandle(fs),
+        _position(0)
+    {
+        ifstream fin(filepath);
+        if (fin)
         {
-            char c = _stream.get();
-            if (!_stream.good())
-            {
-                break;
-            }
-            size--;
-            buffer.push_back(c);
+            _isOpen = true;
+            _data = std::move(vector<char>(std::istreambuf_iterator<char>(fin), std::istreambuf_iterator<char>()));
+        }
+        fin.close();
+    }
+
+    bool seek(int32_t to, std::ios_base::seekdir way) override
+    {
+        switch (way)
+        {
+        case std::ios_base::cur:
+            _position += to;
+        break;
+        case std::ios_base::beg:
+            _position = to;
+        break;
+        case std::ios_base::end:
+        default:
+            _position = static_cast<int32_t>(_data.size()) - to;
+        break;
         }
 
+        return true;
+    }
+
+    int32_t tell() override
+    {
+        return _position;
+    }
+    
+    vector<char> read(streamsize size) override
+    {
+        int32_t offset = std::max(0, _position);
+        int32_t bytes = std::min(static_cast<int32_t>(size), static_cast<int32_t>(_data.size()) - offset);
+
+        if (bytes <= 0)
+            return {};
+
+        vector<char> buffer(_data.begin() + offset, _data.begin() + offset + bytes);
+        bytes -= buffer.size();
+
+        while (bytes--)
+        {
+            buffer.push_back(0);
+        }
+
+        _position += buffer.size();
         return buffer;
     }
 
-    streamsize write(const vector<char>& data)
+    bool eof() const override
     {
-        _stream.write(data.data(), data.size());
-        return data.size();
+        return _position >= static_cast<int32_t>(_data.size());
     }
 
-    bool seek(streamoff to, std::ios_base::seekdir way)
+protected:
+    void _close() override
+    {
+        _position = 0;
+        _data.clear();
+    }
+
+    bool _isReader() const override
+    {
+        return true;
+    }
+private:
+    int32_t _position;
+    vector<char> _data;
+};
+
+class FileHandleWriter : public FileHandle
+{
+public:
+    FileHandleWriter(Filesystem* fs, const string& filepath) :
+        FileHandle(fs)
+    {
+        _stream.open(filepath);
+        _isOpen = _stream.is_open();
+    }
+
+    void write(const vector<char>& data) override
+    {
+        _stream.write(data.data(), data.size());
+    }
+
+    bool seek(int32_t to, std::ios_base::seekdir way) override
     {
         // we may have read past the eof
-        if (fault())
-            clear();
+        _stream.clear();
 
         _stream.seekg(to, way);
 
-        if (fault())
+        if (_stream.fail() || _stream.bad())
         {
-            clear();
+            _stream.clear();
             return false;
         }
 
         return true;
     }
 
-    bool fault() const
+    int32_t tell() override
     {
-        return _stream.fail() || _stream.bad();
+        return static_cast<int32_t>(_stream.tellg());
+    }
+protected:
+    void _close() override
+    {
+        _stream.close();
     }
 
-    void clear()
+    bool _isReader() const override
     {
-        _stream.clear();
-    }
-
-    streamoff tell()
-    {
-        return _stream.tellg();
+        return false;
     }
 
 private:
-    Filesystem* _fs;
     fstream _stream;
-    fstream::openmode _mode;
-
-    // negative position hack
-    int32_t _position;
 };
 
 Filesystem::Filesystem() :
@@ -316,15 +387,15 @@ int Filesystem::read(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
     }
 
-    static const double max_size = std::numeric_limits<int32_t>::max();
-    static const double min_size = std::numeric_limits<int32_t>::min();
+    static constexpr double max_size = std::numeric_limits<int32_t>::max();
+    static constexpr double min_size = std::numeric_limits<int32_t>::min();
 
     double dsize = Value::check(lua, 2, "number").toNumber();
     dsize = std::max(min_size, std::min(max_size, dsize));
 
     vector<char> data = pfh->read(static_cast<int32_t>(dsize));
 
-    if (data.empty() && (dsize > 0 || pfh->isEof()))
+    if (data.empty() && (dsize > 0 || pfh->eof()))
     {
         return ValuePack::ret(lua, Value::nil);
     }
@@ -338,10 +409,6 @@ int Filesystem::write(lua_State* lua)
     if (!pfh->canWrite())
     {
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
-    }
-    else if (pfh->stream()->fail())
-    {
-        return ValuePack::ret(lua, 0);
     }
 
     vector<char> data = Value::check(lua, 2, "string").toRawString();
@@ -532,9 +599,18 @@ int Filesystem::rename(lua_State* lua)
 FileHandle* Filesystem::create(lua_State* lua, const string& filepath, fstream::openmode mode)
 {
     string fullpath = path() + clean(filepath, true, false);
-
-    void* pAlloc = lua_newuserdata(lua, sizeof(FileHandle));
-    FileHandle* pfh = new(pAlloc) FileHandle(this, fullpath, mode);
+    FileHandle* pfh = nullptr;
+    
+    if (mode & fstream::in)
+    {
+        void* pAlloc = lua_newuserdata(lua, sizeof(FileHandleReader));
+        pfh = new(pAlloc) FileHandleReader(this, fullpath);
+    }
+    else
+    {
+        void* pAlloc = lua_newuserdata(lua, sizeof(FileHandleWriter));
+        pfh = new(pAlloc) FileHandleWriter(this, fullpath);
+    }
 
     if (!pfh->isOpen())
     {

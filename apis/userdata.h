@@ -5,6 +5,7 @@
 class UserData
 {
 public:
+    virtual ~UserData() {}
     virtual vector<string> methods() const { return {}; }
     virtual void dispose() {}
 };
