@@ -122,7 +122,9 @@ int Gpu::set(lua_State* lua)
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
     string text = Value::check(lua, 3, "string").toString();
-    set(x, y, text);
+    bool bVertical = Value::check(lua, 4, "boolean", "nil").Or(false).toBool();
+
+    set(x, y, text, bVertical);
     return ValuePack::ret(lua, true);
 }
 
@@ -363,14 +365,16 @@ int Gpu::getColorContext(lua_State* lua, bool bBack)
 {
     check(lua);
     const Color& color = bBack ? _bg : _fg;
-    auto ctx = makeColorContext(color);
+    Value vp = color.paletted ? Value(true) : Value::nil;
 
-    return ValuePack::ret(lua, std::get<0>(ctx), std::get<1>(ctx));
+    return ValuePack::ret(lua, color.rgb, vp);
 }
 
 tuple<int, Value> Gpu::makeColorContext(const Color& color)
 {
     int value = color.rgb;
+    if (!color.paletted)
+        value = ColorMap::inflate(_color_state, value);
     Value vp = color.paletted ? Value(true) : Value::nil;
 
     return make_tuple(value, vp);
@@ -427,17 +431,26 @@ void Gpu::set(int x, int y, const Cell& cell)
         _screen->write(x, y, cell);
 }
 
-void Gpu::set(int x, int y, const string& text)
+void Gpu::set(int x, int y, const string& text, bool bVertical)
 {
     Color deflated_fg = deflate(_fg);
     Color deflated_bg = deflate(_bg);
 
+    int x_step = bVertical ? 0 : 1;
+    int y_step = bVertical ? 1 : 0;
+
     for (const auto& sub : UnicodeApi::subs(text))
     {
         int step = UnicodeApi::charWidth(sub, true);
-        set(x++, y, {sub, deflated_fg, deflated_bg});
+        set(x, y, {sub, deflated_fg, deflated_bg});
+        x += x_step;
+        y += y_step;
+
+        int start_x = x;
         while (--step > 0)
-            set(x++, y, {" ", deflated_fg, deflated_bg});
+            set(start_x++, y, {" ", deflated_fg, deflated_bg});
+        if (!bVertical)
+            x = start_x;
     }
 }
 
