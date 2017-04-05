@@ -355,7 +355,7 @@ int Filesystem::open(lua_State* lua)
     bool uninitialized = true;
     for (char c : mode_text)
     {
-        auto it = mode_map.find(c);
+        const auto& it = mode_map.find(c);
         if (it == mode_map.end())
         {
             uninitialized = true;
@@ -371,17 +371,25 @@ int Filesystem::open(lua_State* lua)
             mode = mode | it->second;
         }
     }
+
+    bool bRead = false;
+    bool bWrite = false;
+
+    if (!uninitialized)
+    {
+        bRead = (mode & mode_map['r']) == mode_map['r'];
+        bWrite = (mode & mode_map['w']) == mode_map['w'];
+        bWrite |= (mode & mode_map['a']) == mode_map['a'];
+    }
     
-    if (uninitialized || 
-        ((mode & mode_map['r']) && (mode & mode_map['w'])) || 
-        ((mode & mode_map['a']) && (mode & mode_map['r'])))
+    if (uninitialized || (bRead && bWrite))
     {
         lout << "bad file mode: " << mode_text << endl;
         return ValuePack::ret(lua, Value::nil, filepath);
     }
-    else if (isReadOnly() && (mode & (mode_map['w'] | mode_map['a'])))
+    else if (isReadOnly() && bWrite)
     {
-        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
+        return ValuePack::ret(lua, Value::nil, filepath);
     }
 
     FileHandle* pfh = create(lua, filepath, mode);
@@ -471,15 +479,28 @@ int Filesystem::list(lua_State* lua)
     return ValuePack::ret(lua, t);
 }
 
+static bool hack_broken_dotdot(const string& path)
+{
+    return path.find("/..") != string::npos;
+}
+
 int Filesystem::isDirectory(lua_State* lua)
 {
-    string relpath = clean(Value::check(lua, 1, "string").toString(), true, true);
+    string given = Value::check(lua, 1, "string").toString();
+    string relpath = clean(given, true, true);
+    if (hack_broken_dotdot(relpath))
+        return ValuePack::ret(lua, Value::nil, given);
     return ValuePack::ret(lua, utils::isDirectory(path() + relpath));
 }
 
 int Filesystem::exists(lua_State* lua)
 {
-    return ValuePack::ret(lua, utils::exists(path() + clean(Value::check(lua, 1, "string").toString(), true, true)));
+    string given = Value::check(lua, 1, "string").toString();
+    string given_clean = clean(given, true, true);
+    if (hack_broken_dotdot(given_clean))
+        return ValuePack::ret(lua, Value::nil, given);
+    string fullpath = path() + given_clean;
+    return ValuePack::ret(lua, utils::exists(fullpath));
 }
 
 int Filesystem::isReadOnly(lua_State* lua)
@@ -559,7 +580,7 @@ int Filesystem::remove(lua_State* lua)
     filepath = path() + clean(filepath, true, false);
     if (isReadOnly())
     {
-        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
+        return ValuePack::ret(lua, false);
     }
     else if (!utils::exists(filepath))
     {
@@ -572,16 +593,32 @@ int Filesystem::makeDirectory(lua_State* lua)
 {
     string dirpath = Value::check(lua, 1, "string").toString();
     dirpath = path() + clean(dirpath, true, false);
-    if (isReadOnly())
-    {
-        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
-    }
-    else if (utils::exists(dirpath))
+    if (isReadOnly() || utils::exists(dirpath))
     {
         return ValuePack::ret(lua, false);
     }
     utils::mkdir(dirpath);
     return ValuePack::ret(lua, true);
+}
+
+static bool hack_broken_rename(const string& from, const string& to)
+{
+    if (to.find(from) != 0)
+        return false;
+
+    string tail = to.substr(from.size());
+    if (tail.size() < 2)
+        return false;
+
+    if (tail.find("/") != 0)
+        return false;
+
+    if (tail.find("/", 1) != string::npos)
+        return false;
+
+    // broken!
+    // a -> a/d should fail, but oc just deletes a
+    return utils::remove(from);
 }
 
 int Filesystem::rename(lua_State* lua)
@@ -593,7 +630,7 @@ int Filesystem::rename(lua_State* lua)
     string to = path() + clean(raw_to, true, true);
     if (isReadOnly())
     {
-        return ValuePack::ret(lua, Value::nil, "filesystem is readonly");
+        return ValuePack::ret(lua, false);
     }
     else if (utils::exists(to))
     {
@@ -602,6 +639,10 @@ int Filesystem::rename(lua_State* lua)
     else if (!utils::exists(from))
     {
         return ValuePack::ret(lua, Value::nil, raw_from);
+    }
+    else if (hack_broken_rename(from, to))
+    {
+        return ValuePack::ret(lua, true);
     }
     return ValuePack::ret(lua, utils::rename(from, to));
 }
