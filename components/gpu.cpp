@@ -189,7 +189,7 @@ int Gpu::fill(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "invalid fill value");
     }
 
-    Cell fill_cell { text, _fg, _bg };
+    Cell fill_cell { text, deflate(_fg), deflate(_bg) };
 
     for (int row = 0; row < height; row++)
     {
@@ -348,7 +348,6 @@ int Gpu::setColorContext(lua_State* lua, bool bBack)
     }
 
     Color color {rgb, p};
-    deflate(color);
 
     int stack = getColorContext(lua, bBack);
 
@@ -371,11 +370,7 @@ int Gpu::getColorContext(lua_State* lua, bool bBack)
 
 tuple<int, Value> Gpu::makeColorContext(const Color& color)
 {
-    int value;
-    if (color.paletted)
-        value = color.rgb;
-    else
-        value = ColorMap::inflate(_color_state, color.rgb);
+    int value = color.rgb;
     Value vp = color.paletted ? Value(true) : Value::nil;
 
     return make_tuple(value, vp);
@@ -434,12 +429,15 @@ void Gpu::set(int x, int y, const Cell& cell)
 
 void Gpu::set(int x, int y, const string& text)
 {
+    Color deflated_fg = deflate(_fg);
+    Color deflated_bg = deflate(_bg);
+
     for (const auto& sub : UnicodeApi::subs(text))
     {
         int step = UnicodeApi::charWidth(sub, true);
-        set(x++, y, {sub, _fg, _bg});
+        set(x++, y, {sub, deflated_fg, deflated_bg});
         while (--step > 0)
-            set(x++, y, {" ", _fg, _bg});
+            set(x++, y, {" ", deflated_fg, deflated_bg});
     }
 }
 
@@ -531,10 +529,12 @@ void Gpu::winched(int width, int height)
     setResolution(width, height);
 }
 
-void Gpu::deflate(Color& color)
+Color Gpu::deflate(const Color& color)
 {
-    color.rgb = ColorMap::deflate(_color_state, color);
-    color.code = encode(color.rgb);
+    Color deflated = color;
+    deflated.rgb = ColorMap::deflate(_color_state, color);
+    deflated.code = encode(deflated.rgb);
+    return deflated;
 }
 
 unsigned char Gpu::encode(int rgb)
@@ -550,8 +550,6 @@ unsigned char Gpu::encode(int rgb)
 
 void Gpu::inflate_all()
 {
-    _fg.rgb = ColorMap::inflate(_color_state, _fg.rgb);
-    _bg.rgb = ColorMap::inflate(_color_state, _bg.rgb);
     size_t size = _width * _height;
     for (size_t i = 0; i < size; i++)
     {
@@ -563,14 +561,11 @@ void Gpu::inflate_all()
 
 void Gpu::deflate_all()
 {
-    deflate(_fg);
-    deflate(_bg);
     size_t size = _width * _height;
     for (size_t i = 0; i < size; i++)
     {
         auto& cell = _cells[i];
-        deflate(cell.fg);
-        deflate(cell.bg);
+        cell.fg = deflate(cell.fg);
+        cell.bg = deflate(cell.bg);
     }
 }
-

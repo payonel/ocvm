@@ -62,7 +62,7 @@ protected:
     void invalidate();
 
     // color mapping to oc 256 codes
-    void deflate(Color& color);
+    Color deflate(const Color& color);
     void inflate_all();
     void deflate_all();
     unsigned char encode(int rgb);
