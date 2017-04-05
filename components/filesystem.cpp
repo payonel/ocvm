@@ -7,6 +7,18 @@
 #include <limits>
 using namespace std;
 
+constexpr inline double truncate_double(const double& value)
+{
+    const double max_size = std::numeric_limits<int32_t>::max();
+    const double min_size = std::numeric_limits<int32_t>::min();
+    return std::min(max_size, std::max(min_size, value));
+}
+
+constexpr inline int32_t truncate(const int32_t& value, const int32_t& min_value, const int32_t& max_value)
+{
+    return std::min(max_value, std::max(min_value, value));
+}
+
 class FileHandle : public UserData
 {
 public:
@@ -46,7 +58,7 @@ public:
         _isOpen = false;
     }
 
-    virtual vector<char> read(streamsize size) {return {};}
+    virtual vector<char> read(int32_t size) {return {};}
     virtual void write(const vector<char>& data) {}
     virtual bool eof() const { return false; }
 
@@ -65,11 +77,11 @@ private:
 class FileHandleReader : public FileHandle
 {
 public:
-    FileHandleReader(Filesystem* fs, const string& filepath) :
+    FileHandleReader(Filesystem* fs, const string& filepath, fstream::openmode mode) :
         FileHandle(fs),
         _position(0)
     {
-        ifstream fin(filepath);
+        ifstream fin(filepath, mode);
         if (fin)
         {
             _isOpen = true;
@@ -90,7 +102,7 @@ public:
         break;
         case std::ios_base::end:
         default:
-            _position = static_cast<int32_t>(_data.size()) - to;
+            _position = static_cast<int32_t>(_data.size()) + to;
         break;
         }
 
@@ -102,18 +114,20 @@ public:
         return _position;
     }
     
-    vector<char> read(streamsize size) override
+    vector<char> read(int32_t size) override
     {
-        int32_t offset = std::max(0, _position);
-        int32_t bytes = std::min(static_cast<int32_t>(size), static_cast<int32_t>(_data.size()) - offset);
-
-        if (bytes <= 0)
+        int32_t size_trunc = static_cast<int32_t>(_data.size());
+        size = truncate(size, 0, size_trunc - _position);
+        if (size <= 0)
             return {};
 
-        vector<char> buffer(_data.begin() + offset, _data.begin() + offset + bytes);
-        bytes -= buffer.size();
+        int32_t offset = truncate(_position, 0, size_trunc);
+        int32_t read_from_data = truncate(size, 0, size_trunc - offset);
+        int32_t fill_bytes = size - read_from_data;
 
-        while (bytes--)
+        vector<char> buffer(_data.begin() + offset, _data.begin() + offset + read_from_data);
+
+        while (fill_bytes--)
         {
             buffer.push_back(0);
         }
@@ -146,10 +160,10 @@ private:
 class FileHandleWriter : public FileHandle
 {
 public:
-    FileHandleWriter(Filesystem* fs, const string& filepath) :
+    FileHandleWriter(Filesystem* fs, const string& filepath, fstream::openmode mode) :
         FileHandle(fs)
     {
-        _stream.open(filepath);
+        _stream.open(filepath, mode);
         _isOpen = _stream.is_open();
     }
 
@@ -387,11 +401,7 @@ int Filesystem::read(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
     }
 
-    static constexpr double max_size = std::numeric_limits<int32_t>::max();
-    static constexpr double min_size = std::numeric_limits<int32_t>::min();
-
-    double dsize = Value::check(lua, 2, "number").toNumber();
-    dsize = std::max(min_size, std::min(max_size, dsize));
+    double dsize = truncate_double(Value::check(lua, 2, "number").toNumber());
 
     vector<char> data = pfh->read(static_cast<int32_t>(dsize));
 
@@ -486,7 +496,7 @@ int Filesystem::seek(lua_State* lua)
     }
 
     string whence = Value::check(lua, 2, "string").toString(); 
-    streamoff to = (streamoff)Value::check(lua, 3, "number", "nil").Or(0).toNumber();
+    double to = truncate_double(Value::check(lua, 3, "number", "nil").Or(0).toNumber());
 
     std::ios_base::seekdir way;
     if (whence == "cur")
@@ -507,7 +517,7 @@ int Filesystem::seek(lua_State* lua)
         return 0;
     }
 
-    if (!pfh->seek(to, way))
+    if (!pfh->seek(static_cast<int32_t>(to), way))
     {
         return ValuePack::ret(lua, Value::nil, "invalid offset");
     }
@@ -601,15 +611,15 @@ FileHandle* Filesystem::create(lua_State* lua, const string& filepath, fstream::
     string fullpath = path() + clean(filepath, true, false);
     FileHandle* pfh = nullptr;
     
-    if (mode & fstream::in)
+    if ((mode & fstream::in) == fstream::in)
     {
         void* pAlloc = lua_newuserdata(lua, sizeof(FileHandleReader));
-        pfh = new(pAlloc) FileHandleReader(this, fullpath);
+        pfh = new(pAlloc) FileHandleReader(this, fullpath, mode);
     }
     else
     {
         void* pAlloc = lua_newuserdata(lua, sizeof(FileHandleWriter));
-        pfh = new(pAlloc) FileHandleWriter(this, fullpath);
+        pfh = new(pAlloc) FileHandleWriter(this, fullpath, mode);
     }
 
     if (!pfh->isOpen())
