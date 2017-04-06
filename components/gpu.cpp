@@ -195,9 +195,10 @@ int Gpu::fill(lua_State* lua)
 
     for (int row = 0; row < height; row++)
     {
+        int x_start = x;
         for (int col = 0; col < width; col++)
         {
-            set(x + col, y + row, fill_cell);
+            x_start += set(x_start, y + row, fill_cell);
         }
     }
 
