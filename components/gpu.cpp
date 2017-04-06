@@ -411,7 +411,7 @@ int Gpu::setPaletteColor(lua_State* lua)
     return ValuePack::ret(lua, prev);
 }
 
-const Cell* Gpu::get(int x, int y) const
+Cell* Gpu::at(int x, int y) const
 {
     // positions are 1-based
     if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
@@ -420,15 +420,34 @@ const Cell* Gpu::get(int x, int y) const
     return &_cells[(y-1)*_width + (x-1)];
 }
 
-void Gpu::set(int x, int y, const Cell& cell)
+const Cell* Gpu::get(int x, int y) const
 {
-    // positions are 1-based
-    if (x < 1 || x > _width || y < 1 || y > _height || _cells == nullptr)
-        return;
+    return const_cast<const Cell*>(at(x, y));
+}
 
-    _cells[(y-1)*_width + (x-1)] = cell;
-    if (_screen)
-        _screen->write(x, y, cell);
+int Gpu::set(int x, int y, const Cell& cell)
+{
+    Cell* pCell = at(x, y);
+    int char_width = UnicodeApi::charWidth(cell.value, true);
+
+    if (pCell)
+    {
+        int distance_to_edge = _width - x + 1; // 1-based, _width is inclusive
+
+        Cell* pPrev = at(x - 1, y);
+        bool is_locked = pPrev && UnicodeApi::charWidth(pPrev->value, true) > 1;
+
+        if (pCell && !is_locked && char_width <= distance_to_edge)
+        {
+            if (_screen)
+                _screen->write(x, y, cell);
+            if (char_width > 1)
+                set(x + 1, y, {" ", cell.fg, cell.bg});
+            *pCell = cell;
+        }
+    }
+
+    return char_width;
 }
 
 void Gpu::set(int x, int y, const string& text, bool bVertical)
@@ -436,21 +455,13 @@ void Gpu::set(int x, int y, const string& text, bool bVertical)
     Color deflated_fg = deflate(_fg);
     Color deflated_bg = deflate(_bg);
 
-    int x_step = bVertical ? 0 : 1;
-    int y_step = bVertical ? 1 : 0;
-
     for (const auto& sub : UnicodeApi::subs(text))
     {
-        int step = UnicodeApi::charWidth(sub, true);
-        set(x, y, {sub, deflated_fg, deflated_bg});
-        x += x_step;
-        y += y_step;
-
-        int start_x = x;
-        while (--step > 0)
-            set(start_x++, y, {" ", deflated_fg, deflated_bg});
+        int width = set(x, y, {sub, deflated_fg, deflated_bg});
         if (!bVertical)
-            x = start_x;
+            x += width;
+        else
+            y++;
     }
 }
 
@@ -497,7 +508,7 @@ void Gpu::resizeBuffer(int width, int height)
                 }
                 else
                 {
-                    it->value = {};
+                    it->value = {" "};
                     it->fg = {};
                     it->bg = {};
                 }
