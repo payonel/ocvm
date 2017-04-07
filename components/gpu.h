@@ -47,7 +47,6 @@ protected:
     const Cell* get(int x, int y) const;
     int set(int x, int y, const Cell& cell);
     void set(int x, int y, const string& text, bool bVertical);
-    void set(int x, int y, const vector<const Cell*>& scanned);
 
     Cell* at(int x, int y) const;
     void setResolution(int width, int height);

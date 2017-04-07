@@ -256,14 +256,21 @@ int Gpu::copy(lua_State* lua)
 
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        set(tx, ty + yoffset, scans.at(yoffset));
-    }
-
-    for (const auto& scan : scans)
-    {
-        for (const auto& pc : scan)
+        int y = ty + yoffset;
+        const auto& line = scans.at(yoffset);
+        for (int xoffset = 0; xoffset < width; xoffset++)
         {
-            delete pc;
+            int x = tx + xoffset;
+            const Cell* pCell = line.at(xoffset);
+            if (pCell)
+            {
+                if (!pCell->locked)
+                {
+                    at(x, y)->locked = false; // copy hack
+                }
+                set(x, y, *pCell);
+                delete pCell;
+            }
         }
     }
 
@@ -431,19 +438,24 @@ int Gpu::set(int x, int y, const Cell& cell)
     Cell* pCell = at(x, y);
     int char_width = UnicodeApi::charWidth(cell.value, true);
 
-    if (pCell)
+    if (pCell && !pCell->locked)
     {
         int distance_to_edge = _width - x + 1; // 1-based, _width is inclusive
-
-        Cell* pPrev = at(x - 1, y);
-        bool is_locked = pPrev && UnicodeApi::charWidth(pPrev->value, true) > 1;
-
-        if (pCell && !is_locked && char_width <= distance_to_edge)
+        if (char_width <= distance_to_edge)
         {
+            if (char_width > 1)
+            {
+                set(x + 1, y, {" ", cell.fg, cell.bg, true});
+            }
+            else if (UnicodeApi::charWidth(pCell->value, true) > 1)
+            {
+                // unlock next
+                // should be safe to deref without check
+                // because distance to edge was checked
+                at(x + 1, y)->locked = false;
+            }
             if (_screen)
                 _screen->write(x, y, cell);
-            if (char_width > 1)
-                set(x + 1, y, {" ", cell.fg, cell.bg});
             *pCell = cell;
         }
     }
@@ -463,18 +475,6 @@ void Gpu::set(int x, int y, const string& text, bool bVertical)
             x += width;
         else
             y++;
-    }
-}
-
-void Gpu::set(int x, int y, const vector<const Cell*>& scanned)
-{
-    for (size_t i = 0; i < scanned.size(); i++)
-    {
-        const Cell* pc = scanned.at(i);
-        if (pc)
-        {
-            set(x + i, y, *pc);
-        }
     }
 }
 
@@ -512,6 +512,7 @@ void Gpu::resizeBuffer(int width, int height)
                     it->value = {" "};
                     it->fg = {};
                     it->bg = {};
+                    it->locked = false;
                 }
                 it++;
             }
