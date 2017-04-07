@@ -167,7 +167,7 @@ string AnsiEscapeTerm::scrub(const string& value) const
     // replace tabs with (U+2409 for HT symbol)
     // I could use the ht unicode symbol in the source file
     // but i prefer to keep the source files in ascii
-    return replace_all(value, "\t", string{(char)226, (char)144, (char)137});
+    return replace_all(value, "\t", string{(char)226, (char)144, (char)137, ' '});
 }
 
 void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
