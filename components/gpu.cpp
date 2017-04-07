@@ -140,6 +140,9 @@ int Gpu::get(lua_State* lua)
         return 0;
     }
 
+    // palette colors are nil unless set as palette colors
+    // unless depth is 4, then palette indexes are always interpretted
+
     auto fg_ctx = makeColorContext(pc->fg);
     auto bg_ctx = makeColorContext(pc->bg);
 
@@ -372,17 +375,26 @@ int Gpu::getColorContext(lua_State* lua, bool bBack)
 {
     check(lua);
     const Color& color = bBack ? _bg : _fg;
-    Value vp = color.paletted ? Value(true) : Value::nil;
-
-    return ValuePack::ret(lua, color.rgb, vp);
+    return ValuePack::ret(lua, color.rgb, color.paletted);
 }
 
 tuple<int, Value> Gpu::makeColorContext(const Color& color)
 {
     int value = color.rgb;
-    if (!color.paletted)
+    if (!color.paletted || _color_state.depth != EDepthType::_8)
+    {
         value = ColorMap::inflate(_color_state, value);
-    Value vp = color.paletted ? Value(true) : Value::nil;
+    }
+
+    Value vp = Value::nil;
+    if (color.paletted)
+    {
+        vp = color.rgb;
+    }
+    else if (_color_state.depth == EDepthType::_4)
+    {
+        vp = color.rgb;
+    }
 
     return make_tuple(value, vp);
 }
