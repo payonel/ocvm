@@ -387,11 +387,7 @@ tuple<int, Value> Gpu::makeColorContext(const Color& color)
     }
 
     Value vp = Value::nil;
-    if (color.paletted)
-    {
-        vp = color.rgb;
-    }
-    else if (_color_state.depth == EDepthType::_4)
+    if (color.paletted || _color_state.depth == EDepthType::_4)
     {
         vp = color.rgb;
     }
