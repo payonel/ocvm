@@ -100,20 +100,20 @@ int Gpu::setResolution(lua_State* lua)
         return luaL_error(lua, "unsupported resolution");
     }
 
-    setResolution(width, height);
-    return ValuePack::ret(lua, true);
+    return ValuePack::ret(lua, setResolution(width, height));
 }
 
-void Gpu::setResolution(int width, int height)
+bool Gpu::setResolution(int width, int height)
 {
     if (!_screen || !_screen->framer())
-        return;
+        return false;
 
     if (width == _width && height == _height)
-        return;
+        return false;
 
     resizeBuffer(width, height);
     client()->pushSignal({"screen_resized", _screen->address(), width, height});
+    return true;
 }
 
 int Gpu::set(lua_State* lua)
@@ -198,7 +198,7 @@ int Gpu::fill(lua_State* lua)
         int x_start = x;
         for (int col = 0; col < width; col++)
         {
-            x_start += set(x_start, y + row, fill_cell);
+            x_start += set(x_start, y + row, fill_cell, false);
         }
     }
 
@@ -268,7 +268,7 @@ int Gpu::copy(lua_State* lua)
                 {
                     at(x, y)->locked = false; // copy hack
                 }
-                set(x, y, *pCell);
+                set(x, y, *pCell, true);
                 delete pCell;
             }
         }
@@ -286,7 +286,7 @@ int Gpu::getDepth(lua_State* lua)
 int Gpu::setDepth(lua_State* lua)
 {
     check(lua);
-    double dbits = Value::check(lua, 1, "number").toNumber();
+    int bits = static_cast<int>(Value::check(lua, 1, "number").toNumber());
 
     string depth_identifier;
     switch (_color_state.depth)
@@ -296,7 +296,6 @@ int Gpu::setDepth(lua_State* lua)
         case EDepthType::_8: depth_identifier = "EightBit"; break;
     }
 
-    int bits = dbits == 1.0 ? 1 : dbits == 4.0 ? 4 : dbits == 8.0 ? 8 : 0;
     EDepthType newDepth;
     switch (bits)
     {
@@ -433,7 +432,7 @@ const Cell* Gpu::get(int x, int y) const
     return const_cast<const Cell*>(at(x, y));
 }
 
-int Gpu::set(int x, int y, const Cell& cell)
+int Gpu::set(int x, int y, const Cell& cell, bool bForce)
 {
     Cell* pCell = at(x, y);
     int char_width = UnicodeApi::charWidth(cell.value, true);
@@ -441,18 +440,18 @@ int Gpu::set(int x, int y, const Cell& cell)
     if (pCell && !pCell->locked)
     {
         int distance_to_edge = _width - x + 1; // 1-based, _width is inclusive
-        if (char_width <= distance_to_edge)
+        if (char_width <= distance_to_edge || bForce)
         {
             if (char_width > 1)
             {
-                set(x + 1, y, {" ", cell.fg, cell.bg, true});
+                set(x + 1, y, {" ", cell.fg, cell.bg, true}, bForce);
             }
             else if (UnicodeApi::charWidth(pCell->value, true) > 1)
             {
                 // unlock next
-                // should be safe to deref without check
-                // because distance to edge was checked
-                at(x + 1, y)->locked = false;
+                Cell* pNext = at(x + 1, y);
+                if (pNext)
+                    pNext->locked = false;
             }
             if (_screen)
                 _screen->write(x, y, cell);
@@ -470,7 +469,7 @@ void Gpu::set(int x, int y, const string& text, bool bVertical)
 
     for (const auto& sub : UnicodeApi::subs(text))
     {
-        int width = set(x, y, {sub, deflated_fg, deflated_bg});
+        int width = set(x, y, {sub, deflated_fg, deflated_bg}, false);
         if (!bVertical)
             x += width;
         else
