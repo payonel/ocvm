@@ -244,21 +244,23 @@ int Gpu::copy(lua_State* lua)
     height = std::min(height, _height - y + 1);
 
     vector<Cell> buffer;
-    buffer.resize(width, {});
+    buffer.reserve(width * height);
 
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        Cell* pScan = buffer.data();
-        Cell* pOrigin = at(x, y + yoffset);
-        Cell* pEnd = pOrigin + width;
-        while (pOrigin != pEnd)
-            *pScan++ = *pOrigin++;
-        pScan = buffer.data();
-
+        Cell* pLine = at(x, y + yoffset);
         for (int xoffset = 0; xoffset < width; xoffset++)
         {
-            const auto& pCell = pScan++;
-            set(tx + xoffset, ty + yoffset, *pCell, true);
+            buffer.push_back(*pLine++);
+        }
+    }
+    Cell* pScan = buffer.data();
+
+    for (int yoffset = 0; yoffset < height; yoffset++)
+    {
+        for (int xoffset = 0; xoffset < width; xoffset++)
+        {
+            set(tx + xoffset, ty + yoffset, *pScan++, true);
         }
     }
 
