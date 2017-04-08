@@ -236,44 +236,29 @@ int Gpu::copy(lua_State* lua)
     if ((x + width) < 1 || (y + height) < 1)
         return ValuePack::ret(lua, true);
 
-    vector<vector<const Cell*>> scans;
-    for (int yoffset = 0; yoffset < height; yoffset++)
-    {
-        auto given_scan = scan(x, y + yoffset, width);
-        vector<const Cell*> next;
-        for (const auto* pc : given_scan)
-        {
-            if (pc)
-            {
-                Cell* pnew = new Cell;
-                *pnew = *pc; // copy
-                next.push_back(pnew);
-            }
-            else
-            {
-                next.push_back(nullptr);
-            }
-        }
-        scans.push_back(next);
-    }
+    if (dx == 0 && dy == 0)
+        return ValuePack::ret(lua, true); // might this unlock cells?
+
+    // truncate width and height so our cells are always non-null
+    width = std::min(width, _width - x + 1);
+    height = std::min(height, _height - y + 1);
+
+    vector<Cell> buffer;
+    buffer.resize(width, {});
 
     for (int yoffset = 0; yoffset < height; yoffset++)
     {
-        int y = ty + yoffset;
-        const auto& line = scans.at(yoffset);
+        Cell* pScan = buffer.data();
+        Cell* pOrigin = at(x, y + yoffset);
+        Cell* pEnd = pOrigin + width;
+        while (pOrigin != pEnd)
+            *pScan++ = *pOrigin++;
+        pScan = buffer.data();
+
         for (int xoffset = 0; xoffset < width; xoffset++)
         {
-            int x = tx + xoffset;
-            const Cell* pCell = line.at(xoffset);
-            if (pCell)
-            {
-                if (!pCell->locked)
-                {
-                    at(x, y)->locked = false; // copy hack
-                }
-                set(x, y, *pCell, true);
-                delete pCell;
-            }
+            const auto& pCell = pScan++;
+            set(tx + xoffset, ty + yoffset, *pCell, true);
         }
     }
 
@@ -445,7 +430,7 @@ int Gpu::set(int x, int y, const Cell& cell, bool bForce)
     Cell* pCell = at(x, y);
     int char_width = UnicodeApi::charWidth(cell.value, true);
 
-    if (pCell && !pCell->locked)
+    if (pCell && (bForce || !pCell->locked))
     {
         int distance_to_edge = _width - x + 1; // 1-based, _width is inclusive
         if (char_width <= distance_to_edge || bForce)

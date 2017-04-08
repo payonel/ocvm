@@ -14,6 +14,7 @@ using namespace std;
 #include <signal.h>
 
 #include "ansi.h"
+#include "apis/unicode.h"
 
 tuple<int, int> current_resolution()
 {
@@ -178,7 +179,7 @@ void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
         flog << cell.value;
         flog.close();
     }
-    else
+    else if (!cell.locked)
     {
         string cmd = "";
         if (x != _x || y != _y)
@@ -191,8 +192,10 @@ void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
         if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
             cmd += Ansi::set_color(cell.fg, cell.bg);
 
-        cout << cmd << scrub(cell.value);
-        _x = x + 1;
+        string text = scrub(cell.value);
+        int length = UnicodeApi::wlen(text);
+        cout << cmd << text;
+        _x = x + length;
         _y = y;
         _fg_rgb = cell.fg.rgb;
         _bg_rgb = cell.bg.rgb;
