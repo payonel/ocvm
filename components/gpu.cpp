@@ -121,7 +121,7 @@ int Gpu::set(lua_State* lua)
     check(lua);
     int x = Value::check(lua, 1, "number").toNumber();
     int y = Value::check(lua, 2, "number").toNumber();
-    string text = Value::check(lua, 3, "string").toString();
+    vector<char> text = Value::check(lua, 3, "string").toRawString();
     bool bVertical = Value::check(lua, 4, "boolean", "nil").Or(false).toBool();
 
     set(x, y, text, bVertical);
@@ -186,15 +186,15 @@ int Gpu::fill(lua_State* lua)
     int y = Value::check(lua, 2, "number").toNumber();
     int width = Value::check(lua, 3, "number").toNumber();
     int height = Value::check(lua, 4, "number").toNumber();
-    string text = Value::check(lua, 5, "string").toString();
+    vector<char> text = Value::check(lua, 5, "string").toRawString();
 
-    string value = UnicodeApi::sub(text, 1, 1);
-    if (value != text || value.empty())
+    vector<char> value = UnicodeApi::sub(text, 1, 1);
+    if (value.size() != text.size() || value.empty())
     {
         return ValuePack::ret(lua, Value::nil, "invalid fill value");
     }
 
-    Cell fill_cell { text, deflate(_fg), deflate(_bg) };
+    Cell fill_cell { UnicodeApi::toString(text), deflate(_fg), deflate(_bg) };
 
     for (int row = 0; row < height; row++)
     {
@@ -430,7 +430,7 @@ const Cell* Gpu::get(int x, int y) const
 int Gpu::set(int x, int y, const Cell& cell, bool bForce)
 {
     Cell* pCell = at(x, y);
-    int char_width = UnicodeApi::charWidth(cell.value, true);
+    int char_width = UnicodeApi::charWidth(UnicodeApi::toRawString(cell.value), true);
 
     if (pCell && (bForce || !pCell->locked))
     {
@@ -441,7 +441,7 @@ int Gpu::set(int x, int y, const Cell& cell, bool bForce)
             {
                 set(x + 1, y, {" ", cell.fg, cell.bg, true}, bForce);
             }
-            else if (UnicodeApi::charWidth(pCell->value, true) > 1)
+            else if (UnicodeApi::charWidth(UnicodeApi::toRawString(pCell->value), true) > 1)
             {
                 // unlock next
                 Cell* pNext = at(x + 1, y);
@@ -457,14 +457,14 @@ int Gpu::set(int x, int y, const Cell& cell, bool bForce)
     return char_width;
 }
 
-void Gpu::set(int x, int y, const string& text, bool bVertical)
+void Gpu::set(int x, int y, const vector<char>& text, bool bVertical)
 {
     Color deflated_fg = deflate(_fg);
     Color deflated_bg = deflate(_bg);
 
     for (const auto& sub : UnicodeApi::subs(text))
     {
-        int width = set(x, y, {sub, deflated_fg, deflated_bg}, false);
+        int width = set(x, y, {UnicodeApi::toString(sub), deflated_fg, deflated_bg, false}, false);
         if (!bVertical)
             x += width;
         else

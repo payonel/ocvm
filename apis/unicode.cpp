@@ -83,10 +83,10 @@ void UnicodeApi::configure(const Value& settings)
     font_width[9] = 2;
 }
 
-string UnicodeApi::wtrunc(const string& text, const size_t width)
+vector<char> UnicodeApi::wtrunc(const vector<char>& text, const size_t width)
 {
     size_t current_width = 0;
-    string result;
+    vector<char> result;
     for (const auto& sub : subs(text))
     {
         current_width += charWidth(sub, true);
@@ -94,26 +94,26 @@ string UnicodeApi::wtrunc(const string& text, const size_t width)
         {
             break;
         }
-        result += sub;
+        result.insert(result.end(), sub.begin(), sub.end());
     }
 
     return result;
 }
 
-bool UnicodeApi::isWide(const string& text)
+bool UnicodeApi::isWide(const vector<char>& text)
 {
     return charWidth(text) > 1;
 }
 
-string UnicodeApi::upper(const string& text)
+vector<char> UnicodeApi::upper(const vector<char>& text)
 {
-    string r;
+    vector<char> r;
     for (const auto& c : text)
-        r += ::toupper(c);
+        r.push_back(::toupper(c));
     return r;
 }
 
-uint32_t UnicodeApi::tocodepoint(const string& text, const size_t index)
+uint32_t UnicodeApi::tocodepoint(const vector<char>& text, const size_t index)
 {
     size_t end = text.size();
     if (index >= end) return 0;
@@ -225,7 +225,7 @@ vector<char> UnicodeApi::tochar(const uint32_t codepoint32)
     return buffer;
 }
 
-size_t UnicodeApi::wlen(const string& text)
+size_t UnicodeApi::wlen(const vector<char>& text)
 {
     size_t width = 0;
     for (const auto& sub : subs(text))
@@ -236,7 +236,7 @@ size_t UnicodeApi::wlen(const string& text)
     return width;
 }
 
-size_t UnicodeApi::len(const string& text)
+size_t UnicodeApi::len(const vector<char>& text)
 {
     size_t length = 0;
     auto iterator = subs(text);
@@ -248,16 +248,16 @@ size_t UnicodeApi::len(const string& text)
     return length;
 }
 
-string UnicodeApi::sub(const string& text, int from, int to)
+vector<char> UnicodeApi::sub(const vector<char>& text, int from, int to)
 {
     if (from == 0)
         from = 1;
     if (to == 0)
-        return "";
+        return {};
 
     size_t early_break = (from>0 && to>0) ? (size_t)std::max(from, to) : std::numeric_limits<size_t>::max();
 
-    vector<string> parts;
+    vector<vector<char>> parts;
     for (const auto& sub : subs(text))
     {
         parts.push_back(sub);
@@ -266,13 +266,13 @@ string UnicodeApi::sub(const string& text, int from, int to)
     }
     int numParts = parts.size();
     if (numParts == 0)
-        return "";
+        return {};
 
     if (from < 0)
         from = std::max(1, from + numParts + 1);
 
     if (from > numParts)
-        return "";
+        return {};
 
     if (to < 0)
         to += numParts + 1;
@@ -280,16 +280,17 @@ string UnicodeApi::sub(const string& text, int from, int to)
     
     // switch to zero-based index
     from--;
-    string result;
+    vector<char> result;
     for (int i = from; i < to; i++)
     {
-        result += parts.at(i);
+        const auto& part = parts.at(i);
+        result.insert(result.end(), part.begin(), part.end());
     }
 
     return result;
 }
 
-int UnicodeApi::charWidth(const string& text, bool bAlreadySingle)
+int UnicodeApi::charWidth(const vector<char>& text, bool bAlreadySingle)
 {
     uint32_t codepoint = UnicodeApi::tocodepoint(bAlreadySingle ? text : UnicodeApi::sub(text, 1, 1));
     const auto& it = font_width.find(codepoint);
@@ -298,28 +299,29 @@ int UnicodeApi::charWidth(const string& text, bool bAlreadySingle)
     return it->second;
 }
 
-string UnicodeApi::reverse(const string& text)
+vector<char> UnicodeApi::reverse(const vector<char>& text)
 {
-    string r;
+    vector<char> r;
     size_t len = UnicodeApi::len(text);
     for (size_t i = 0; i < len; i++)
     {
-        r = UnicodeApi::sub(text, i + 1, i + 1) + r;
+        const auto& next = UnicodeApi::sub(text, i + 1, i + 1);
+        r.insert(r.begin(), next.begin(), next.end());
     }
     return r;
 }
 
-string UnicodeApi::lower(const string& text)
+vector<char> UnicodeApi::lower(const vector<char>& text)
 {
-    string r;
+    vector<char> r;
     for (const auto& c : text)
-        r += ::tolower(c);
+        r.push_back(::tolower(c));
     return r;
 }
 
 int UnicodeApi::wtrunc(lua_State* lua)
 {
-    string text = Value::check(lua, 1, "string").toString();
+    vector<char> text = Value::check(lua, 1, "string").toRawString();
     size_t width = std::max(0, static_cast<int>(Value::check(lua, 2, "number").toNumber()));
     if (wlen(text) < width)
         luaL_error(lua, "index out of range");
@@ -328,12 +330,12 @@ int UnicodeApi::wtrunc(lua_State* lua)
 
 int UnicodeApi::isWide(lua_State* lua)
 {
-    return ValuePack::ret(lua, isWide(Value::check(lua, 1, "string").toString()));
+    return ValuePack::ret(lua, isWide(Value::check(lua, 1, "string").toRawString()));
 }
 
 int UnicodeApi::upper(lua_State* lua)
 {
-    return ValuePack::ret(lua, upper(Value::check(lua, 1, "string").toString()));
+    return ValuePack::ret(lua, upper(Value::check(lua, 1, "string").toRawString()));
 }
 
 int UnicodeApi::tochar(lua_State* lua)
@@ -351,17 +353,17 @@ int UnicodeApi::tochar(lua_State* lua)
 
 int UnicodeApi::wlen(lua_State* lua)
 {
-    return ValuePack::ret(lua, wlen(Value::check(lua, 1, "string").toString()));
+    return ValuePack::ret(lua, wlen(Value::check(lua, 1, "string").toRawString()));
 }
 
 int UnicodeApi::len(lua_State* lua)
 {
-    return ValuePack::ret(lua, len(Value::check(lua, 1, "string").toString()));
+    return ValuePack::ret(lua, len(Value::check(lua, 1, "string").toRawString()));
 }
 
 int UnicodeApi::sub(lua_State* lua)
 {
-    string text = Value::check(lua, 1, "string").toString();
+    vector<char> text = Value::check(lua, 1, "string").toRawString();
     int len = text.size();
     int from = Value::check(lua, 2, "number").toNumber();
     int to = Value::check(lua, 3, "number", "nil").Or(len).toNumber();
@@ -371,22 +373,22 @@ int UnicodeApi::sub(lua_State* lua)
 
 int UnicodeApi::charWidth(lua_State* lua)
 {
-    return ValuePack::ret(lua, charWidth(Value::check(lua, 1, "string").toString()));
+    return ValuePack::ret(lua, charWidth(Value::check(lua, 1, "string").toRawString()));
 }
 
 int UnicodeApi::reverse(lua_State* lua)
 {
-    return ValuePack::ret(lua, reverse(Value::check(lua, 1, "string").toString()));
+    return ValuePack::ret(lua, reverse(Value::check(lua, 1, "string").toRawString()));
 }
 
 int UnicodeApi::lower(lua_State* lua)
 {
-    return ValuePack::ret(lua, lower(Value::check(lua, 1, "string").toString()));
+    return ValuePack::ret(lua, lower(Value::check(lua, 1, "string").toRawString()));
 }
 
-UnicodeIterator UnicodeApi::subs(const string& src)
+UnicodeIterator UnicodeApi::subs(const vector<char>& src)
 {
-    return UnicodeIterator{src};
+    return UnicodeIterator{src.data(), src.size()};
 }
 
 bool UnicodeIterator::UnicodeIt::operator != (const UnicodeIterator::UnicodeIt& other) const
@@ -402,11 +404,11 @@ void UnicodeIterator::UnicodeIt::operator++()
 size_t UnicodeIterator::UnicodeIt::next() const
 {
     const auto& src = parent.source;
-    size_t length = src.size();
+    size_t length = parent.size;
     if (start >= length)
         return length;
 
-    unsigned char c = src.at(start);
+    unsigned char c = src[start];
     size_t step = 0;
     if (c <= end_1_byte) step = 1;
     else if (c <= set_2_bytes_bits) return length; // continuation bit, invalid point
@@ -419,9 +421,11 @@ size_t UnicodeIterator::UnicodeIt::next() const
     return std::min(start + step, length);
 }
 
-string UnicodeIterator::UnicodeIt::operator*() const
+vector<char> UnicodeIterator::UnicodeIt::operator*() const
 {
-    return parent.source.substr(start, next() - start);
+    const char* beg = parent.source + start;
+    const char* end = parent.source + next();
+    return vector<char>(beg, end);
 }
 
 UnicodeIterator::UnicodeIt UnicodeIterator::begin()
@@ -431,6 +435,6 @@ UnicodeIterator::UnicodeIt UnicodeIterator::begin()
 
 UnicodeIterator::UnicodeIt UnicodeIterator::end()
 {
-    return {*this, source.size()};
+    return {*this, size};
 }
 
