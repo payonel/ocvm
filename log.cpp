@@ -35,7 +35,7 @@ Logger& operator<< (Logger& logger, const string& text)
     Frame* pf = Logger::getFrame();
     if (!logger.priority())
         cerr << text;
-    pf->write(1, 1, {text, {}, {}});
+    pf->write(1, 1, {text, {}, {}, false, (int)text.size()});
     return logger;
 }
 

@@ -16,7 +16,8 @@ struct Cell
     string value; // must be a string for multibyte chars
     Color fg;
     Color bg;
-    bool locked = false; // locked when a double wide is placed before it
+    bool locked; // locked when a double wide is placed before it
+    int width;
 };
 
 class Frame;

@@ -194,7 +194,14 @@ int Gpu::fill(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "invalid fill value");
     }
 
-    Cell fill_cell { UnicodeApi::toString(text), deflate(_fg), deflate(_bg) };
+    Cell fill_cell
+    {
+        UnicodeApi::toString(text),
+        deflate(_fg),
+        deflate(_bg),
+        false, // not locked
+        UnicodeApi::charWidth(value, true)
+    };
 
     for (int row = 0; row < height; row++)
     {
@@ -430,7 +437,7 @@ const Cell* Gpu::get(int x, int y) const
 int Gpu::set(int x, int y, const Cell& cell, bool bForce)
 {
     Cell* pCell = at(x, y);
-    int char_width = UnicodeApi::charWidth(UnicodeApi::toRawString(cell.value), true);
+    int char_width = cell.width;
 
     if (pCell && (bForce || !pCell->locked))
     {
@@ -439,9 +446,9 @@ int Gpu::set(int x, int y, const Cell& cell, bool bForce)
         {
             if (char_width > 1)
             {
-                set(x + 1, y, {" ", cell.fg, cell.bg, true}, bForce);
+                set(x + 1, y, {" ", cell.fg, cell.bg, true, 1}, bForce);
             }
-            else if (UnicodeApi::charWidth(UnicodeApi::toRawString(pCell->value), true) > 1)
+            else if (pCell->width > 1)
             {
                 // unlock next
                 Cell* pNext = at(x + 1, y);
@@ -464,7 +471,14 @@ void Gpu::set(int x, int y, const vector<char>& text, bool bVertical)
 
     for (const auto& sub : UnicodeApi::subs(text))
     {
-        int width = set(x, y, {UnicodeApi::toString(sub), deflated_fg, deflated_bg, false}, false);
+        int width = set(x, y,
+            {
+                UnicodeApi::toString(sub),
+                deflated_fg,
+                deflated_bg,
+                false,
+                UnicodeApi::charWidth(sub, true)
+            }, false);
         if (!bVertical)
             x += width;
         else
@@ -507,6 +521,7 @@ void Gpu::resizeBuffer(int width, int height)
                     it->fg = {};
                     it->bg = {};
                     it->locked = false;
+                    it->width = 1;
                 }
                 it++;
             }

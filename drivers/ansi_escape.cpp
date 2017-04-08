@@ -193,9 +193,8 @@ void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
             cmd += Ansi::set_color(cell.fg, cell.bg);
 
         string text = scrub(cell.value);
-        int length = UnicodeApi::wlen(UnicodeApi::toRawString(text));
         cout << cmd << text;
-        _x = x + length;
+        _x = x + cell.width;
         _y = y;
         _fg_rgb = cell.fg.rgb;
         _bg_rgb = cell.bg.rgb;
