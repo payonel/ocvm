@@ -173,52 +173,56 @@ uint32_t UnicodeApi::tocodepoint(const string& text, const size_t index)
     return codepoint;
 }
 
-string UnicodeApi::tochar(const uint32_t codepoint)
+vector<char> UnicodeApi::tochar(const uint32_t codepoint32)
 {
-    char buffer[6] {};
+    vector<char> buffer;
+
+    // unicode isn't going to be more than 4 bytes
+    // even though utf8 would support this, i'll truncate here
+    uint32_t codepoint = codepoint32 & 0xFFFF;
 
     if (codepoint < end_1_byte)
     {
-        buffer[0] = codepoint;
+        buffer.push_back(codepoint);
     }
     else if (codepoint < end_2_byte)
     {
-        buffer[0] = set_2_bytes_bits | (set_2_mask & codepoint >> 6);
-        buffer[1] = continuation_bit | (continuation_mask & codepoint);
+        buffer.push_back(set_2_bytes_bits | (set_2_mask & codepoint >> 6));
+        buffer.push_back(continuation_bit | (continuation_mask & codepoint));
     }
     else if (codepoint < end_3_byte)
     {
-        buffer[0] = set_3_bytes_bits | (set_3_mask & codepoint >> 12);
-        buffer[1] = continuation_bit | (continuation_mask & codepoint >> 6);
-        buffer[2] = continuation_bit | (continuation_mask & codepoint);
+        buffer.push_back(set_3_bytes_bits | (set_3_mask & codepoint >> 12));
+        buffer.push_back(continuation_bit | (continuation_mask & codepoint >> 6));
+        buffer.push_back(continuation_bit | (continuation_mask & codepoint));
     }
-    else if (codepoint < end_4_byte)
-    {
-        buffer[0] = set_4_bytes_bits | (set_4_mask & codepoint >> 18);
-        buffer[1] = continuation_bit | (continuation_mask & codepoint >> 12);
-        buffer[2] = continuation_bit | (continuation_mask & codepoint >> 6);
-        buffer[3] = continuation_bit | (continuation_mask & codepoint);
-    }
-    else if (codepoint < end_5_byte)
-    {
-        buffer[0] = set_5_bytes_bits | (set_5_mask & codepoint >> 24);
-        buffer[1] = continuation_bit | (continuation_mask & codepoint >> 18);
-        buffer[2] = continuation_bit | (continuation_mask & codepoint >> 12);
-        buffer[3] = continuation_bit | (continuation_mask & codepoint >> 6);
-        buffer[4] = continuation_bit | (continuation_mask & codepoint);
-    }
-    else if (codepoint < end_6_byte)
-    {
-        buffer[0] = set_6_bytes_bits | (set_6_mask & codepoint >> 30);
-        buffer[1] = continuation_bit | (continuation_mask & codepoint >> 24);
-        buffer[2] = continuation_bit | (continuation_mask & codepoint >> 18);
-        buffer[3] = continuation_bit | (continuation_mask & codepoint >> 12);
-        buffer[4] = continuation_bit | (continuation_mask & codepoint >> 6);
-        buffer[5] = continuation_bit | (continuation_mask & codepoint);
-    }
+    // else if (codepoint < end_4_byte)
+    // {
+    //     buffer[0] = set_4_bytes_bits | (set_4_mask & codepoint >> 18);
+    //     buffer[1] = continuation_bit | (continuation_mask & codepoint >> 12);
+    //     buffer[2] = continuation_bit | (continuation_mask & codepoint >> 6);
+    //     buffer[3] = continuation_bit | (continuation_mask & codepoint);
+    // }
+    // else if (codepoint < end_5_byte)
+    // {
+    //     buffer[0] = set_5_bytes_bits | (set_5_mask & codepoint >> 24);
+    //     buffer[1] = continuation_bit | (continuation_mask & codepoint >> 18);
+    //     buffer[2] = continuation_bit | (continuation_mask & codepoint >> 12);
+    //     buffer[3] = continuation_bit | (continuation_mask & codepoint >> 6);
+    //     buffer[4] = continuation_bit | (continuation_mask & codepoint);
+    // }
+    // else if (codepoint < end_6_byte)
+    // {
+    //     buffer[0] = set_6_bytes_bits | (set_6_mask & codepoint >> 30);
+    //     buffer[1] = continuation_bit | (continuation_mask & codepoint >> 24);
+    //     buffer[2] = continuation_bit | (continuation_mask & codepoint >> 18);
+    //     buffer[3] = continuation_bit | (continuation_mask & codepoint >> 12);
+    //     buffer[4] = continuation_bit | (continuation_mask & codepoint >> 6);
+    //     buffer[5] = continuation_bit | (continuation_mask & codepoint);
+    // }
     // else invalid
 
-    return string{buffer};
+    return buffer;
 }
 
 size_t UnicodeApi::wlen(const string& text)
@@ -316,7 +320,7 @@ string UnicodeApi::lower(const string& text)
 int UnicodeApi::wtrunc(lua_State* lua)
 {
     string text = Value::check(lua, 1, "string").toString();
-    size_t width = Value::check(lua, 2, "number").toNumber();
+    size_t width = std::max(0, static_cast<int>(Value::check(lua, 2, "number").toNumber()));
     if (wlen(text) < width)
         luaL_error(lua, "index out of range");
     return ValuePack::ret(lua, wtrunc(text, width));
@@ -334,7 +338,15 @@ int UnicodeApi::upper(lua_State* lua)
 
 int UnicodeApi::tochar(lua_State* lua)
 {
-    return ValuePack::ret(lua, tochar(Value::check(lua, 1, "number").toNumber()));
+    vector<char> result;
+    int top = lua_gettop(lua);
+    for (int i = 1; i <= top; i++)
+    {
+        uint32_t code = static_cast<uint32_t>(Value::check(lua, i, "number").toNumber());
+        vector<char> unicode_char = tochar(code);
+        result.insert(result.end(), unicode_char.begin(), unicode_char.end());
+    }
+    return ValuePack::ret(lua, result);
 }
 
 int UnicodeApi::wlen(lua_State* lua)
@@ -359,7 +371,7 @@ int UnicodeApi::sub(lua_State* lua)
 
 int UnicodeApi::charWidth(lua_State* lua)
 {
-    return wlen(lua);
+    return ValuePack::ret(lua, charWidth(Value::check(lua, 1, "string").toString()));
 }
 
 int UnicodeApi::reverse(lua_State* lua)

@@ -33,7 +33,7 @@ public:
     static string wtrunc(const string& text, const size_t width);
     static bool isWide(const string& text);
     static string upper(const string& text);
-    static string tochar(const uint32_t n);
+    static vector<char> tochar(const uint32_t n);
     static uint32_t tocodepoint(const string& text, const size_t index = 0);
     static size_t wlen(const string& text);
     static size_t len(const string& text);
