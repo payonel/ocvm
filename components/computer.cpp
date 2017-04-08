@@ -117,6 +117,44 @@ void Computer::injectCustomLua()
     luaL_loadstring(_state, code.c_str()); // (function) +1
     lua_setfield(_state, -2, "address"); // computer.address = function, pops loadstring -1
 
+    lua_getglobal(_state, "os"); // +1
+
+    lua_pushstring(_state, "time"); // +1
+    lua_gettable(_state, -2); // push time on stack, pop key name, +1-1
+    lua_setfield(_state, -2, "_time"); // os._time = os.time, pops time, -1
+    // now override time function
+    luaL_loadstring
+    (_state,
+        "local t = ...              \n"
+        "if type(t) == 'table' then \n"
+        "    t.isdst = false        \n"
+        "end                        \n"
+        "return os._time(...)       \n"
+    ); // +1
+    lua_setfield(_state, -2, "time"); // os.time = function, pops function, -1
+
+    lua_pushstring(_state, "date"); // +1
+    lua_gettable(_state, -2); // push date on stack, pop key name, +1-1
+    lua_setfield(_state, -2, "_date"); // os._date = os.date, pops time, -1
+    // now override date function (to be exception safe)
+    luaL_loadstring
+    (_state,
+        "local text = ...                                   \n"
+        "if select('#', ...) == 0 then                      \n"
+        "    return os._date()                              \n"
+        "end                                                \n"
+        "if type(text) == 'string' then                     \n"
+        "    text = text:gsub('%%?.', function(c)           \n"
+        "        local ok, ret = pcall(os._date, c)         \n"
+        "        return ok and c or ''                      \n"
+        "    end)                                           \n"
+        "end                                                \n"
+        "return os._date(select(1, text, select(2, ...)))   \n"
+    ); // +1
+    lua_setfield(_state, -2, "date"); // os.date = function, pops function, -1
+
+    lua_pop(_state, 1); // pop os, -1
+
     //stringstream ss;
     //ss << _start_time;
     //string startTimeText = ss.str();
