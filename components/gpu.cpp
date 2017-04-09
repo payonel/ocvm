@@ -52,7 +52,7 @@ bool Gpu::onInitialize()
 
 int Gpu::bind(lua_State* lua)
 {
-    string address = Value::check(lua, 1, "string").toString();
+    string address = Value::checkArg<string>(lua, 1);
     if (_screen && _screen->address() == address)
         return 0; // already set
 
@@ -91,8 +91,8 @@ int Gpu::getResolution(lua_State* lua)
 int Gpu::setResolution(lua_State* lua)
 {
     check(lua);
-    int width = (int)Value::check(lua, 1, "number").toNumber();
-    int height = (int)Value::check(lua, 2, "number").toNumber();
+    int width = Value::checkArg<int>(lua, 1);
+    int height = Value::checkArg<int>(lua, 2);
 
     tuple<int, int> max = _screen->framer()->maxResolution();
     if (width < 1 || width > std::get<0>(max) || height < 1 || height > std::get<1>(max))
@@ -119,10 +119,12 @@ bool Gpu::setResolution(int width, int height)
 int Gpu::set(lua_State* lua)
 {
     check(lua);
-    int x = Value::check(lua, 1, "number").toNumber();
-    int y = Value::check(lua, 2, "number").toNumber();
-    vector<char> text = Value::check(lua, 3, "string").toRawString();
-    bool bVertical = Value::check(lua, 4, "boolean", "nil").Or(false).toBool();
+    int x = Value::checkArg<int>(lua, 1);
+    int y = Value::checkArg<int>(lua, 2);
+    vector<char> text = Value::checkArg<vector<char>>(lua, 3);
+
+    static const bool default_vertical = false;
+    bool bVertical = Value::checkArg<bool>(lua, 4, &default_vertical);
 
     set(x, y, text, bVertical);
     return ValuePack::ret(lua, true);
@@ -131,8 +133,8 @@ int Gpu::set(lua_State* lua)
 int Gpu::get(lua_State* lua)
 {
     check(lua);
-    int x = Value::check(lua, 1, "number").toNumber();
-    int y = Value::check(lua, 2, "number").toNumber();
+    int x = Value::checkArg<int>(lua, 1);
+    int y = Value::checkArg<int>(lua, 2);
     const Cell* pc = get(x, y);
     if (!pc)
     {
@@ -182,11 +184,11 @@ int Gpu::fill(lua_State* lua)
 {
     check(lua);
 
-    int x = Value::check(lua, 1, "number").toNumber();
-    int y = Value::check(lua, 2, "number").toNumber();
-    int width = Value::check(lua, 3, "number").toNumber();
-    int height = Value::check(lua, 4, "number").toNumber();
-    vector<char> text = Value::check(lua, 5, "string").toRawString();
+    int x = Value::checkArg<int>(lua, 1);
+    int y = Value::checkArg<int>(lua, 2);
+    int width = Value::checkArg<int>(lua, 3);
+    int height = Value::checkArg<int>(lua, 4);
+    vector<char> text = Value::checkArg<vector<char>>(lua, 5);
 
     vector<char> value = UnicodeApi::sub(text, 1, 1);
     if (value.size() != text.size() || value.empty())
@@ -218,12 +220,12 @@ int Gpu::fill(lua_State* lua)
 int Gpu::copy(lua_State* lua)
 {
     check(lua);
-    int x = Value::check(lua, 1, "number").toNumber();
-    int y = Value::check(lua, 2, "number").toNumber();
-    int width = Value::check(lua, 3, "number").toNumber();
-    int height = Value::check(lua, 4, "number").toNumber();
-    int dx = Value::check(lua, 5, "number").toNumber();
-    int dy = Value::check(lua, 6, "number").toNumber();
+    int x = Value::checkArg<int>(lua, 1);
+    int y = Value::checkArg<int>(lua, 2);
+    int width = Value::checkArg<int>(lua, 3);
+    int height = Value::checkArg<int>(lua, 4);
+    int dx = Value::checkArg<int>(lua, 5);
+    int dy = Value::checkArg<int>(lua, 6);
 
     int tx = x + dx;
     int ty = y + dy;
@@ -283,7 +285,7 @@ int Gpu::getDepth(lua_State* lua)
 int Gpu::setDepth(lua_State* lua)
 {
     check(lua);
-    int bits = static_cast<int>(Value::check(lua, 1, "number").toNumber());
+    int bits = Value::checkArg<int>(lua, 1);
 
     string depth_identifier;
     switch (_color_state.depth)
@@ -337,9 +339,10 @@ int Gpu::getScreen(lua_State* lua)
 int Gpu::setColorContext(lua_State* lua, bool bBack)
 {
     check(lua);
-    
-    int rgb = Value::check(lua, 1, "number").toNumber();
-    bool p = Value::check(lua, 2, "boolean", "nil").Or(false).toBool();
+
+    static const bool default_paletted = false;
+    int rgb = Value::checkArg<int>(lua, 1);
+    bool p = Value::checkArg<bool>(lua, 2, &default_paletted);
 
     if (p)
     {
@@ -391,23 +394,28 @@ tuple<int, Value> Gpu::makeColorContext(const Color& color)
 
 int Gpu::getPaletteColor(lua_State* lua)
 {
-    int index = Value::check(lua, 1, "number").toNumber();
+    int index = Value::checkArg<int>(lua, 1);
+
     if (_color_state.depth == EDepthType::_1)
         return ValuePack::ret(lua, Value::nil, "palette not available");
+
     if (index < 0 || index > 15)
         return luaL_error(lua, "invalid palette index");
-    
+
     return ValuePack::ret(lua, _color_state.palette[index]);
 }
 
 int Gpu::setPaletteColor(lua_State* lua)
 {
-    int index = Value::check(lua, 1, "number").toNumber();
-    int rgb = Value::check(lua, 2, "number").toNumber();
+    int index = Value::checkArg<int>(lua, 1);
+    int rgb = Value::checkArg<int>(lua, 2);
+
     if (_color_state.depth == EDepthType::_1)
         return ValuePack::ret(lua, Value::nil, "palette not available");
+
     if (index < 0 || index > 15)
         return luaL_error(lua, "invalid palette index");
+
     int prev = _color_state.palette[index];
     if (prev != rgb)
     {
@@ -417,6 +425,7 @@ int Gpu::setPaletteColor(lua_State* lua)
         deflate_all();
         invalidate();
     }
+
     return ValuePack::ret(lua, prev);
 }
 

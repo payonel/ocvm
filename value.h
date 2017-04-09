@@ -41,6 +41,7 @@ public:
     int len() const;
     string type() const;
     int type_id() const;
+
     string toString() const;
     vector<char> toRawString() const;
     double toNumber() const;
@@ -49,8 +50,8 @@ public:
     lua_State* toThread() const;
     int status() const;
 
-    // static const Value& select(const ValuePack& pack, size_t index);
-    static Value check(lua_State* lua, size_t index, const string& required, const string& optional = "");
+    template <typename T>
+    static T checkArg(lua_State* lua, int index, const T* pDefault = nullptr);
 
     // table functions
     vector<string> keys() const;

@@ -63,8 +63,9 @@ int Eeprom::getDataSize(lua_State* lua)
 
 int Eeprom::setData(lua_State* lua)
 {
-    string value = Value::check(lua, 1, "string", "nil").Or("").toString();
-    size_t len = value.length();
+    static const vector<char> default_value {};
+    vector<char> value = Value::checkArg<vector<char>>(lua, 1, &default_value);
+    size_t len = value.size();
     if (_data_size_limit < 0 || len > static_cast<size_t>(_data_size_limit))
         return ValuePack::ret(lua, Value::nil, "data size exceeded");
 
@@ -95,6 +96,6 @@ int Eeprom::getLabel(lua_State* lua)
 
 int Eeprom::setLabel(lua_State* lua)
 {
-    update(ConfigIndex::Label, Value::check(lua, 1, "string"));
+    update(ConfigIndex::Label, Value::checkArg<string>(lua, 1));
     return 0;
 }

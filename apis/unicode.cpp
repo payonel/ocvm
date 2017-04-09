@@ -321,8 +321,8 @@ vector<char> UnicodeApi::lower(const vector<char>& text)
 
 int UnicodeApi::wtrunc(lua_State* lua)
 {
-    vector<char> text = Value::check(lua, 1, "string").toRawString();
-    size_t width = std::max(0, static_cast<int>(Value::check(lua, 2, "number").toNumber()));
+    vector<char> text = Value::checkArg<vector<char>>(lua, 1);
+    size_t width = std::max(0, Value::checkArg<int>(lua, 2));
     if (wlen(text) < width)
         luaL_error(lua, "index out of range");
     return ValuePack::ret(lua, wtrunc(text, width));
@@ -330,12 +330,12 @@ int UnicodeApi::wtrunc(lua_State* lua)
 
 int UnicodeApi::isWide(lua_State* lua)
 {
-    return ValuePack::ret(lua, isWide(Value::check(lua, 1, "string").toRawString()));
+    return ValuePack::ret(lua, isWide(Value::checkArg<vector<char>>(lua, 1)));
 }
 
 int UnicodeApi::upper(lua_State* lua)
 {
-    return ValuePack::ret(lua, upper(Value::check(lua, 1, "string").toRawString()));
+    return ValuePack::ret(lua, upper(Value::checkArg<vector<char>>(lua, 1)));
 }
 
 int UnicodeApi::tochar(lua_State* lua)
@@ -344,7 +344,7 @@ int UnicodeApi::tochar(lua_State* lua)
     int top = lua_gettop(lua);
     for (int i = 1; i <= top; i++)
     {
-        uint32_t code = static_cast<uint32_t>(Value::check(lua, i, "number").toNumber());
+        uint32_t code = Value::checkArg<uint32_t>(lua, i);
         vector<char> unicode_char = tochar(code);
         result.insert(result.end(), unicode_char.begin(), unicode_char.end());
     }
@@ -353,37 +353,37 @@ int UnicodeApi::tochar(lua_State* lua)
 
 int UnicodeApi::wlen(lua_State* lua)
 {
-    return ValuePack::ret(lua, wlen(Value::check(lua, 1, "string").toRawString()));
+    return ValuePack::ret(lua, wlen(Value::checkArg<vector<char>>(lua, 1)));
 }
 
 int UnicodeApi::len(lua_State* lua)
 {
-    return ValuePack::ret(lua, len(Value::check(lua, 1, "string").toRawString()));
+    return ValuePack::ret(lua, len(Value::checkArg<vector<char>>(lua, 1)));
 }
 
 int UnicodeApi::sub(lua_State* lua)
 {
-    vector<char> text = Value::check(lua, 1, "string").toRawString();
+    vector<char> text = Value::checkArg<vector<char>>(lua, 1);
     int len = text.size();
-    int from = Value::check(lua, 2, "number").toNumber();
-    int to = Value::check(lua, 3, "number", "nil").Or(len).toNumber();
+    int from = Value::checkArg<int>(lua, 2);
+    int to = Value::checkArg<int>(lua, 3, &len);
 
     return ValuePack::ret(lua, sub(text, from, to));
 }
 
 int UnicodeApi::charWidth(lua_State* lua)
 {
-    return ValuePack::ret(lua, charWidth(Value::check(lua, 1, "string").toRawString()));
+    return ValuePack::ret(lua, charWidth(Value::checkArg<vector<char>>(lua, 1)));
 }
 
 int UnicodeApi::reverse(lua_State* lua)
 {
-    return ValuePack::ret(lua, reverse(Value::check(lua, 1, "string").toRawString()));
+    return ValuePack::ret(lua, reverse(Value::checkArg<vector<char>>(lua, 1)));
 }
 
 int UnicodeApi::lower(lua_State* lua)
 {
-    return ValuePack::ret(lua, lower(Value::check(lua, 1, "string").toRawString()));
+    return ValuePack::ret(lua, lower(Value::checkArg<vector<char>>(lua, 1)));
 }
 
 UnicodeIterator UnicodeApi::subs(const vector<char>& src)

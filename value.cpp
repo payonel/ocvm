@@ -419,34 +419,6 @@ void Value::push(lua_State* lua) const
     }
 }
 
-Value Value::check(lua_State* lua, size_t index, const string& required, const string& optional)
-{
-    int top = lua_gettop(lua);
-    int id = LUA_TNIL;
-    string type = "nil";
-    if (index <= (size_t)top) // top:1, index:0 is max
-    {
-        id = lua_type(lua, index);
-        type = lua_typename(lua, id);
-    }
-
-    if (type != required)
-    {
-        if (optional.empty() || type != optional)
-        {
-            luaL_error(lua, "bad arguments #%d (%s expected, got %s) ",
-                index,
-                required.c_str(),
-                type.c_str());
-        }
-    }
-
-    if (id == LUA_TNIL)
-        return Value::nil;
-
-    return Value(lua, index);
-}
-
 ValuePack::ValuePack(std::initializer_list<Value> values)
 {
     for (const auto& v : values)
@@ -502,4 +474,114 @@ int ValuePack::push(lua_State* lua) const
         v.push(lua);
     }
     return (int)size();
+}
+
+static bool validate_argument_type(lua_State* lua, int index, int type_id, bool nilok)
+{
+    int top = lua_gettop(lua);
+    int id = LUA_TNIL;
+    if (index <= top) // top:1, index:0 is max
+    {
+        id = lua_type(lua, index);
+    }
+
+    if (id != type_id)
+    {
+        if (!nilok)
+        {
+            luaL_error(lua, "bad arguments #%d (%s expected, got %s) ",
+                index,
+                lua_typename(lua, type_id),
+                lua_typename(lua, id));
+        }
+    }
+
+    return id == type_id;
+}
+
+template <>
+string Value::checkArg<string>(lua_State* lua, int index, const string* pDefault)
+{
+    bool has_type = validate_argument_type(lua, index, LUA_TSTRING, pDefault);
+    
+    if (!has_type)
+        return *pDefault;
+
+    return string(lua_tostring(lua, index));
+}
+
+template <>
+vector<char> Value::checkArg<vector<char>>(lua_State* lua, int index, const vector<char>* pDefault)
+{
+    bool has_type = validate_argument_type(lua, index, LUA_TSTRING, pDefault);
+    
+    if (!has_type)
+        return *pDefault;
+
+    const char* p = lua_tostring(lua, index);
+    int len;
+#if LUA_VERSION_NUM>502
+        len = lua_strlen(lua, index);
+#else
+        len = lua_rawlen(lua, index);
+#endif
+    return vector<char>(p, p+len);
+}
+
+template <>
+double Value::checkArg<double>(lua_State* lua, int index, const double* pDefault)
+{
+    bool has_type = validate_argument_type(lua, index, LUA_TNUMBER, pDefault);
+    
+    if (!has_type)
+        return *pDefault;
+
+    return lua_tonumber(lua, index);
+}
+
+template <typename TNumber>
+static inline TNumber checkNumber(lua_State* lua, int index, const TNumber* pDefault)
+{
+    double value;
+    double* pValue = nullptr;
+    if (pDefault)
+    {
+        value = *pDefault;
+        pValue = &value;
+    }
+    return static_cast<TNumber>(Value::checkArg<double>(lua, index, pValue));
+}
+
+template <>
+int Value::checkArg<int>(lua_State* lua, int index, const int* pDefault)
+{
+    return checkNumber<int>(lua, index, pDefault);
+}
+
+template <>
+uint32_t Value::checkArg<uint32_t>(lua_State* lua, int index, const uint32_t* pDefault)
+{
+    return checkNumber<uint32_t>(lua, index, pDefault);
+}
+
+template <>
+void* Value::checkArg<void*>(lua_State* lua, int index, void* const* pDefault)
+{
+    bool has_type = validate_argument_type(lua, index, LUA_TUSERDATA, pDefault);
+    
+    if (!has_type)
+        return *pDefault;
+
+    return const_cast<void*>(lua_topointer(lua, index));
+}
+
+template <>
+bool Value::checkArg<bool>(lua_State* lua, int index, const bool* pDefault)
+{
+    bool has_type = validate_argument_type(lua, index, LUA_TBOOLEAN, pDefault);
+    
+    if (!has_type)
+        return *pDefault;
+
+    return lua_toboolean(lua, index);
 }

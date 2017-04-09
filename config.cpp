@@ -13,7 +13,7 @@ extern "C"
     {
         const void* raw = lua_topointer(lua, 1);
         Value* pdata = const_cast<Value*>(static_cast<const Value*>(raw));
-        string key = Value::check(lua, 2, "string").toString();
+        string key = Value::checkArg<string>(lua, 2);
         Value value(lua, 3);
         pdata->set(key, value);
 

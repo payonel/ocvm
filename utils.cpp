@@ -80,16 +80,23 @@ bool utils::copy(const string& src, const string& dst)
     return ec.value() == 0;
 }
 
-bool utils::write(const string& data, const string& dst)
+bool utils::write(const vector<char>& data, const string& dst)
 {
     ofstream file;
     file.open(dst);
     if (!file)
         return false;
     
-    file << data;
+    file.write(data.data(), data.size());
     file.close();
+
     return true;
+}
+
+bool utils::write(const string& data, const string& dst)
+{
+    vector<char> buffer { data.begin(), data.end() };
+    return utils::write(buffer, dst);
 }
 
 void utils::mkdir(const string& path)

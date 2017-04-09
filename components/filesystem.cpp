@@ -7,11 +7,11 @@
 #include <limits>
 using namespace std;
 
-constexpr inline double truncate_double(const double& value)
+constexpr inline int32_t truncate_double(const double& value)
 {
     const double max_size = std::numeric_limits<int32_t>::max();
     const double min_size = std::numeric_limits<int32_t>::min();
-    return std::min(max_size, std::max(min_size, value));
+    return static_cast<int32_t>(std::min(max_size, std::max(min_size, value)));
 }
 
 constexpr inline int32_t truncate(const int32_t& value, const int32_t& min_value, const int32_t& max_value)
@@ -341,8 +341,10 @@ bool Filesystem::isTmpfs() const
 
 int Filesystem::open(lua_State* lua)
 {
-    string filepath = Value::check(lua, 1, "string").toString();
-    string mode_text = Value::check(lua, 2, "string", "nil").Or("r").toString();
+    static const string default_mode = "r";
+
+    string filepath = Value::checkArg<string>(lua, 1);
+    string mode_text = Value::checkArg<string>(lua, 2, &default_mode);
 
     static map<char, fstream::openmode> mode_map
     {
@@ -409,11 +411,10 @@ int Filesystem::read(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
     }
 
-    double dsize = truncate_double(Value::check(lua, 2, "number").toNumber());
+    int32_t size = truncate_double(Value::checkArg<double>(lua, 2));
+    vector<char> data = pfh->read(size);
 
-    vector<char> data = pfh->read(static_cast<int32_t>(dsize));
-
-    if (data.empty() && (dsize > 0 || pfh->eof()))
+    if (data.empty() && (size > 0 || pfh->eof()))
     {
         return ValuePack::ret(lua, Value::nil);
     }
@@ -429,7 +430,7 @@ int Filesystem::write(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
     }
 
-    vector<char> data = Value::check(lua, 2, "string").toRawString();
+    vector<char> data = Value::checkArg<vector<char>>(lua, 2);
     pfh->write(data);
 
     return ValuePack::ret(lua, true);
@@ -460,13 +461,13 @@ int Filesystem::setLabel(lua_State* lua)
         return luaL_error(lua, "label is readonly");
 
     int stack = getLabel(lua);
-    update(ConfigIndex::Label, Value::check(lua, 1, "string"));
+    update(ConfigIndex::Label, Value::checkArg<string>(lua, 1));
     return stack;
 }
 
 int Filesystem::list(lua_State* lua)
 {
-    string request_path = path() + clean(Value::check(lua, 1, "string").toString(), true, false);
+    string request_path = path() + clean(Value::checkArg<string>(lua, 1), true, false);
     auto listing = utils::list(request_path);
 
     Value t = Value::table();
@@ -486,7 +487,7 @@ static bool hack_broken_dotdot(const string& path)
 
 int Filesystem::isDirectory(lua_State* lua)
 {
-    string given = Value::check(lua, 1, "string").toString();
+    string given = Value::checkArg<string>(lua, 1);
     string relpath = clean(given, true, true);
     if (hack_broken_dotdot(relpath))
         return ValuePack::ret(lua, Value::nil, given);
@@ -495,7 +496,7 @@ int Filesystem::isDirectory(lua_State* lua)
 
 int Filesystem::exists(lua_State* lua)
 {
-    string given = Value::check(lua, 1, "string").toString();
+    string given = Value::checkArg<string>(lua, 1);
     string given_clean = clean(given, true, true);
     if (hack_broken_dotdot(given_clean))
         return ValuePack::ret(lua, Value::nil, given);
@@ -516,8 +517,10 @@ int Filesystem::seek(lua_State* lua)
         return ValuePack::ret(lua, Value::nil, "bad file descriptor");
     }
 
-    string whence = Value::check(lua, 2, "string").toString(); 
-    double to = truncate_double(Value::check(lua, 3, "number", "nil").Or(0).toNumber());
+    string whence = Value::checkArg<string>(lua, 2);
+
+    static const double default_to = 0; 
+    double to = truncate_double(Value::checkArg<double>(lua, 3, &default_to));
 
     std::ios_base::seekdir way;
     if (whence == "cur")
@@ -548,20 +551,20 @@ int Filesystem::seek(lua_State* lua)
 
 int Filesystem::size(lua_State* lua)
 {
-    string filepath = Value::check(lua, 1, "string").toString();
+    string filepath = Value::checkArg<string>(lua, 1);
     return ValuePack::ret(lua, utils::size(path() + clean(filepath, true, false)));
 }
 
 int Filesystem::lastModified(lua_State* lua)
 {
-    string filepath = Value::check(lua, 1, "string").toString();
+    string filepath = Value::checkArg<string>(lua, 1);
     return ValuePack::ret(lua, utils::lastModified(path() + clean(filepath, true, false)));
 }
 
 FileHandle* Filesystem::getFileHandle(lua_State* lua) const
 {
-    const Value& handle = Value::check(lua, 1, "userdata");
-    return reinterpret_cast<FileHandle*>(handle.toPointer());
+    void* handle = Value::checkArg<void*>(lua, 1);
+    return reinterpret_cast<FileHandle*>(handle);
 }
 
 int Filesystem::spaceUsed(lua_State* lua)
@@ -576,7 +579,7 @@ int Filesystem::spaceTotal(lua_State* lua)
 
 int Filesystem::remove(lua_State* lua)
 {
-    string filepath = Value::check(lua, 1, "string").toString();
+    string filepath = Value::checkArg<string>(lua, 1);
     filepath = path() + clean(filepath, true, false);
     if (isReadOnly())
     {
@@ -591,7 +594,7 @@ int Filesystem::remove(lua_State* lua)
 
 int Filesystem::makeDirectory(lua_State* lua)
 {
-    string dirpath = Value::check(lua, 1, "string").toString();
+    string dirpath = Value::checkArg<string>(lua, 1);
     dirpath = path() + clean(dirpath, true, false);
     if (isReadOnly() || utils::exists(dirpath))
     {
@@ -623,8 +626,8 @@ static bool hack_broken_rename(const string& from, const string& to)
 
 int Filesystem::rename(lua_State* lua)
 {
-    string raw_from = Value::check(lua, 1, "string").toString();
-    string raw_to = Value::check(lua, 2, "string").toString();
+    string raw_from = Value::checkArg<string>(lua, 1);
+    string raw_to = Value::checkArg<string>(lua, 2);
 
     string from = path() + clean(raw_from, true, true);
     string to = path() + clean(raw_to, true, true);

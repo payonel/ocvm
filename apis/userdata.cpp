@@ -14,9 +14,7 @@ UserDataApi::UserDataApi() : LuaProxy("userdata")
 
 static UserData* check(lua_State* lua)
 {
-    Value vdata = Value::check(lua, 1, "userdata");
-    void* ptr = vdata.toPointer();
-    UserData* pData = reinterpret_cast<UserData*>(ptr);
+    UserData* pData = reinterpret_cast<UserData*>(Value::checkArg<void*>(lua, 1));
 
     if (!pData)
     {

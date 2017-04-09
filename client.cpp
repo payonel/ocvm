@@ -215,8 +215,11 @@ Component* Client::component(const string& address) const
 
 int Client::component_list(lua_State* lua)
 {
-    string filter = Value::check(lua, 1, "string", "nil").Or("").toString();
-    bool exact = Value::check(lua, 2, "boolean", "nil").toBool();
+    static const string default_filter = "";
+    static const bool default_exact = false;
+
+    string filter = Value::checkArg<string>(lua, 1, &default_filter);
+    bool exact = Value::checkArg<bool>(lua, 2, &default_exact);
 
     Value result = Value::table();
     for (auto* pc : components(filter, exact))
@@ -233,9 +236,9 @@ int Client::component_invoke(lua_State* lua)
     // LuaProxy::invoke has already logged much about this call, but is waiting to log the result
     // but, logging from here on out will look like a return value, so we add some indentation here
     // lout << "-> ";
-    string address = Value::check(lua, 1, "string").toString();
+    string address = Value::checkArg<string>(lua, 1);
     lua_remove(lua, 1);
-    string methodName = Value::check(lua, 1, "string").toString();
+    string methodName = Value::checkArg<string>(lua, 1);
     lua_remove(lua, 1);
     
     Component* pc = component(address);
@@ -250,7 +253,7 @@ int Client::component_invoke(lua_State* lua)
 
 int Client::component_methods(lua_State* lua)
 {
-    string address = Value::check(lua, 1, "string").toString();
+    string address = Value::checkArg<string>(lua, 1);
 
     Component* pc = component(address);
     if (!pc)
@@ -268,7 +271,7 @@ int Client::component_methods(lua_State* lua)
 
 int Client::component_type(lua_State* lua)
 {
-    string address = Value::check(lua, 1, "string").toString();
+    string address = Value::checkArg<string>(lua, 1);
     Component* pc = component(address);
     if (!pc)
         return ValuePack::ret(lua, Value::nil, "no such component");
@@ -278,7 +281,7 @@ int Client::component_type(lua_State* lua)
 
 int Client::component_slot(lua_State* lua)
 {
-    string address = Value::check(lua, 1, "string").toString();
+    string address = Value::checkArg<string>(lua, 1);
     Component* pc = component(address);
     if (!pc)
         return ValuePack::ret(lua, Value::nil, "no such component");
@@ -288,8 +291,8 @@ int Client::component_slot(lua_State* lua)
 
 int Client::component_doc(lua_State* lua)
 {
-    string address = Value::check(lua, 1, "string").toString();
-    string methodName = Value::check(lua, 2, "string").toString();
+    string address = Value::checkArg<string>(lua, 1);
+    string methodName = Value::checkArg<string>(lua, 2);
     Component* pc = component(address);
     if (!pc)
         return ValuePack::ret(lua, Value::nil, "no such component");
