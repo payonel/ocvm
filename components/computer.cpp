@@ -7,6 +7,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <cstring>
 using namespace std::chrono;
 
 inline double now()
@@ -43,11 +44,70 @@ Computer::~Computer()
     close();
 }
 
+static void* alloc_handler(void* ud, void* ptr, size_t osize, size_t nsize)
+{
+    Computer* pc = reinterpret_cast<Computer*>(ud);
+    return pc->alloc(ptr, osize, nsize);
+}
+
+void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
+{
+    osize = ptr ? osize : 0; // do not use osize if ptr is null
+    if (nsize < osize) // drop
+    {
+        size_t drop = osize - nsize;
+        if (_memory_used < drop) // !!
+        {
+            lerr << "critical emulator bug, memory used drop larger than used\n";
+            drop = _memory_used;
+        }
+        _memory_used -= drop;
+    }
+    else // rise
+    {
+        size_t to_alloc = nsize - osize;
+        size_t request_memory_use = _memory_used + to_alloc;
+        if (_baseline_initialized)
+        {
+            // memory may drop below baseline
+            if (request_memory_use > _baseline)
+            {
+                size_t machine_used = request_memory_use - _baseline;
+                if (machine_used > _total_memory)
+                {
+                    lout << "vm out of memory\n";
+                    return nullptr;
+                }
+            }
+        }
+        _memory_used = request_memory_use;
+    }
+
+    if (nsize == 0)
+    {
+        free(ptr);
+        return 0;
+    }
+    return realloc(ptr, nsize);
+}
+
 bool Computer::onInitialize()
 {
     this->client()->computer(this);
 
-    _state = luaL_newstate();
+    {
+        auto total_mem_setting = config().get(ConfigIndex::TotalMemory);
+        if (total_mem_setting)
+        {
+            _total_memory = static_cast<size_t>(total_mem_setting.toNumber());
+        }
+        else
+        {
+            _total_memory = std::numeric_limits<size_t>::max();
+        }
+    }
+
+    _state = lua_newstate(&alloc_handler, this);
     luaL_openlibs(_state); // needed for common globals
     newlib(this);
     injectCustomLua();
@@ -286,12 +346,16 @@ int Computer::tmpAddress(lua_State* lua)
 
 int Computer::freeMemory(lua_State* lua)
 {
-    return ValuePack::ret(lua, std::numeric_limits<double>::max());
+    size_t free_memory = 0;
+    if (_memory_used <= _total_memory)
+        free_memory = _total_memory - _memory_used;
+
+    return ValuePack::ret(lua, free_memory);
 }
 
 int Computer::totalMemory(lua_State* lua)
 {
-    return ValuePack::ret(lua, std::numeric_limits<double>::max());
+    return ValuePack::ret(lua, _total_memory);
 }
 
 int Computer::energy(lua_State* lua)
@@ -340,7 +404,8 @@ RunState Computer::update()
     RunState result = resume(nargs);
     if (bFirstTimeRun)
     {
-        // create memory baseline
+        _baseline = _memory_used;
+        _baseline_initialized = true;
     }
     return result;
 }
