@@ -104,15 +104,16 @@ public:
             dataStack.pop();
         }
 
-        if (dataStack.empty() && buffer->size())
-        {
-            lout << "unknown sequence: ";
-            while (buffer->size())
-            {
-                lout << (int)buffer->get() << ' ';
-            }
-            lout << endl;
-        }
+        // LEAVING buffer for insert signal
+        // if (dataStack.empty() && buffer->size())
+        // {
+        //     lout << "unknown sequence: ";
+        //     while (buffer->size())
+        //     {
+        //         lout << (int)buffer->get() << ' ';
+        //     }
+        //     lout << endl;
+        // }
 
         // now clear buffer up to stack height
         while (dataStack.size())
@@ -411,6 +412,13 @@ void KeyboardDriverImpl::enqueue(TermBuffer* buffer)
     _Code code;
     if (!kb_data.lookup(buffer, &code, &mod))
     {
+        if (buffer->size()) // insert?
+        {
+            unique_ptr<KeyEvent> pkey(new KeyEvent);
+            while (buffer->size())
+                pkey->insert.push_back(buffer->get());
+            _source->push(std::move(pkey));
+        }
         return;
     }
 

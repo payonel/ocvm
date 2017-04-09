@@ -19,6 +19,8 @@ struct KeyEvent : public InputEvent
     bool bControl;  //0x04
     bool bAlt;      //0x08
     bool bNumLock;  //0x10
+
+    std::vector<char> insert;
 };
 
 class KeyboardInput : protected InputSource

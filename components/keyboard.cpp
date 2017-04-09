@@ -48,6 +48,10 @@ RunState Keyboard::update()
             lout << "shell abort";
             return RunState::Halt;
         }
+        else if (pke->insert.size())
+        {
+            client()->pushSignal({"clipboard", address(), pke->insert});
+        }
         else
         {
             client()->pushSignal({pke->bPressed ? "key_down" : "key_up", address(), pke->keysym, pke->keycode});
