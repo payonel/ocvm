@@ -105,12 +105,30 @@ bool UnicodeApi::isWide(const vector<char>& text)
     return charWidth(text) > 1;
 }
 
+static inline vector<char> wide_foreach(const vector<char>& text, function<wchar_t(wchar_t)> action)
+{
+    std::setlocale(LC_ALL, "en_US.utf8");
+    char buf[16] {};
+    vector<char> result;
+    for (const auto& sub : UnicodeApi::subs(text))
+    {
+        std::mbstate_t state = std::mbstate_t();
+        wchar_t big;
+        std::mbtowc(&big, sub.data(), sub.size());
+        wchar_t small = action(big);
+        int bytes = std::wcrtomb(buf, small, &state);
+        if (bytes < 0 || bytes > 16)
+            continue;
+        result.insert(result.end(), buf, buf + bytes);
+    }
+    std::setlocale(LC_ALL, "C");
+
+    return result;
+}
+
 vector<char> UnicodeApi::upper(const vector<char>& text)
 {
-    vector<char> r;
-    for (const auto& c : text)
-        r.push_back(::toupper(c));
-    return r;
+    return wide_foreach(text, std::towupper);
 }
 
 uint32_t UnicodeApi::tocodepoint(const vector<char>& text, const size_t index)
@@ -313,10 +331,7 @@ vector<char> UnicodeApi::reverse(const vector<char>& text)
 
 vector<char> UnicodeApi::lower(const vector<char>& text)
 {
-    vector<char> r;
-    for (const auto& c : text)
-        r.push_back(::tolower(c));
-    return r;
+    return wide_foreach(text, std::towlower);
 }
 
 int UnicodeApi::wtrunc(lua_State* lua)
