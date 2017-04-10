@@ -1,9 +1,13 @@
 MAKEFLAGS+="-j 4"
 flags=-g --std=c++14 -Wall
 
+ifeq ($(lua),)
+lua=5.2
+endif
+
 ifeq ($(prof),)
-libs=-llua5.2
-includes=-I/usr/local/include/lua5.2/
+libs=$(shell pkg-config lua$(lua) --libs)
+includes=$(shell pkg-config lua$(lua) --cflags)
 else
 $(info profile build)
 libs=-L../gperftools-2.5/.libs/ -ldl -lprofiler ../lua-5.3.4/src/liblua.a
@@ -12,10 +16,6 @@ bin=-profiled
 flags+=-Wl,--no-as-needed
 endif
 
-ifeq ($(lua),5.3)
-libs=-llua5.3
-includes=-I/usr/local/include/lua5.3/
-endif
 
 includes+=-I.
 libs+=-lstdc++ -lstdc++fs -pthread
