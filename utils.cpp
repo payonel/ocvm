@@ -5,6 +5,10 @@
 #include <fstream>
 using namespace std;
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 #include <unistd.h>
 
 #include <sys/stat.h>
@@ -193,12 +197,22 @@ string utils::proc_root()
     {
         constexpr ssize_t size = 1024;
         char buf[size];
+
+#ifdef __APPLE__
+        uint32_t len = size;
+        if(_NSGetExecutablePath(buf, &len) != 0) {
+            cerr << "proc path too long\n";
+            ::exit(1);
+        }
+#else
         ssize_t len = ::readlink("/proc/self/exe", buf, size);
         if (len >= size) // yikes, abort
         {
             cerr << "proc path too long\n";
             ::exit(1);
         }
+#endif
+
         buf[len] = 0;
         path = buf;
 
