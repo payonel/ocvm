@@ -50,12 +50,7 @@ vector<char> Value::checkArg<vector<char>>(lua_State* lua, int index, const vect
         return *pDefault;
 
     const char* p = lua_tostring(lua, index);
-    int len;
-#if LUA_VERSION_NUM>502
-        len = lua_strlen(lua, index);
-#else
-        len = lua_rawlen(lua, index);
-#endif
+    int len = lua_rawlen(lua, index);
     return vector<char>(p, p+len);
 }
 
