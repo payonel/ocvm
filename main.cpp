@@ -151,45 +151,38 @@ int main(int argc, char** argv)
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
     Host host(framer.get());
+    RunState run;
 
-    if (!framer->open())  // open the ui
+    do
     {
-        cerr << "framer open failed\n";
-        return 1;
-    }
-
-    framer->add(Logger::getFrame());
-
-    // init client config
-    // // creates instances of host components
-    Client client(&host, client_env_path);
-
-    // init lua environment
-    if (!client.load())
-    {
-        return 1;
-    }
-
-    while (framer->update())
-    {
-        auto run = client.run();
-        if (run == RunState::Reboot)
+        if (!framer->open())  // open the ui
         {
-            client.close();
-            framer->close();
-            if (!framer->open() ||
-                !framer->add(Logger::getFrame()) ||
-                !client.load())
-            {
-                lout << "reboot failed\n";
-                break;
-            }
-        }
-        else if (run == RunState::Halt)
-        {
+            cerr << "framer open failed\n";
             break;
         }
+
+        framer->add(Logger::getFrame());
+
+        // init client config
+        Client client(&host, client_env_path);
+        // init lua environment
+        // // creates instances of host components
+        if (!client.load())
+            break;
+
+        do
+        {
+            if (!framer->update())
+            {
+                break;
+            }
+            run = client.run();
+        }
+        while (run == RunState::Continue);
+
+        framer->close();
     }
+    while (run == RunState::Reboot);
 
     return 0;
 }

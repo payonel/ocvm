@@ -16,6 +16,11 @@ bin=-profiled
 flags+=-Wl,--no-as-needed
 endif
 
+ifeq ($(lua),5.3)
+libs=-ldl ../lua-5.3.4/src/liblua.a
+includes=-I../lua-5.3.4/src
+flags+=-Wl,--no-as-needed
+endif
 
 includes+=-I.
 libs+=-lstdc++ -lstdc++fs -pthread

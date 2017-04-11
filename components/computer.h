@@ -10,6 +10,11 @@ public:
     Computer();
     ~Computer();
 
+    enum ConfigIndex
+    {
+        TotalMemory = Component::ConfigIndex::Next
+    };
+
     RunState update() override;
     bool load(const string& machinePath);
     bool newlib(LuaProxy* proxy);
@@ -17,6 +22,8 @@ public:
     void setTmpAddress(const string& addr);
     void pushSignal(const ValuePack& pack);
     bool postInit() override;
+
+    void* alloc(void* ptr, size_t osize, size_t nsize);
 
     int isRunning(lua_State* lua);
     int setArchitecture(lua_State* lua);
@@ -51,6 +58,11 @@ private:
     lua_State* _machine = nullptr;
     double _standby = 0;
     double _nexttrace = 0;
+
+    size_t _total_memory = 0;
+    size_t _memory_used = 0;
+    size_t _baseline = 0;
+    bool _baseline_initialized = false;
 
     queue<ValuePack> _signals;
 };

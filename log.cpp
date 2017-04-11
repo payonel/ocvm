@@ -2,45 +2,74 @@
 #include "io/frame.h"
 
 #include <iostream>
+#include <functional>
 using std::cout;
 using std::cerr;
+using std::function;
 
-Logger lout(1);
-Logger lerr(0);
-
-class LogFrame : public Frame
+class LogHandler
 {
 public:
-    LogFrame()
+    virtual void write(const string& text)
     {
-        scrolling(true);
+        Logger::getFrame()->write(1, 1, {text, {}, {}, false, (int)text.size()});
     }
-    ~LogFrame()
+} log_handler;
+
+class LogErrorHandler : public LogHandler
+{
+public:
+    void write(const string& text) override
     {
+        _buffer.push_back(text);
+        LogHandler::write(text);
     }
-} single_log_frame;
+    ~LogErrorHandler()
+    {
+        for (const auto& text : _buffer)
+            cerr << text;
+    }
+private:
+    vector<string> _buffer;
+} err_handler;
+
+class LogProfHandler : public LogHandler
+{
+public:
+    void write(const string& text) override
+    {
+        //LogHandler::write(text);
+    }
+} prof_handler;
+
+Logger::Logger(LogHandler* handler) :
+    _handler(handler)
+{
+}
+
+Logger lout(&log_handler);
+Logger lerr(&err_handler);
+Logger lprof(&prof_handler);
 
 Frame* Logger::getFrame()
 {
+    static Frame single_log_frame;
+    static bool initialized = false;
+    if (!initialized)
+    {
+        initialized = true;
+        single_log_frame.scrolling(true);
+    }
     return &single_log_frame;
 }
 
-Logger::Logger(int priority) :
-    _priority(priority)
+void Logger::handle(const string& text)
 {
+    _handler->write(text);
 }
 
-Logger& operator<< (Logger& logger, const string& text)
+Logger& operator<< (Logger& logger, std::ostream& (*)(std::ostream&))
 {
-    Frame* pf = Logger::getFrame();
-    if (!logger.priority())
-        cerr << text;
-    pf->write(1, 1, {text, {}, {}, false, (int)text.size()});
-    return logger;
-}
-
-Logger& operator<< (Logger& logger, std::ostream& (*pf)(std::ostream&))
-{
-    logger << "\n";
+    logger.handle("\n");
     return logger;
 }

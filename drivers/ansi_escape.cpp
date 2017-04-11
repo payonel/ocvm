@@ -76,8 +76,8 @@ static void register_winch(bool doit)
         sigaddset(&g_sigset, SIGUSR1);
         if (pthread_sigmask(SIG_BLOCK, &g_sigset, nullptr))
         {
-            cerr << "failed to mask threads for winch\n";
-            ::exit(1);
+            lerr << "failed to mask threads for winch - resize will be ignored\n";
+            return;
         }
 
         g_stop_winching = false;
