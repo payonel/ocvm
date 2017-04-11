@@ -62,6 +62,7 @@ void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
             drop = _memory_used;
         }
         _memory_used -= drop;
+        // lprof << "memory:-" << drop << endl;
     }
     else // rise
     {
@@ -79,6 +80,7 @@ void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
                     return nullptr;
                 }
             }
+            // lprof << "memory:" << to_alloc << endl;
         }
         _memory_used = request_memory_use;
     }
@@ -153,7 +155,9 @@ double Computer::trace(lua_State* coState, bool bForce)
         }
         if (coState)
         {
-            // lout << Value::stack(coState) << endl;
+            //string stack = Value::stack(coState);
+            //lout << "stack: memory[" << _memory_used << "]" << stack << endl;
+            // lprof << "stack\n";
         }
     }
     return thenow;
@@ -406,6 +410,7 @@ RunState Computer::update()
     {
         _baseline = _memory_used;
         _baseline_initialized = true;
+        lout << "lua env baseline\n";
     }
     return result;
 }

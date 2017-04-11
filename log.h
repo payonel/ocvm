@@ -9,28 +9,29 @@ using std::endl;
 
 class Frame;
 
+class LogHandler;
 class Logger
 {
 public:
-    Logger(int priority);
+    Logger(LogHandler* handler);
+    
     static Frame* getFrame();
-    int priority() const { return _priority; }
+    void handle(const string& text);
 private:
-    Logger();
-    int _priority;
+    LogHandler* _handler;
 };
 
-Logger& operator<< (Logger&, const string& text);
-Logger& operator<< (Logger&, std::ostream& (*)(std::ostream&));
+Logger& operator<< (Logger& logger, std::ostream& (*)(std::ostream&));
 
 template <typename T>
 Logger& operator<< (Logger& logger, const T& t)
 {
     stringstream ss;
     ss << t;
-    logger << ss.str();
+    logger.handle(ss.str());
     return logger;
 }
 
 extern Logger lout;
 extern Logger lerr;
+extern Logger lprof;
