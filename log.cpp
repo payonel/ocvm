@@ -21,8 +21,16 @@ class LogErrorHandler : public LogHandler
 public:
     void write(const string& text) override
     {
+        _buffer.push_back(text);
         LogHandler::write(text);
     }
+    ~LogErrorHandler()
+    {
+        for (const auto& text : _buffer)
+            cerr << text;
+    }
+private:
+    vector<string> _buffer;
 } err_handler;
 
 class LogProfHandler : public LogHandler

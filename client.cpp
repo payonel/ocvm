@@ -57,7 +57,7 @@ bool Client::load()
 {
     if (_config || _globals)
     {
-        lout << "Client is either already loaded or did not close properly";
+        lerr << "Client is either already loaded or did not close properly";
         return false;
     }
 
@@ -80,7 +80,7 @@ bool Client::load()
 
     if (!loadLuaComponentApi())
     {
-        lout << "failed to load lua component api\n";
+        lerr << "failed to load lua component api\n";
         return false;
     }
 
@@ -106,7 +106,7 @@ bool Client::createComponents()
                 Component* pc = _host->create(key);
                 if (!(pc && pc->initialize(this, component_config)))
                 {
-                    lout << "failed! The host could not create a " << key << endl;
+                    lerr << "failed! The host could not create: " << key << endl;
                     return false;
                 }
                 else
@@ -135,7 +135,7 @@ bool Client::postInit()
     {
         if (!pc->postInit())
         {
-            lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+            lerr << pc->type() << "[" << pc->address() << "] failed to postInit\n";
             return false;
         }
         // machine.lua handles component_added for us
@@ -150,7 +150,7 @@ bool Client::loadLuaComponentApi()
     // computer required
     if (!_computer)
     {
-        lout << "emulation requires exactly one computer component\n";
+        lerr << "emulation requires exactly one computer component\n";
         return false;
     }
 

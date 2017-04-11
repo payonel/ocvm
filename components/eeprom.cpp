@@ -35,7 +35,12 @@ bool Eeprom::onInitialize()
 
     if (!utils::read(biosPath()))
     {
-        return utils::copy(originalBiosPath, biosPath());
+        lout << "no computer eeprom found, copying from system\n";
+        if (!utils::copy(originalBiosPath, biosPath()))
+        {
+            lerr << "Could not create an initial bios from: " << originalBiosPath << endl;
+            return false;
+        }
     }
 
     return true;

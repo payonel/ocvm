@@ -34,7 +34,6 @@ static inline void exit_function()
 static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
 {
     exit_function();
-    exit(0);
 }
 
 class TtyReader : public Worker
@@ -156,7 +155,7 @@ private:
                 // try to reset kb JUST IN CASE
                 ::ioctl(0, KDSKBMODE, K_UNICODE);
                 ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
-                cerr << "critical failure: tried to use ioctl\n";
+                cerr << "critical failure: could not set raw mode\n";
                 ::exit(1);
             }
 
