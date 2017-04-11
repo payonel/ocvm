@@ -1,6 +1,6 @@
 #include "luaproxy.h"
 #include "log.h"
-#include "drivers/fs_drv.h"
+#include "drivers/fs_utils.h"
 #include <iostream>
 
 LuaProxy::LuaProxy(const string& name) :
@@ -43,7 +43,7 @@ int lua_proxy_static_caller(lua_State* lua)
     LuaProxy* p = reinterpret_cast<LuaProxy*>(_this);
     
     int stacked = 0;
-    if (!utils::run_safely(
+    if (!fs_utils::run_safely(
             [&stacked, &p, &methodName, &lua]()
             {
                 stacked = p->invoke(methodName, lua);

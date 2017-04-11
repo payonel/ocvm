@@ -1,5 +1,5 @@
 #include "unicode.h"
-#include "drivers/fs_drv.h"
+#include "drivers/fs_utils.h"
 #include "model/log.h"
 #include <sstream>
 #include <fstream>
@@ -55,7 +55,7 @@ void UnicodeApi::configure(const Value& settings)
 {
     font_width.clear();
     string fonts_file = settings.get("fonts").Or("").toString();
-    if (utils::read(fonts_file))
+    if (fs_utils::read(fonts_file))
     {
         ifstream file(fonts_file);
 

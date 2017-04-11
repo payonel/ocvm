@@ -7,7 +7,7 @@ using std::string;
 using std::vector;
 using std::function;
 
-namespace utils
+namespace fs_utils
 {
     bool read(const string& path, string* pOutData = nullptr);
     bool copy(const string& src, const string& dst);

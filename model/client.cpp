@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "log.h"
-#include "drivers/fs_drv.h"
+#include "drivers/fs_utils.h"
 #include <lua.hpp>
 
 #include "apis/os.h"
@@ -37,10 +37,10 @@ Client::Client(Host* host, const string& env_path) :
 
     // adjust env path if it is relative
     if (env_path.find("/") != 0)
-        _env_path = utils::proc_root() + _env_path;
+        _env_path = fs_utils::proc_root() + _env_path;
 
     // make the env path if it doesn't already exist
-    utils::mkdir(_env_path);
+    fs_utils::mkdir(_env_path);
 }
 
 Client::~Client()

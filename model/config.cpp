@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include <sstream>
-#include "drivers/fs_drv.h"
+#include "drivers/fs_utils.h"
 
 extern "C"
 {
@@ -34,7 +34,7 @@ bool Config::load(const string& path, const string& name)
 
     // first check _path, else local for name
     string table;
-    if (!utils::read(savePath(), &table) && !utils::read(name + ".cfg", &table))
+    if (!fs_utils::read(savePath(), &table) && !fs_utils::read(name + ".cfg", &table))
     {
         lout << "config could not load: " << name << endl;
         return false;
@@ -119,7 +119,7 @@ bool Config::save() const
         if (updated_config != _cache)
         {
             lout << "saving " << _name << ": config\n";
-            return utils::write(updated_config, savePath());
+            return fs_utils::write(updated_config, savePath());
         }
     }
     return true;

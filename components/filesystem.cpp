@@ -1,7 +1,7 @@
 #include "filesystem.h"
 #include "model/client.h"
 #include "model/log.h"
-#include "drivers/fs_drv.h"
+#include "drivers/fs_utils.h"
 #include "apis/userdata.h"
 #include <fstream>
 #include <limits>
@@ -237,9 +237,9 @@ bool Filesystem::onInitialize()
     if (source_uri.type() == "string") // loot disk
     {
         _isReadOnly = true;
-        _src = utils::proc_root() + source_uri.toString();
+        _src = fs_utils::proc_root() + source_uri.toString();
         _tmpfs = false;
-        if (!utils::exists(_src))
+        if (!fs_utils::exists(_src))
         {
             lout << "loot disk not found: " << _src << endl;
             return false;
@@ -251,9 +251,9 @@ bool Filesystem::onInitialize()
         _src = "";
         _tmpfs = source_uri.toBool();
         // make local dir if it doesn't yet exist
-        if (!utils::exists(path()))
+        if (!fs_utils::exists(path()))
         {
-            utils::mkdir(path());
+            fs_utils::mkdir(path());
         }
     }
     return true;
@@ -468,7 +468,7 @@ int Filesystem::setLabel(lua_State* lua)
 int Filesystem::list(lua_State* lua)
 {
     string request_path = path() + clean(Value::checkArg<string>(lua, 1), true, false);
-    auto listing = utils::list(request_path);
+    auto listing = fs_utils::list(request_path);
 
     Value t = Value::table();
     for (const auto& item : listing)
@@ -491,7 +491,7 @@ int Filesystem::isDirectory(lua_State* lua)
     string relpath = clean(given, true, true);
     if (hack_broken_dotdot(relpath))
         return ValuePack::ret(lua, Value::nil, given);
-    return ValuePack::ret(lua, utils::isDirectory(path() + relpath));
+    return ValuePack::ret(lua, fs_utils::isDirectory(path() + relpath));
 }
 
 int Filesystem::exists(lua_State* lua)
@@ -501,7 +501,7 @@ int Filesystem::exists(lua_State* lua)
     if (hack_broken_dotdot(given_clean))
         return ValuePack::ret(lua, Value::nil, given);
     string fullpath = path() + given_clean;
-    return ValuePack::ret(lua, utils::exists(fullpath));
+    return ValuePack::ret(lua, fs_utils::exists(fullpath));
 }
 
 int Filesystem::isReadOnly(lua_State* lua)
@@ -552,13 +552,13 @@ int Filesystem::seek(lua_State* lua)
 int Filesystem::size(lua_State* lua)
 {
     string filepath = Value::checkArg<string>(lua, 1);
-    return ValuePack::ret(lua, utils::size(path() + clean(filepath, true, false)));
+    return ValuePack::ret(lua, fs_utils::size(path() + clean(filepath, true, false)));
 }
 
 int Filesystem::lastModified(lua_State* lua)
 {
     string filepath = Value::checkArg<string>(lua, 1);
-    return ValuePack::ret(lua, utils::lastModified(path() + clean(filepath, true, false)));
+    return ValuePack::ret(lua, fs_utils::lastModified(path() + clean(filepath, true, false)));
 }
 
 FileHandle* Filesystem::getFileHandle(lua_State* lua) const
@@ -569,7 +569,7 @@ FileHandle* Filesystem::getFileHandle(lua_State* lua) const
 
 int Filesystem::spaceUsed(lua_State* lua)
 {
-    return ValuePack::ret(lua, utils::size(path(), true));
+    return ValuePack::ret(lua, fs_utils::size(path(), true));
 }
 
 int Filesystem::spaceTotal(lua_State* lua)
@@ -585,22 +585,22 @@ int Filesystem::remove(lua_State* lua)
     {
         return ValuePack::ret(lua, false);
     }
-    else if (!utils::exists(filepath))
+    else if (!fs_utils::exists(filepath))
     {
         return ValuePack::ret(lua, Value::nil, "no such file or directory");
     }
-    return ValuePack::ret(lua, utils::remove(filepath));
+    return ValuePack::ret(lua, fs_utils::remove(filepath));
 }
 
 int Filesystem::makeDirectory(lua_State* lua)
 {
     string dirpath = Value::checkArg<string>(lua, 1);
     dirpath = path() + clean(dirpath, true, false);
-    if (isReadOnly() || utils::exists(dirpath))
+    if (isReadOnly() || fs_utils::exists(dirpath))
     {
         return ValuePack::ret(lua, false);
     }
-    utils::mkdir(dirpath);
+    fs_utils::mkdir(dirpath);
     return ValuePack::ret(lua, true);
 }
 
@@ -621,7 +621,7 @@ static bool hack_broken_rename(const string& from, const string& to)
 
     // broken!
     // a -> a/d should fail, but oc just deletes a
-    return utils::remove(from);
+    return fs_utils::remove(from);
 }
 
 int Filesystem::rename(lua_State* lua)
@@ -635,11 +635,11 @@ int Filesystem::rename(lua_State* lua)
     {
         return ValuePack::ret(lua, false);
     }
-    else if (utils::exists(to))
+    else if (fs_utils::exists(to))
     {
         return ValuePack::ret(lua, false);
     }
-    else if (!utils::exists(from))
+    else if (!fs_utils::exists(from))
     {
         return ValuePack::ret(lua, Value::nil, raw_from);
     }
@@ -647,7 +647,7 @@ int Filesystem::rename(lua_State* lua)
     {
         return ValuePack::ret(lua, true);
     }
-    return ValuePack::ret(lua, utils::rename(from, to));
+    return ValuePack::ret(lua, fs_utils::rename(from, to));
 }
 
 FileHandle* Filesystem::create(lua_State* lua, const string& filepath, fstream::openmode mode)

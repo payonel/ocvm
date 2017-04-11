@@ -1,4 +1,4 @@
-#include "drivers/fs_drv.h"
+#include "drivers/fs_utils.h"
 
 #include "model/log.h"
 #include <iostream>
@@ -35,7 +35,7 @@ static string handle_exception(std::exception_ptr&& p)
     return "unknown exception";
 }
 
-bool utils::run_safely(function<void()> func, function<void(const string&)> onError)
+bool fs_utils::run_safely(function<void()> func, function<void(const string&)> onError)
 {
     string exception_message;
     try
@@ -55,7 +55,7 @@ bool utils::run_safely(function<void()> func, function<void(const string&)> onEr
     return false;
 }
 
-bool utils::read(const string& path, string* pOutData)
+bool fs_utils::read(const string& path, string* pOutData)
 {
     ifstream file;
     file.open(path);
@@ -72,9 +72,9 @@ bool utils::read(const string& path, string* pOutData)
     return true;
 }
 
-bool utils::copy(const string& src, const string& dst)
+bool fs_utils::copy(const string& src, const string& dst)
 {
-    if (!utils::exists(src))
+    if (!fs_utils::exists(src))
     {
         return false;
     }
@@ -84,7 +84,7 @@ bool utils::copy(const string& src, const string& dst)
     return ec.value() == 0;
 }
 
-bool utils::write(const vector<char>& data, const string& dst)
+bool fs_utils::write(const vector<char>& data, const string& dst)
 {
     ofstream file;
     file.open(dst);
@@ -97,29 +97,29 @@ bool utils::write(const vector<char>& data, const string& dst)
     return true;
 }
 
-bool utils::write(const string& data, const string& dst)
+bool fs_utils::write(const string& data, const string& dst)
 {
     vector<char> buffer { data.begin(), data.end() };
-    return utils::write(buffer, dst);
+    return fs_utils::write(buffer, dst);
 }
 
-void utils::mkdir(const string& path)
+void fs_utils::mkdir(const string& path)
 {
     error_code ec;
     fs::create_directories(path, ec);
 }
 
-bool utils::exists(const string& path)
+bool fs_utils::exists(const string& path)
 {
     error_code ec;
     bool result = fs::exists(path, ec);
     return result && ec.value() == 0;
 }
 
-vector<string> utils::list(const string& path)
+vector<string> fs_utils::list(const string& path)
 {
     vector<string> result;
-    if (!utils::exists(path))
+    if (!fs_utils::exists(path))
         return result;
 
     error_code ec;
@@ -134,18 +134,18 @@ vector<string> utils::list(const string& path)
     return result;
 }
 
-bool utils::isDirectory(const string& path)
+bool fs_utils::isDirectory(const string& path)
 {
     error_code ec;
     bool result = fs::is_directory(path, ec);
     return result && ec.value() == 0;
 }
 
-size_t utils::size(const string& path, bool recursive)
+size_t fs_utils::size(const string& path, bool recursive)
 {
     error_code ec;
     size_t result = 0;
-    if (!utils::isDirectory(path))
+    if (!fs_utils::isDirectory(path))
     {
         result = fs::file_size(path, ec);
         if (ec.value() != 0)
@@ -154,7 +154,7 @@ size_t utils::size(const string& path, bool recursive)
     return result;
 }
 
-uint64_t utils::lastModified(const string& filepath)
+uint64_t fs_utils::lastModified(const string& filepath)
 {
     error_code ec;
     uint64_t result = 0;
@@ -169,28 +169,28 @@ uint64_t utils::lastModified(const string& filepath)
     return result;
 }
 
-bool utils::remove(const string& path)
+bool fs_utils::remove(const string& path)
 {
     bool success = true;
     error_code ec;
     auto info = fs::symlink_status(path, ec);
     if (ec.value() == 0 && info.type() == fs::file_type::directory)
         for (fs::directory_iterator d(path, ec), end; ec.value() == 0 && d != end; ++d)
-            success = success && utils::remove(d->path());
+            success = success && fs_utils::remove(d->path());
     if (ec.value())
         return -1;
     success = success && fs::remove(path, ec);
     return success && ec.value() == 0;
 }
 
-bool utils::rename(const string& from, const string& to)
+bool fs_utils::rename(const string& from, const string& to)
 {
     error_code ec;
     fs::rename(from, to, ec);
     return ec.value() == 0;
 }
 
-string utils::proc_root()
+string fs_utils::proc_root()
 {
     static string path;
     if (path.empty())

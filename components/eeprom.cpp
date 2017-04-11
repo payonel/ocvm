@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "drivers/fs_drv.h"
+#include "drivers/fs_utils.h"
 #include "model/client.h"
 
 Eeprom::Eeprom()
@@ -33,10 +33,10 @@ bool Eeprom::onInitialize()
         return false;
     }
 
-    if (!utils::read(biosPath()))
+    if (!fs_utils::read(biosPath()))
     {
         lout << "no computer eeprom found, copying from system\n";
-        if (!utils::copy(originalBiosPath, biosPath()))
+        if (!fs_utils::copy(originalBiosPath, biosPath()))
         {
             lerr << "Could not create an initial bios from: " << originalBiosPath << endl;
             return false;
@@ -74,7 +74,7 @@ int Eeprom::setData(lua_State* lua)
     if (_data_size_limit < 0 || len > static_cast<size_t>(_data_size_limit))
         return ValuePack::ret(lua, Value::nil, "data size exceeded");
 
-    return ValuePack::ret(lua, utils::write(value, dataPath()));
+    return ValuePack::ret(lua, fs_utils::write(value, dataPath()));
 }
 
 string Eeprom::biosPath() const
@@ -90,7 +90,7 @@ string Eeprom::dataPath() const
 string Eeprom::load(const string& path) const
 {
     string buffer;
-    utils::read(path, &buffer);
+    fs_utils::read(path, &buffer);
     return buffer;
 }
 
