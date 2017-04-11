@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <limits>
+#include <clocale>
 using namespace std;
 
 static const uint32_t end_1_byte = 0x00000080;

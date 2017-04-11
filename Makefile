@@ -1,9 +1,13 @@
 MAKEFLAGS+="-j 4"
 flags=-g --std=c++14 -Wall
 
+ifeq ($(lua),)
+lua=5.2
+endif
+
 ifeq ($(prof),)
-libs=-llua5.2
-includes=-I/usr/include/lua5.2/
+libs=$(shell pkg-config lua$(lua) --libs)
+includes=$(shell pkg-config lua$(lua) --cflags)
 else
 $(info profile build)
 libs=-L../gperftools-2.5/.libs/ -ldl -lprofiler ../lua-5.3.4/src/liblua.a
@@ -31,13 +35,13 @@ objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 
 ocvm$(bin): $(objs) system
-	g++ $(flags) $(objs) $(libs) -o ocvm$(bin)
+	$(CXX) $(flags) $(objs) $(libs) -o ocvm$(bin)
 	@echo done
 
 -include $(deps)
 bin/%$(bin).o : %.cpp
 	@mkdir -p $@D
-	g++ $(flags) $(includes) -MMD -c $< -o $@
+	$(CXX) $(flags) $(includes) -MMD -c $< -o $@
 
 system:
 	@echo downloading OpenComputers system files
