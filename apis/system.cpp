@@ -1,10 +1,14 @@
 #include "system.h"
 #include "model/log.h"
+#include "apis/unicode.h"
 
 // statics
 double SystemApi::_timeout = 5;
 bool SystemApi::_gc = false;
 bool SystemApi::_bytecode = false;
+string SystemApi::_fonts;
+string SystemApi::_bios;
+string SystemApi::_machine;
 
 SystemApi::SystemApi() : LuaProxy("system")
 {
@@ -40,4 +44,23 @@ void SystemApi::configure(const Value& settings)
     _timeout = settings.get("timeout").Or(_timeout).toNumber();
     _bytecode = settings.get("allowBytecode").Or(_bytecode).toBool();
     _gc = settings.get("allowGC").Or(_gc).toBool();
+    _fonts = settings.get("fonts").Or("").toString();
+    _bios = settings.get("bios").Or("").toString();
+    _machine = settings.get("machine").Or("").toString();
+
+    UnicodeApi::configure(_fonts);
 }
+
+string SystemApi::fonts_path()
+{
+    return _fonts;
+}
+string SystemApi::bios_path()
+{
+    return _bios;
+}
+string SystemApi::machine_path()
+{
+    return _machine;
+}
+

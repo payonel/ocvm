@@ -74,17 +74,17 @@ bool Client::load()
         return false;
     lout << "components loaded: " << _components.size() << "\n";
 
-    if (!postInit())
-        return false;
-    lout << "components post initialized\n";
-
     if (!loadLuaComponentApi())
     {
         lerr << "failed to load lua component api\n";
         return false;
     }
 
-    return _computer->load(host()->machinePath());
+    if (!postInit())
+        return false;
+    lout << "components post initialized\n";
+
+    return true;
 }
 
 bool Client::createComponents()
@@ -119,10 +119,6 @@ bool Client::createComponents()
         else if (section == "system")
         {
             SystemApi::configure(section_data);
-        }
-        else if (section == "unicode")
-        {
-            UnicodeApi::configure(section_data);
         }
     }
     return true;

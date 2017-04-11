@@ -9,8 +9,7 @@ public:
 
     enum ConfigIndex
     {
-        BiosPath = Component::ConfigIndex::Next,
-        BiosSize,
+        BiosSize = Component::ConfigIndex::Next,
         DataSize,
         Label
     };
@@ -27,6 +26,7 @@ protected:
     string biosPath() const;
     string dataPath() const;
     string load(const string& path) const;
+    bool postInit() override;
 private:
     string _bios;
     string _data;

@@ -11,7 +11,6 @@ public:
     Host(Framer* framer);
     ~Host();
 
-    string machinePath() const;
     Framer* getFramer() const;
     Component* create(const string& type);
     void close();

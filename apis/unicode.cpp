@@ -51,13 +51,12 @@ UnicodeApi* UnicodeApi::get()
     return &it;
 }
 
-void UnicodeApi::configure(const Value& settings)
+void UnicodeApi::configure(const string& fonts_path)
 {
     font_width.clear();
-    string fonts_file = settings.get("fonts").Or("").toString();
-    if (fs_utils::read(fonts_file))
+    if (fs_utils::read(fonts_path))
     {
-        ifstream file(fonts_file);
+        ifstream file(fonts_path);
 
         while (file)
         {

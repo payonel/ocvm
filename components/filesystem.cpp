@@ -482,7 +482,13 @@ int Filesystem::list(lua_State* lua)
 
 static bool hack_broken_dotdot(const string& path)
 {
-    return path.find("/..") != string::npos;
+    static const string dot_end = "/..";
+    size_t index = path.find(dot_end);
+    if (index < path.size())
+    {
+        return path.size() - index == dot_end.size();
+    }
+    return false;
 }
 
 int Filesystem::isDirectory(lua_State* lua)

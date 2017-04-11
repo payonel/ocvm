@@ -5,6 +5,7 @@
 #include <fstream>
 #include "drivers/fs_utils.h"
 #include "model/client.h"
+#include "apis/system.h"
 
 Eeprom::Eeprom()
 {
@@ -19,7 +20,6 @@ Eeprom::Eeprom()
 
 bool Eeprom::onInitialize()
 {
-    string originalBiosPath = config().get(ConfigIndex::BiosPath).toString();
 
     int config_bios_size = config().get(ConfigIndex::BiosSize).toNumber();
     int config_data_size = config().get(ConfigIndex::DataSize).toNumber();
@@ -33,6 +33,17 @@ bool Eeprom::onInitialize()
         return false;
     }
 
+    return true;
+}
+
+int Eeprom::get(lua_State* lua)
+{
+    return ValuePack::ret(lua, this->load(biosPath()));
+}
+
+bool Eeprom::postInit()
+{
+    string originalBiosPath = SystemApi::bios_path();
     if (!fs_utils::read(biosPath()))
     {
         lout << "no computer eeprom found, copying from system\n";
@@ -44,11 +55,6 @@ bool Eeprom::onInitialize()
     }
 
     return true;
-}
-
-int Eeprom::get(lua_State* lua)
-{
-    return ValuePack::ret(lua, this->load(biosPath()));
 }
 
 int Eeprom::getData(lua_State* lua)

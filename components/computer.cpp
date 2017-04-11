@@ -2,6 +2,7 @@
 #include "model/log.h"
 #include "model/client.h"
 #include "filesystem.h"
+#include "apis/system.h"
 
 #include <lua.hpp>
 #include <iostream>
@@ -314,6 +315,22 @@ int Computer::pushSignal(lua_State* lua)
 
 bool Computer::postInit()
 {
+    _machine = lua_newthread(_state);
+    lout << "machine thread created\n";
+
+    string machine_path = SystemApi::machine_path();
+    if (luaL_loadfile(_state, machine_path.c_str()))
+    {
+        lerr << "failed to load machine [" << machine_path << "]\n";
+        lerr << lua_tostring(_state, -1) << "\n";
+        lua_pop(_state, 1);
+        return false;
+    }
+    lout << "machine function loaded\n";
+
+    if (_machine == nullptr)
+        return false;
+
     for (auto* pc : client()->components("filesystem", true))
     {
         auto pfs = dynamic_cast<Filesystem*>(pc);
@@ -503,30 +520,14 @@ RunState Computer::resume(int nargs)
     }
     else
     {
-        lout << "host crash: ";
-        lout << lua_tostring(_state, -1) << "\n";
-        lout << "machine status: " << Value(_state).serialize() << endl;
+        lerr << "vm crash: ";
+        lerr << lua_tostring(_state, -1) << "\n";
+        lerr << "machine stack: " << Value::stack(_machine) << endl;
+        lerr << "machine status: " << Value(_machine).serialize() << endl;
         return RunState::Halt;
     }
 
     return RunState::Continue;
-}
-
-bool Computer::load(const string& machinePath)
-{
-    _machine = lua_newthread(_state);
-    lout << "machine thread created\n";
-
-    if (luaL_loadfile(_state, machinePath.c_str()))
-    {
-        lout << "failed to load machine\n";
-        lout << lua_tostring(_state, -1) << "\n";
-        lua_pop(_state, 1);
-        return false;
-    }
-    lout << "machine function loaded\n";
-
-    return _machine;
 }
 
 void Computer::close()

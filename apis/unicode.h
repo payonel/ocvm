@@ -64,7 +64,7 @@ public:
         return string(buffer.begin(), buffer.end());
     }
 
-    static void configure(const Value& settings);
+    static void configure(const string& fonts_path);
 private:
     UnicodeApi();
     static std::unordered_map<uint32_t, int> font_width;

@@ -16,7 +16,6 @@ public:
     };
 
     RunState update() override;
-    bool load(const string& machinePath);
     bool newlib(LuaProxy* proxy);
     void close();
     void setTmpAddress(const string& addr);

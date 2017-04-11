@@ -19,11 +19,6 @@ Host::~Host()
     close();
 }
 
-string Host::machinePath() const
-{
-    return "system/machine.lua";
-}
-
 Component* Host::create(const string& type)
 {
     if (type == "screen")

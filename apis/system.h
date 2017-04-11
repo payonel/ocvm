@@ -10,6 +10,10 @@ public:
     static int allowGC(lua_State* lua);
     static int allowBytecode(lua_State* lua);
 
+    static string fonts_path();
+    static string bios_path();
+    static string machine_path();
+
     static void configure(const Value& settings);
 private:
     SystemApi();
@@ -17,4 +21,7 @@ private:
     static double _timeout;
     static bool _gc;
     static bool _bytecode;
+    static string _fonts;
+    static string _bios;
+    static string _machine;
 };
