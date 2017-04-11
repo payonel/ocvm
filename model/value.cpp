@@ -557,9 +557,13 @@ ValuePack ValuePack::pack(lua_State* lua)
 
 string Value::stack(lua_State* state)
 {
-    luaL_traceback(state, state, NULL, 1);
-    string stacktrace = string(lua_tostring(state, -1));
-    lua_pop(state, 1);
+    // creating a stack trace allocates memory for the strings
+    // to keep the quiet on the machine lua state we can
+    // use a lua state specifically for allocation
+    static lua_State* stack_state = luaL_newstate();
+    luaL_traceback(stack_state, state, nullptr, 1);
+    string stacktrace = string(lua_tostring(stack_state, -1));
+    lua_pop(stack_state, 1);
     return stacktrace;
 }
 
