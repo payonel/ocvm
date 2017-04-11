@@ -96,31 +96,37 @@ struct ValuePack : public vector<Value>
         return ValuePack::push_ret(lua, args...);
     }
 private:
-    inline static int push_ret(lua_State* lua, double arg)
-    {
-        lua_pushnumber(lua, arg);
-        return 1;
-    }
-
-    inline static int push_ret(lua_State* lua, size_t arg)
-    {
-        lua_pushnumber(lua, arg);
-        return 1;
-    }
-
     inline static int push_ret(lua_State* lua, bool arg)
     {
         lua_pushboolean(lua, arg);
         return 1;
     }
 
-    inline static int push_ret(lua_State* lua, int arg)
+    inline static int push_ret(lua_State* lua, int32_t arg)
+    {
+        lua_pushnumber(lua, arg);
+        return 1;
+    }
+
+    inline static int push_ret(lua_State* lua, uint32_t arg)
+    {
+        lua_pushnumber(lua, arg);
+        return 1;
+    }
+
+    inline static int push_ret(lua_State* lua, int64_t arg)
     {
         lua_pushnumber(lua, arg);
         return 1;
     }
 
     inline static int push_ret(lua_State* lua, uint64_t arg)
+    {
+        lua_pushnumber(lua, arg);
+        return 1;
+    }
+
+    inline static int push_ret(lua_State* lua, double arg)
     {
         lua_pushnumber(lua, arg);
         return 1;
