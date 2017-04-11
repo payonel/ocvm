@@ -1,5 +1,5 @@
 #include "sandbox_methods.h"
-#include "log.h"
+#include "model/log.h"
 
 SandboxMethods::SandboxMethods(Client* pClient) :
     LuaProxy(""),

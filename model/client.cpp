@@ -5,7 +5,7 @@
 
 #include "config.h"
 #include "log.h"
-#include "utils.h"
+#include "drivers/fs_drv.h"
 #include <lua.hpp>
 
 #include "apis/os.h"

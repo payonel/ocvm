@@ -3,12 +3,12 @@
 #include <iostream>
 #include <vector>
 
-#include "client.h"
-#include "host.h"
+#include "model/client.h"
+#include "model/host.h"
 #include "apis/unicode.h"
 
 #include "io/mouse_input.h"
-#include "log.h"
+#include "model/log.h"
 
 Screen::Screen()
 {

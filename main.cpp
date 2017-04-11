@@ -1,9 +1,9 @@
 #include <string>
 #include <memory>
-#include "host.h"
-#include "client.h"
+#include "model/host.h"
+#include "model/client.h"
 #include "io/frame.h"
-#include "log.h"
+#include "model/log.h"
 #include "components/computer.h"
 
 using std::cerr;

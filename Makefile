@@ -31,6 +31,7 @@ files+=$(wildcard components/*.cpp)
 files+=$(wildcard io/*.cpp)
 files+=$(wildcard drivers/*.cpp)
 files+=$(wildcard color/*.cpp)
+files+=$(wildcard model/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 

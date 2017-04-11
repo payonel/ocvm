@@ -1,6 +1,6 @@
 #include "gpu.h"
-#include "log.h"
-#include "client.h"
+#include "model/log.h"
+#include "model/client.h"
 #include "screen.h"
 #include "apis/unicode.h"
 #include "color/color_map.h"

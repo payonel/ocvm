@@ -1,6 +1,6 @@
 #include "kb_drv.h"
 #include "ansi.h"
-#include "log.h"
+#include "model/log.h"
 
 #include <bitset>
 #include <iostream>

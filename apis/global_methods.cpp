@@ -1,5 +1,5 @@
 #include "global_methods.h"
-#include "log.h"
+#include "model/log.h"
 
 GlobalMethods::GlobalMethods() : LuaProxy("")
 {

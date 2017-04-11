@@ -1,10 +1,10 @@
 #include "eeprom.h"
-#include "log.h"
+#include "model/log.h"
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "utils.h"
-#include "client.h"
+#include "drivers/fs_drv.h"
+#include "model/client.h"
 
 Eeprom::Eeprom()
 {

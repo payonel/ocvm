@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "value.h"
-#include "luaproxy.h"
+#include "model/value.h"
+#include "model/luaproxy.h"
 
 class Component;
 typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);

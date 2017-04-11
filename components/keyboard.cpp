@@ -1,7 +1,7 @@
 #include "keyboard.h"
 #include "screen.h"
-#include "client.h"
-#include "log.h"
+#include "model/client.h"
+#include "model/log.h"
 
 #include "io/kb_input.h"
 

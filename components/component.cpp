@@ -1,5 +1,5 @@
 #include "component.h"
-#include "log.h"
+#include "model/log.h"
 
 #include <random>
 

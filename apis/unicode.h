@@ -1,5 +1,5 @@
 #pragma once
-#include "luaproxy.h"
+#include "model/luaproxy.h"
 #include <vector>
 #include <unordered_map>
 using std::vector;

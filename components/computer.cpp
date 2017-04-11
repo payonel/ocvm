@@ -1,6 +1,6 @@
 #include "computer.h"
-#include "log.h"
-#include "client.h"
+#include "model/log.h"
+#include "model/client.h"
 #include "filesystem.h"
 
 #include <lua.hpp>

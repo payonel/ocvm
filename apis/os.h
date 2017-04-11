@@ -1,5 +1,5 @@
 #pragma once
-#include "luaproxy.h"
+#include "model/luaproxy.h"
 
 class OSApi : public LuaProxy
 {

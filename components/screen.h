@@ -1,6 +1,6 @@
 #pragma once
 #include "component.h"
-#include "value.h"
+#include "model/value.h"
 #include "io/frame.h"
 
 class MouseInput;

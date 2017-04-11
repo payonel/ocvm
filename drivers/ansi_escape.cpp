@@ -1,5 +1,5 @@
 #include "ansi_escape.h"
-#include "log.h"
+#include "model/log.h"
 
 #include <iostream>
 #include <sstream>
