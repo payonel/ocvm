@@ -54,36 +54,15 @@ static void* alloc_handler(void* ud, void* ptr, size_t osize, size_t nsize)
 void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
 {
     osize = ptr ? osize : 0; // do not use osize if ptr is null
-    if (nsize < osize) // drop
-    {
-        size_t drop = osize - nsize;
-        if (_memory_used < drop) // !!
-        {
-            lerr << "critical emulator bug, memory used drop larger than used\n";
-            drop = _memory_used;
-        }
-        _memory_used -= drop;
-        // lprof << "memory:-" << drop << endl;
-    }
-    else // rise
+    if (nsize > osize) // rise
     {
         size_t to_alloc = nsize - osize;
-        size_t request_memory_use = _memory_used + to_alloc;
-        if (_baseline_initialized)
+        size_t free_mem = freeMemory();
+        if (to_alloc > free_mem)
         {
-            // memory may drop below baseline
-            if (request_memory_use > _baseline)
-            {
-                size_t machine_used = request_memory_use - _baseline;
-                if (machine_used > _total_memory)
-                {
-                    lout << "vm out of memory\n";
-                    return nullptr;
-                }
-            }
-            // lprof << "memory:" << to_alloc << endl;
+            lout << "vm out of memory\n";
+            return nullptr;
         }
-        _memory_used = request_memory_use;
     }
 
     if (nsize == 0)
@@ -156,8 +135,11 @@ double Computer::trace(lua_State* coState, bool bForce)
         }
         if (coState)
         {
+            // int count = lua_gc(_state, LUA_GCCOUNT, 0) * 1024 + lua_gc(_state, LUA_GCCOUNTB, 0);
+            // lout << "mem: " << memory_used << " vs " << count << endl;
+
             //string stack = Value::stack(coState);
-            //lout << "stack: memory[" << _memory_used << "]" << stack << endl;
+            //lout << "stack: memory[" << memory_used << "]" << stack << endl;
             // lprof << "stack\n";
         }
     }
@@ -367,11 +349,7 @@ int Computer::tmpAddress(lua_State* lua)
 
 int Computer::freeMemory(lua_State* lua)
 {
-    size_t free_memory = 0;
-    if (_memory_used <= _total_memory)
-        free_memory = _total_memory - _memory_used;
-
-    return ValuePack::ret(lua, free_memory);
+    return ValuePack::ret(lua, freeMemory());
 }
 
 int Computer::totalMemory(lua_State* lua)
@@ -425,7 +403,7 @@ RunState Computer::update()
     RunState result = resume(nargs);
     if (bFirstTimeRun)
     {
-        _baseline = _memory_used;
+        _baseline = memoryUsedRaw();
         _baseline_initialized = true;
         lout << "lua env baseline\n";
     }
@@ -616,4 +594,36 @@ void Computer::mark_gc()
         lua_gc(_state, LUA_GCCOLLECT, 0); // data, last param, not used for collect
         _gc_ticks = 0;
     }
+}
+
+size_t Computer::memoryUsedRaw()
+{
+    if (_state == nullptr)
+        return 0;
+
+    return lua_gc(_state, LUA_GCCOUNT, 0) * 1024 + lua_gc(_state, LUA_GCCOUNTB, 0);
+}
+
+size_t Computer::memoryUsedVM()
+{
+    if (!_baseline_initialized)
+        return 0;
+
+    size_t raw = memoryUsedRaw();
+    if (raw <= _baseline)
+        return 0;
+
+    return raw - _baseline;
+}
+
+size_t Computer::freeMemory()
+{
+    if (!_baseline_initialized)
+        return std::numeric_limits<size_t>::max();
+
+    size_t vm_used = memoryUsedVM();
+    if (vm_used >= _total_memory)
+        return 0;
+
+    return _total_memory - vm_used;
 }

@@ -49,6 +49,9 @@ protected:
 
     int get_address(lua_State* lua);
     void mark_gc();
+    size_t memoryUsedRaw();
+    size_t memoryUsedVM();
+    size_t freeMemory();
 private:
     void injectCustomLua();
 
@@ -60,7 +63,6 @@ private:
     double _nexttrace = 0;
 
     size_t _total_memory = 0;
-    size_t _memory_used = 0;
     size_t _baseline = 0;
     bool _baseline_initialized = false;
 
