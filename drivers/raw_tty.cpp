@@ -142,6 +142,7 @@ private:
 
         //put in raw mod
         termios raw;
+        memset(&raw, 0, sizeof(termios));
         ::cfmakeraw(&raw);
         ::tcsetattr(STDIN_FILENO, TCSANOW, &raw);
 

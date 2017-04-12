@@ -85,7 +85,7 @@ public:
         if (fin)
         {
             _isOpen = true;
-            _data = std::move(vector<char>(std::istreambuf_iterator<char>(fin), std::istreambuf_iterator<char>()));
+            _data = { std::istreambuf_iterator<char>(fin), std::istreambuf_iterator<char>() };
         }
         fin.close();
     }

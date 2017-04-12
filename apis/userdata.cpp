@@ -40,6 +40,7 @@ int UserDataApi::dispose(lua_State* lua)
 {
     UserData* data = check(lua);
     data->dispose();
+    data->~UserData();
     return 0;
 }
 

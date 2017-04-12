@@ -34,6 +34,8 @@ Gpu::Gpu()
 
 Gpu::~Gpu()
 {
+    delete [] _cells;
+    _cells = nullptr;
 }
 
 void Gpu::check(lua_State* lua) const

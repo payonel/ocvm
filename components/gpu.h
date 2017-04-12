@@ -72,8 +72,8 @@ protected:
 private:
     Screen* _screen = nullptr;
 
-    int _width;
-    int _height;
+    int _width = 0;
+    int _height = 0;
 
     Cell* _cells = nullptr;
     Color _bg;
