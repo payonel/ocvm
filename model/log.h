@@ -16,21 +16,20 @@ public:
     Logger(LogHandler* handler);
     
     static Frame* getFrame();
-    void handle(const string& text);
+
+    Logger& operator<< (const string& text);
+    Logger& operator<< (std::ostream& (*)(std::ostream&));
+    Logger& operator<< (const char* cstr);
+    template <typename T>
+    Logger& operator<< (const T& t)
+    {
+        stringstream ss;
+        ss << t;
+        return *this << ss.str();
+    }
 private:
     LogHandler* _handler;
 };
-
-Logger& operator<< (Logger& logger, std::ostream& (*)(std::ostream&));
-
-template <typename T>
-Logger& operator<< (Logger& logger, const T& t)
-{
-    stringstream ss;
-    ss << t;
-    logger.handle(ss.str());
-    return logger;
-}
 
 extern Logger lout;
 extern Logger lerr;

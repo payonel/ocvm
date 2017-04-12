@@ -48,6 +48,7 @@ protected:
     double trace(lua_State* coState = nullptr, bool bForce = false);
 
     int get_address(lua_State* lua);
+    void mark_gc();
 private:
     void injectCustomLua();
 
@@ -64,4 +65,6 @@ private:
     bool _baseline_initialized = false;
 
     queue<ValuePack> _signals;
+
+    size_t _gc_ticks = 0;
 };

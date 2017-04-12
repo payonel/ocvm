@@ -63,13 +63,19 @@ Frame* Logger::getFrame()
     return &single_log_frame;
 }
 
-void Logger::handle(const string& text)
+Logger& Logger::operator<< (const string& text)
 {
     _handler->write(text);
+    return *this;
 }
 
-Logger& operator<< (Logger& logger, std::ostream& (*)(std::ostream&))
+Logger& Logger::operator<< (std::ostream& (*)(std::ostream&))
 {
-    logger.handle("\n");
-    return logger;
+    return *this << string("\n");
 }
+
+Logger& Logger::operator<< (const char* cstr)
+{
+    return *this << string(cstr);
+}
+

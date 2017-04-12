@@ -497,6 +497,7 @@ RunState Computer::resume(int nargs)
                     return resume(top);
                 break;
                 case LUA_TNUMBER:
+                    mark_gc();
                     _standby = std::max(0.0, lua_tonumber(_state, 1)) + now();
                 break;
                 case LUA_TBOOLEAN:
@@ -605,4 +606,14 @@ int Computer::get_address(lua_State* lua)
 int Computer::isRunning(lua_State* lua)
 {
     return ValuePack::ret(lua, true);
+}
+
+void Computer::mark_gc()
+{
+    _gc_ticks++;
+    if (_gc_ticks >= 20)
+    {
+        lua_gc(_state, LUA_GCCOLLECT, 0); // data, last param, not used for collect
+        _gc_ticks = 0;
+    }
 }
