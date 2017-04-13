@@ -65,6 +65,9 @@ void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
         }
     }
 
+    // if (_baseline_initialized)
+    //     _prof.trace(osize, nsize, _state);
+
     if (nsize == 0)
     {
         free(ptr);
@@ -517,6 +520,8 @@ void Computer::close()
         _state = nullptr;
         lout << "lua env closed\n";
     }
+
+    _prof.dump("profiler.massif");
 }
 
 bool Computer::newlib(LuaProxy* proxy)

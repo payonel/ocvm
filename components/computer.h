@@ -1,6 +1,7 @@
 #pragma once
 
 #include "component.h"
+#include "model/profiler.h"
 #include <queue>
 using std::queue;
 
@@ -69,4 +70,5 @@ private:
     queue<ValuePack> _signals;
 
     size_t _gc_ticks = 0;
+    Profiler _prof;
 };

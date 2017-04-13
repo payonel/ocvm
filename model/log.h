@@ -33,4 +33,3 @@ private:
 
 extern Logger lout;
 extern Logger lerr;
-extern Logger lprof;

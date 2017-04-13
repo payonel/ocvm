@@ -49,7 +49,6 @@ Logger::Logger(LogHandler* handler) :
 
 Logger lout(&log_handler);
 Logger lerr(&err_handler);
-Logger lprof(&prof_handler);
 
 Frame* Logger::getFrame()
 {
@@ -78,4 +77,3 @@ Logger& Logger::operator<< (const char* cstr)
 {
     return *this << string(cstr);
 }
-
