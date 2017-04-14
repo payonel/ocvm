@@ -51,6 +51,32 @@ static void* alloc_handler(void* ud, void* ptr, size_t osize, size_t nsize)
     return pc->alloc(ptr, osize, nsize);
 }
 
+string get_stacktrace(lua_State* lua)
+{
+    lua_State* coState = nullptr;
+    lua_Debug ar;
+    lua_getstack(lua, 1, &ar);
+    for (int n = 1; n < 10 && !coState; n++)
+    {
+        const char* cstrVarName = lua_getlocal(lua, &ar, n);
+        if (!cstrVarName)
+        {
+            break; // could not find coState
+        }
+        if (cstrVarName[0] == 'c' &&
+            cstrVarName[1] == 'o' &&
+            cstrVarName[2] == '\0')
+        {
+            coState = lua_tothread(lua, -1);
+        }
+        lua_pop(lua, 1);
+    }
+
+    if (coState)
+        return Value::stack(coState);
+    return "";
+}
+
 void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
 {
     osize = ptr ? osize : 0; // do not use osize if ptr is null
@@ -65,15 +91,30 @@ void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
         }
     }
 
-    // if (_baseline_initialized)
-    //     _prof.trace(osize, nsize, _state);
+    string stacktrace;
+    if (_baseline_initialized && nsize != 0)
+    {
+        stacktrace = get_stacktrace(_state);
+    }
+
+    if (ptr && (nsize == 0 || nsize != osize))
+    {
+        _prof.release(ptr);
+    }
+
+    void* ret_ptr = nullptr;
+    if (nsize != 0)
+        ret_ptr = realloc(ptr, nsize);
+
+    if (_baseline_initialized && ret_ptr)
+        _prof.trace(stacktrace, ret_ptr, nsize);
 
     if (nsize == 0)
     {
         free(ptr);
-        return 0;
+        return nullptr;
     }
-    return realloc(ptr, nsize);
+    return ret_ptr;
 }
 
 bool Computer::onInitialize()

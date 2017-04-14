@@ -10,6 +10,14 @@ using namespace std;
 
 static const string massif_separator = "#-----------";
 
+int64_t CallNode::memory() const
+{
+    int64_t sum = 0;
+    for (const auto& it : ptrs)
+        sum += it.second;
+    return sum;
+}
+
 string Profiler::serialize_calls(const CallNode* pNode, int64_t* pMem, string tab)
 {
     string result;
@@ -17,13 +25,13 @@ string Profiler::serialize_calls(const CallNode* pNode, int64_t* pMem, string ta
     for (const auto& child : pNode->children)
     {
         int64_t mem = 0;
-        string line = serialize_calls(&child, &mem, tab + " ");
+        string line = serialize_calls(child, &mem, tab + " ");
         *pMem += mem;
         result += line;
     }
 
-    *pMem += pNode->memory;
-    int64_t mem = std::max(static_cast<int64_t>(0), *pMem);
+    *pMem += pNode->memory();
+    int64_t mem = *pMem;//std::max(static_cast<int64_t>(0), *pMem);
 
     stringstream ss;
     ss << tab << "n" << pNode->children.size() << ": ";
@@ -50,7 +58,7 @@ n1: 0 new[]
     // auto now = system_clock::now().time_since_epoch() / nanoseconds(1) % 1492093709000000000ull;
     int64_t mem_total = 0;
     string heap_tree = serialize_calls(&_root, &mem_total);
-    mem_total = std::max(static_cast<int64_t>(0), mem_total);
+    // mem_total = std::max(static_cast<int64_t>(0), mem_total);
 
     stringstream ss;
     ss << "snapshot=" << _snaps.size() << endl;
@@ -96,13 +104,9 @@ static vector<string> parse_calls(const string& stack_text)
     return lines;
 }
 
-static CallNode* find_node(lua_State* lua, CallNode* pRoot)
+static CallNode* find_node(const string& stacktrace, CallNode* pRoot)
 {
-    if (lua == nullptr)
-        return nullptr;
-
-    string stack = Value::stack(lua);
-    vector<string> calls = parse_calls(stack);
+    vector<string> calls = parse_calls(stacktrace);
     auto call_it = calls.begin();
     if (call_it == calls.end())
         return nullptr;
@@ -111,21 +115,21 @@ static CallNode* find_node(lua_State* lua, CallNode* pRoot)
     while (call_it != calls.end())
     {
         CallNode* next = nullptr;
-        for (CallNode& child : node->children)
+        for (CallNode* child : node->children)
         {
-            if (*call_it == child.name)
+            if (*call_it == child->name)
             {
-                next = &child;
+                next = child;
                 break;
             }
         }
 
         if (!next)
         {
-            CallNode add;
-            add.name = *call_it;
-            node->children.push_back(add);
-            next = &(node->children.at(node->children.size() - 1));
+            CallNode* add = new CallNode;
+            add->name = *call_it;
+            node->children.insert(add);
+            next = add;
         }
         call_it++;
         node = next;
@@ -134,48 +138,42 @@ static CallNode* find_node(lua_State* lua, CallNode* pRoot)
     return node;
 }
 
-void Profiler::trace(size_t osize, size_t nsize, lua_State* lua)
+void Profiler::trace(const string& stacktrace, void* ptr, size_t size)
 {
     if (_locked)
         return; // ignore, stack inspection caused allocation
     _locked = true;
-    locked_trace(osize, nsize, lua);
+    locked_trace(stacktrace, ptr, size);
     _locked = false;
 }
 
-void Profiler::locked_trace(size_t osize, size_t nsize, lua_State* lua)
+void Profiler::release(void* ptr)
 {
-    if (_snaps.size() > 10)
+    if (!ptr)
+        return;
+
+    const auto& node_it = _ptrs.find(ptr);
+    if (node_it != _ptrs.end())
+    {
+        node_it->second->ptrs.erase(ptr);
+        _ptrs.erase(node_it);
+    }
+}
+
+void Profiler::locked_trace(const string& stacktrace, void* ptr, size_t size)
+{
+    if (_snaps.size() > 10000)
         return;
     
-    lua_State* coState = nullptr;
-    lua_Debug ar;
-    lua_getstack(lua, 1, &ar);
-    for (int n = 1; n < 10 && !coState; n++)
-    {
-        const char* cstrVarName = lua_getlocal(lua, &ar, n);
-        if (!cstrVarName)
-        {
-            break; // could not find coState
-        }
-        string varname = cstrVarName;
-        if (varname == "co")
-        {
-            coState = lua_tothread(lua, -1);
-        }
-        lua_pop(lua, 1);
-    }
-
-    if (!coState)
+    if (stacktrace.empty())
         return;
 
-    CallNode* node = find_node(coState, &_root);
-
+    CallNode* node = find_node(stacktrace, &_root);
     if (node == nullptr)
         return;
 
-    node->memory += nsize;
-    node->memory -= osize;
+    _ptrs[ptr] = node;
+    node->ptrs[ptr] = size;
 
     store_snapshot();
 }
