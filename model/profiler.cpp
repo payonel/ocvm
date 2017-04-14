@@ -87,11 +87,11 @@ static vector<string> parse_calls(const string& stack_text)
     static const string dots = "...";
     static const string c_call = "[C]: in global 'pcall'";
 
-    string full_line;
     vector<string> lines;
     stringstream ss(stack_text);
     while (ss)
     {
+        string full_line;
         getline(ss, full_line);
 
         // ignore starting "stack trace:"
@@ -147,8 +147,8 @@ static CallNode* find_node(const string& stacktrace, CallNode* pRoot)
             unique_ptr<CallNode> add(new CallNode);
             add->parent = node;
             add->name = *call_it;
-            node->children.insert(std::move(add));
             next = add.get();
+            node->children.insert(std::move(add));
         }
         call_it++;
         node = next;
