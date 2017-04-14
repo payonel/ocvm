@@ -8,6 +8,15 @@ using namespace std::chrono;
 
 using namespace std;
 
+struct CallNode
+{
+    int64_t memory() const;
+    string name;
+    set<CallNode*> children;
+    CallNode* parent = nullptr;
+    map<void*, int64_t> ptrs;
+};
+
 static const string massif_separator = "#-----------";
 
 int64_t CallNode::memory() const
@@ -16,6 +25,12 @@ int64_t CallNode::memory() const
     for (const auto& it : ptrs)
         sum += it.second;
     return sum;
+}
+
+Profiler::Profiler()
+{
+    _root = new CallNode;
+    _root->parent = nullptr;
 }
 
 string Profiler::serialize_calls(const CallNode* pNode, int64_t* pMem, string tab)
@@ -57,7 +72,7 @@ n1: 0 new[]
 */
     // auto now = system_clock::now().time_since_epoch() / nanoseconds(1) % 1492093709000000000ull;
     int64_t mem_total = 0;
-    string heap_tree = serialize_calls(&_root, &mem_total);
+    string heap_tree = serialize_calls(_root, &mem_total);
     // mem_total = std::max(static_cast<int64_t>(0), mem_total);
 
     stringstream ss;
@@ -76,15 +91,20 @@ n1: 0 new[]
 
 static vector<string> parse_calls(const string& stack_text)
 {
+    static const string stack_line = "stack traceback:";
+    static const string machine_pattern = "system/machine.lua";
+    static const string dots = "...";
+    static const string c_call = "[C]: in global 'pcall'";
+
+    string full_line;
     vector<string> lines;
     stringstream ss(stack_text);
     while (ss)
     {
-        string full_line;
         getline(ss, full_line);
 
         // ignore starting "stack trace:"
-        if (full_line == "stack traceback:")
+        if (full_line == stack_line)
             continue;
 
         // ignore empty lines
@@ -96,7 +116,14 @@ static vector<string> parse_calls(const string& stack_text)
             full_line = full_line.substr(1);
 
         // ignore machine calls
-        if (full_line.find("system/machine.lua") == 0)
+        if (full_line.find(machine_pattern) == 0)
+            continue;
+
+        // ignore ... sequences
+        if (full_line == dots)
+            continue;
+
+        if (full_line == c_call)
             continue;
 
         lines.push_back(full_line);
@@ -127,6 +154,7 @@ static CallNode* find_node(const string& stacktrace, CallNode* pRoot)
         if (!next)
         {
             CallNode* add = new CallNode;
+            add->parent = node;
             add->name = *call_it;
             node->children.insert(add);
             next = add;
@@ -147,6 +175,20 @@ void Profiler::trace(const string& stacktrace, void* ptr, size_t size)
     _locked = false;
 }
 
+static inline void cut_empty_children(CallNode* pNode)
+{
+    if (pNode == nullptr || pNode->ptrs.size() || pNode->children.size())
+        return;
+
+    CallNode* parent = pNode->parent;
+    if (parent)
+    {
+        parent->children.erase(pNode);
+        cut_empty_children(parent);
+    }
+    delete pNode;
+}
+
 void Profiler::release(void* ptr)
 {
     if (!ptr)
@@ -155,7 +197,9 @@ void Profiler::release(void* ptr)
     const auto& node_it = _ptrs.find(ptr);
     if (node_it != _ptrs.end())
     {
-        node_it->second->ptrs.erase(ptr);
+        CallNode* pNode = node_it->second;
+        pNode->ptrs.erase(ptr);
+        cut_empty_children(pNode);
         _ptrs.erase(node_it);
     }
 }
@@ -168,7 +212,7 @@ void Profiler::locked_trace(const string& stacktrace, void* ptr, size_t size)
     if (stacktrace.empty())
         return;
 
-    CallNode* node = find_node(stacktrace, &_root);
+    CallNode* node = find_node(stacktrace, _root);
     if (node == nullptr)
         return;
 
