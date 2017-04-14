@@ -8,15 +8,6 @@ using namespace std::chrono;
 
 using namespace std;
 
-struct CallNode
-{
-    int64_t memory() const;
-    string name;
-    set<CallNode*> children;
-    CallNode* parent = nullptr;
-    map<void*, int64_t> ptrs;
-};
-
 static const string massif_separator = "#-----------";
 
 int64_t CallNode::memory() const
@@ -29,7 +20,7 @@ int64_t CallNode::memory() const
 
 Profiler::Profiler()
 {
-    _root = new CallNode;
+    _root.reset(new CallNode);
     _root->parent = nullptr;
 }
 
@@ -40,7 +31,7 @@ string Profiler::serialize_calls(const CallNode* pNode, int64_t* pMem, string ta
     for (const auto& child : pNode->children)
     {
         int64_t mem = 0;
-        string line = serialize_calls(child, &mem, tab + " ");
+        string line = serialize_calls(child.get(), &mem, tab + " ");
         *pMem += mem;
         result += line;
     }
@@ -72,7 +63,7 @@ n1: 0 new[]
 */
     // auto now = system_clock::now().time_since_epoch() / nanoseconds(1) % 1492093709000000000ull;
     int64_t mem_total = 0;
-    string heap_tree = serialize_calls(_root, &mem_total);
+    string heap_tree = serialize_calls(_root.get(), &mem_total);
     // mem_total = std::max(static_cast<int64_t>(0), mem_total);
 
     stringstream ss;
@@ -142,22 +133,22 @@ static CallNode* find_node(const string& stacktrace, CallNode* pRoot)
     while (call_it != calls.end())
     {
         CallNode* next = nullptr;
-        for (CallNode* child : node->children)
+        for (const unique_ptr<CallNode>& child : node->children)
         {
             if (*call_it == child->name)
             {
-                next = child;
+                next = child.get();
                 break;
             }
         }
 
         if (!next)
         {
-            CallNode* add = new CallNode;
+            unique_ptr<CallNode> add(new CallNode);
             add->parent = node;
             add->name = *call_it;
-            node->children.insert(add);
-            next = add;
+            node->children.insert(std::move(add));
+            next = add.get();
         }
         call_it++;
         node = next;
@@ -183,10 +174,16 @@ static inline void cut_empty_children(CallNode* pNode)
     CallNode* parent = pNode->parent;
     if (parent)
     {
-        parent->children.erase(pNode);
+        for (const auto& it : parent->children)
+        {
+            if (it.get() == pNode)
+            {
+                parent->children.erase(it);
+                break;
+            }
+        }
         cut_empty_children(parent);
     }
-    delete pNode;
 }
 
 void Profiler::release(void* ptr)
@@ -212,7 +209,7 @@ void Profiler::locked_trace(const string& stacktrace, void* ptr, size_t size)
     if (stacktrace.empty())
         return;
 
-    CallNode* node = find_node(stacktrace, _root);
+    CallNode* node = find_node(stacktrace, _root.get());
     if (node == nullptr)
         return;
 

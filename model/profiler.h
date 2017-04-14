@@ -4,13 +4,23 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <memory>
 using std::string;
 using std::vector;
 using std::map;
 using std::set;
+using std::unique_ptr;
 
 struct lua_State;
-struct CallNode;
+
+struct CallNode
+{
+    int64_t memory() const;
+    string name;
+    set<unique_ptr<CallNode>> children;
+    CallNode* parent = nullptr;
+    map<void*, int64_t> ptrs;
+};
 
 class Profiler
 {
@@ -24,7 +34,7 @@ private:
     void store_snapshot();
     string serialize_calls(const CallNode* pNode, int64_t* pMem, string tab = "");
 
-    CallNode* _root;
+    unique_ptr<CallNode> _root;
     map<void*, CallNode*> _ptrs;
     vector<string> _snaps;
     bool _locked = false;
