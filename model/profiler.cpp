@@ -66,18 +66,7 @@ n1: 0 new[]
     string heap_tree = serialize_calls(_root.get(), &mem_total);
     // mem_total = std::max(static_cast<int64_t>(0), mem_total);
 
-    stringstream ss;
-    ss << "snapshot=" << _snaps.size() << endl;
-    ss << massif_separator << endl;
-    ss << "time=" << _snaps.size() << endl;
-    ss << "mem_heap_B=" << mem_total << endl;
-    ss << "mem_heap_extra_B=0\n";
-    ss << "mem_stacks_B=0\n";
-    ss << "heap_tree=detailed\n";
-
-    ss << heap_tree; // tree print already has newline
-
-    _snaps.push_back(ss.str());
+    _snaps.push_back(make_tuple(mem_total, heap_tree));
 }
 
 static vector<string> parse_calls(const string& stack_text)
@@ -232,10 +221,35 @@ time_unit: B
     ofs << "cmd: ./ocvm\n";
     ofs << "time_unit: i\n";
 
-    for (const auto& snap : _snaps)
+    size_t percent = _snaps.size() / 100;
+
+    for (size_t i = 0; i < _snaps.size(); i++)
     {
+        const auto& snap = _snaps.at(i);
+        int64_t mem = std::get<0>(snap);
+        const string& heap_tree = std::get<1>(snap);
+        bool detailed = i % percent == 0;
+
+        if (!detailed) continue;
+
         ofs << massif_separator << endl;
-        ofs << snap;
+        ofs << "snapshot=" << i << endl;
+        ofs << massif_separator << endl;
+        ofs << "time=" << i << endl;
+        ofs << "mem_heap_B=" << mem << endl;
+        ofs << "mem_heap_extra_B=0\n";
+        ofs << "mem_stacks_B=0\n";
+        ofs << "heap_tree=";
+        
+        if (detailed)
+        {
+            ofs << "detailed\n";
+            ofs << heap_tree; // tree print already has newline
+        }
+        else
+        {
+            ofs << "empty\n";
+        }
     }
 
     ofs.close();

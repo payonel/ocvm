@@ -5,11 +5,13 @@
 #include <map>
 #include <set>
 #include <memory>
+#include <tuple>
 using std::string;
 using std::vector;
 using std::map;
 using std::set;
 using std::unique_ptr;
+using std::tuple;
 
 struct lua_State;
 
@@ -36,6 +38,6 @@ private:
 
     unique_ptr<CallNode> _root;
     map<void*, CallNode*> _ptrs;
-    vector<string> _snaps;
+    vector<tuple<int64_t, string>> _snaps;
     bool _locked = false;
 };
