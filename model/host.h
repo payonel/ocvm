@@ -14,6 +14,11 @@ public:
     Framer* getFramer() const;
     Component* create(const string& type);
     void close();
+
+    string stackLog() const { return _stack_log; }
+    void stackLog(const string& stack_log) { _stack_log = stack_log; }
+
 private:
     Framer* _framer;
+    string _stack_log;
 };

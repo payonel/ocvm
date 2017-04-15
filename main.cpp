@@ -10,10 +10,12 @@ using std::cerr;
 
 void usage()
 {
-    cerr << "ocvm [ENV_PATH] [--frame=FRAME_TYPE] [--depth=DEPTH]\n"
+    cerr << "ocvm [ENV_PATH] [--frame=FRAME_TYPE] [--depth=DEPTH] [--log-allocs[=STACK_LOG]]\n"
             "  ENV_PATH     VM env path. Optional. defaults to ./tmp\n"
             "  FRAME_TYPE   Term emulator(ansi or basic). defaults to ansi\n"
-            "  DEPTH        Color depth(1, 8, 16, 256, or 16m). defaults to 256\n";
+            "  DEPTH        Color depth(1, 8, 16, 256, or 16m). defaults to 256\n"
+            "  STACK_LOG    Log allocations and stack traces to STACK_LOG.\n"
+            "                 If enabled, defaults to stack.log\n";
     ::exit(1);
 }
 
@@ -21,6 +23,20 @@ struct Args
 {
     vector<string> indexed;
     map<string, string> named;
+
+    enum
+    {
+        LogAllocKey,
+        FrameKey,
+        DepthKey
+    };
+
+    const string keys[3] =
+    {
+        "log-allocs",
+        "frame",
+        "depth"
+    };
 
     string get(int n) const
     {
@@ -37,21 +53,29 @@ struct Args
             return "";
         return it->second;
     }
-};
 
-bool valid_key(const string& key)
-{
-    if (key == "help") // no error message, but report usage
-        return false;
-
-    if (key != "frame" && key != "depth")
+    bool valid_key(const string& key)
     {
+        if (key == "help") // no error message, but report usage
+            return false;
+
+        for (size_t i = 0; i < sizeof(keys); i++)
+        {
+            if (key == keys[i])
+                return true;
+        }
+
         cerr << "bad argument [" << key << "]\n";
         return false;
     }
 
-    return true;
-}
+    string defaults(const string& key)
+    {
+        if (key == keys[LogAllocKey])
+            return "stack.log";
+        return "";
+    }
+};
 
 bool valid_arg_index(size_t size)
 {
@@ -72,15 +96,15 @@ Args load_args(int argc, char** argv)
         string t = argv[i];
         if (t.find("--") == 0)
         {
-            string key;
+            string key = t.substr(2);
             string value;
-            size_t equal_index = t.find("=");
+            size_t equal_index = key.find("=");
             if (equal_index != string::npos)
             {
-                key = t.substr(2, equal_index - 2);
-                value = t.substr(equal_index + 1);
+                value = key.substr(equal_index + 1);
+                key = key.substr(0, equal_index);
 
-                if (!valid_key(key))
+                if (!args.valid_key(key))
                 {
                     usage();
                 }
@@ -89,7 +113,10 @@ Args load_args(int argc, char** argv)
             }
             else
             {
-                usage();
+                string def = args.defaults(key);
+                if (def.empty())
+                    usage();
+                args.named[key] = def;
             }
         }
         else if (t.find("-") == 0)
@@ -136,6 +163,7 @@ int main(int argc, char** argv)
     string client_env_path = get_env_path(args.get(1));
     string framer_type = get_framer_type(args.get("frame"));
     EDepthType depth = get_depth(args.get("depth"));
+    string stack_log = args.get("log-allocs");
 
     std::unique_ptr<Framer> framer(Factory::create_framer(framer_type));
 
@@ -151,6 +179,7 @@ int main(int argc, char** argv)
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
     Host host(framer.get());
+    host.stackLog(stack_log);
     RunState run;
 
     do

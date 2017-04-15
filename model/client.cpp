@@ -150,6 +150,7 @@ bool Client::loadLuaComponentApi()
         return false;
     }
 
+    _computer->stackLog(_host->stackLog());
     _computer->newlib(this);
     _computer->newlib(_globals);
     _computer->newlib(OSApi::get());

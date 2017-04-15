@@ -1,7 +1,7 @@
 #pragma once
 
 #include "component.h"
-#include "model/profiler.h"
+#include "model/prof_log.h"
 #include <queue>
 using std::queue;
 
@@ -24,6 +24,7 @@ public:
     bool postInit() override;
 
     void* alloc(void* ptr, size_t osize, size_t nsize);
+    void stackLog(const string& stack_log);
 
     int isRunning(lua_State* lua);
     int setArchitecture(lua_State* lua);
@@ -70,5 +71,5 @@ private:
     queue<ValuePack> _signals;
 
     size_t _gc_ticks = 0;
-    Profiler _prof;
+    ProfLog _prof;
 };

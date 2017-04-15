@@ -40,6 +40,11 @@ Computer::Computer()
     add("isRunning", &Computer::isRunning);
 }
 
+void Computer::stackLog(const string& stack_log)
+{
+    _prof.open(stack_log);
+}
+
 Computer::~Computer()
 {
     close();
@@ -92,21 +97,24 @@ void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
     }
 
     string stacktrace;
-    if (_baseline_initialized && nsize != 0)
+    if (_prof.is_open())
     {
-        stacktrace = get_stacktrace(_state);
-    }
+        if (_baseline_initialized && nsize != 0)
+        {
+            stacktrace = get_stacktrace(_state);
+        }
 
-    if (ptr && (nsize == 0 || nsize != osize))
-    {
-        _prof.release(ptr);
+        if (ptr && (nsize == 0 || nsize != osize))
+        {
+            _prof.release(ptr);
+        }
     }
 
     void* ret_ptr = nullptr;
     if (nsize != 0)
         ret_ptr = realloc(ptr, nsize);
 
-    if (_baseline_initialized && ret_ptr)
+    if (_prof.is_open() && _baseline_initialized && ret_ptr)
         _prof.trace(stacktrace, ret_ptr, nsize);
 
     if (nsize == 0)
@@ -562,7 +570,7 @@ void Computer::close()
         lout << "lua env closed\n";
     }
 
-    _prof.dump("profiler.massif");
+    _prof.flush();
 }
 
 bool Computer::newlib(LuaProxy* proxy)
