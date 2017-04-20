@@ -25,12 +25,9 @@ protected:
     bool onInitialize() override;
     string biosPath() const;
     string dataPath() const;
-    string load(const string& path) const;
+    vector<char> load(const string& path) const;
     bool postInit() override;
 private:
-    string _bios;
-    string _data;
-
     string _dir; // real on disk storage location
 
     int _bios_size_limit = 1024 * 4; // also read from configuration

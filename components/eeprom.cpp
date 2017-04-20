@@ -93,10 +93,10 @@ string Eeprom::dataPath() const
     return client()->envPath() + "/data";
 }
 
-string Eeprom::load(const string& path) const
+vector<char> Eeprom::load(const string& path) const
 {
-    string buffer;
-    fs_utils::read(path, &buffer);
+    vector<char> buffer;
+    fs_utils::read(path, buffer);
     return buffer;
 }
 

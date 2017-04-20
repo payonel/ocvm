@@ -55,6 +55,24 @@ bool fs_utils::run_safely(function<void()> func, function<void(const string&)> o
     return false;
 }
 
+bool fs_utils::read(const string& path, vector<char>& outData)
+{
+    ifstream file;
+    file.open(path);
+    if (!file)
+        return false;
+
+    std::filebuf* pbuf = file.rdbuf();
+    std::size_t buffer_size = pbuf->pubseekoff(0, file.end, file.in);
+    pbuf->pubseekpos(0, file.in);
+
+    outData.resize(buffer_size);
+    pbuf->sgetn(outData.data(), buffer_size);
+
+    file.close();
+    return true;
+}
+
 bool fs_utils::read(const string& path, string* pOutData)
 {
     ifstream file;
