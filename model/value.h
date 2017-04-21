@@ -132,6 +132,12 @@ private:
         return 1;
     }
 
+    inline static int push_ret(lua_State* lua, float arg)
+    {
+        lua_pushnumber(lua, arg);
+        return 1;
+    }
+
     inline static int push_ret(lua_State* lua, const string& arg)
     {
         lua_pushstring(lua, arg.c_str());

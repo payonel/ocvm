@@ -11,6 +11,8 @@
 #include <cstring>
 using namespace std::chrono;
 
+const float memory_scale = 1.24;
+
 inline double now()
 {
     return duration_cast<duration<double>>(system_clock::now().time_since_epoch()).count();
@@ -91,7 +93,6 @@ void* Computer::alloc(void* ptr, size_t osize, size_t nsize)
         size_t free_mem = freeMemory();
         if (to_alloc > free_mem)
         {
-            lout << "vm out of memory\n";
             return nullptr;
         }
     }
@@ -133,7 +134,7 @@ bool Computer::onInitialize()
         auto total_mem_setting = config().get(ConfigIndex::TotalMemory);
         if (total_mem_setting)
         {
-            _total_memory = static_cast<size_t>(total_mem_setting.toNumber());
+            _total_memory = static_cast<size_t>(total_mem_setting.toNumber() * memory_scale);
         }
         else
         {
@@ -401,12 +402,12 @@ int Computer::tmpAddress(lua_State* lua)
 
 int Computer::freeMemory(lua_State* lua)
 {
-    return ValuePack::ret(lua, freeMemory());
+    return ValuePack::ret(lua, freeMemory() / memory_scale);
 }
 
 int Computer::totalMemory(lua_State* lua)
 {
-    return ValuePack::ret(lua, _total_memory);
+    return ValuePack::ret(lua, _total_memory / memory_scale);
 }
 
 int Computer::energy(lua_State* lua)
@@ -528,7 +529,7 @@ RunState Computer::resume(int nargs)
                 break;
                 case LUA_TNUMBER:
                     mark_gc();
-                    _standby = std::max(0.0, lua_tonumber(_state, 1)) + now();
+                    _standby = std::max(static_cast<lua_Number>(0), lua_tonumber(_state, 1)) + now();
                 break;
                 case LUA_TBOOLEAN:
                     if (lua_toboolean(_state, 1)) // reboot
@@ -571,6 +572,9 @@ void Computer::close()
     }
 
     _prof.flush();
+
+    lout << "computer peek memory: " << _peek_memory << endl;
+    _peek_memory = 0;
 }
 
 bool Computer::newlib(LuaProxy* proxy)
@@ -667,7 +671,9 @@ size_t Computer::memoryUsedVM()
     if (raw <= _baseline)
         return 0;
 
-    return raw - _baseline;
+    size_t used = raw - _baseline;
+    _peek_memory = std::max(_peek_memory, used);
+    return used;
 }
 
 size_t Computer::freeMemory()

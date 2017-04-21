@@ -64,6 +64,7 @@ private:
     double _standby = 0;
     double _nexttrace = 0;
 
+    size_t _peek_memory = 0; // for debugging purposes
     size_t _total_memory = 0;
     size_t _baseline = 0;
     bool _baseline_initialized = false;
