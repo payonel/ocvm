@@ -11,7 +11,7 @@
 #include <cstring>
 using namespace std::chrono;
 
-const float memory_scale = 1.24;
+const float memory_scale = 1;
 
 inline double now()
 {
@@ -291,14 +291,18 @@ void Computer::injectCustomLua()
 
 int Computer::setArchitecture(lua_State* lua)
 {
-    luaL_error(lua, "setArchitecture not implemented");
+    string arch = Value::checkArg<string>(lua, 1);
+    if (LUA_VERSION != arch)
+    {
+        return luaL_error(lua, "cannot change architecture");
+    }
+
     return 0;
 }
 
 int Computer::getArchitecture(lua_State* lua)
 {
-    luaL_error(lua, "getArchitecture not implemented");
-    return 0;
+    return ValuePack::ret(lua, LUA_VERSION);
 }
 
 int Computer::getArchitectures(lua_State* lua)

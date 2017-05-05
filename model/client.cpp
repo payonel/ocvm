@@ -217,6 +217,8 @@ int Client::component_list(lua_State* lua)
 
     string filter = Value::checkArg<string>(lua, 1, &default_filter);
     bool exact = Value::checkArg<bool>(lua, 2, &default_exact);
+    if (lua_type(lua, 1) == LUA_TNIL)
+        exact = false;
 
     Value result = Value::table();
     for (auto* pc : components(filter, exact))

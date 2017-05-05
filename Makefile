@@ -6,7 +6,7 @@ lua=5.2
 endif
 
 ifeq ($(prof),)
-libs=$(shell pkg-config lua$(lua) --libs)
+libs=$(shell pkg-config lua$(lua) --libs 2>/dev/null || echo -llua5.2)
 includes=$(shell pkg-config lua$(lua) --cflags)
 else
 $(info profile build)

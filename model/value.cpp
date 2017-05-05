@@ -18,7 +18,7 @@ static bool validate_argument_type(lua_State* lua, int index, int type_id, bool 
 
     if (id != type_id)
     {
-        if (!nilok)
+        if (id != LUA_TNIL || !nilok)
         {
             luaL_error(lua, "bad arguments #%d (%s expected, got %s) ",
                 index,

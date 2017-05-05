@@ -76,6 +76,9 @@ int Gpu::bind(lua_State* lua)
     _screen->set_gpu(this);
     ColorMap::initialize_color_state(_color_state, _screen->framer()->getInitialDepth());
 
+    tuple<int, int> max = _screen->framer()->maxResolution();
+    setResolution(std::get<0>(max), std::get<1>(max));
+
     return 0;
 }
 
