@@ -441,6 +441,25 @@ void KeyboardDriverImpl::enqueue(TermBuffer* buffer)
         _modifier_state = mod;
     }
 
+    // keep history of last N pressed keys
+    const auto& existing_iterator = _pressedCodesCache.find(code);
+    if (existing_iterator != _pressedCodesCache.end())
+    {
+        _lastUsedCodes.erase(existing_iterator->second);
+    }
+
+    _lastUsedCodes.push_front(code);
+    _pressedCodesCache[code] = _lastUsedCodes.begin();
+
+    // N+1 key in history is released
+    if (_lastUsedCodes.size() > cache_size)
+    {
+        auto old_code = _lastUsedCodes.back();
+        _pressedCodesCache.erase(old_code);
+        _lastUsedCodes.pop_back();
+        enqueue(false, old_code);
+    }
+
     enqueue(true, code);
 }
 
