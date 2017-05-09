@@ -232,6 +232,16 @@ int Gpu::copy(lua_State* lua)
     int dx = Value::checkArg<int>(lua, 5);
     int dy = Value::checkArg<int>(lua, 6);
 
+    int xadj = std::max(1, x) - x;
+    int yadj = std::max(1, y) - y;
+
+    width -= xadj;
+    height -= yadj;
+    dx -= xadj;
+    dy -= yadj;
+    x -= xadj;
+    y -= yadj;
+
     int tx = x + dx;
     int ty = y + dy;
 
