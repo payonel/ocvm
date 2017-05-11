@@ -239,8 +239,8 @@ int Gpu::copy(lua_State* lua)
     height -= yadj;
     dx -= xadj;
     dy -= yadj;
-    x -= xadj;
-    y -= yadj;
+    x += xadj;
+    y += yadj;
 
     int tx = x + dx;
     int ty = y + dy;
