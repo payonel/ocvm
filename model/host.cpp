@@ -8,6 +8,7 @@
 #include "components/computer.h"
 #include "components/filesystem.h"
 #include "components/keyboard.h"
+#include "components/internet.h"
 
 Host::Host(Framer* framer) :
     _framer(framer)
@@ -44,6 +45,10 @@ Component* Host::create(const string& type)
     else if (type == "keyboard")
     {
         return new Keyboard;
+    }
+    else if (type == "internet")
+    {
+        return new Internet;
     }
 
     return nullptr;
