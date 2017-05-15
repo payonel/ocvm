@@ -9,6 +9,7 @@
 #include "components/filesystem.h"
 #include "components/keyboard.h"
 #include "components/internet.h"
+#include "components/sandbox.h"
 
 Host::Host(Framer* framer) :
     _framer(framer)
@@ -20,7 +21,7 @@ Host::~Host()
     close();
 }
 
-Component* Host::create(const string& type)
+Component* Host::create(const string& type) const
 {
     if (type == "screen")
     {
@@ -49,6 +50,10 @@ Component* Host::create(const string& type)
     else if (type == "internet")
     {
         return new Internet;
+    }
+    else if (type == "sandbox")
+    {
+        return new Sandbox;
     }
 
     return nullptr;

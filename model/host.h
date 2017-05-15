@@ -12,7 +12,7 @@ public:
     ~Host();
 
     Framer* getFramer() const;
-    Component* create(const string& type);
+    Component* create(const string& type) const;
     void close();
 
     string stackLog() const { return _stack_log; }

@@ -43,7 +43,11 @@ Frame::Frame() :
 {
 }
 
-Frame::~Frame(){}
+Frame::~Frame()
+{
+    if (_gpu)
+        _gpu->unbind();
+}
 
 bool Framer::open()
 {

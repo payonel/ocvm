@@ -13,7 +13,6 @@
 #include "apis/system.h"
 #include "apis/unicode.h"
 #include "apis/userdata.h"
-#include "apis/sandbox_methods.h"
 
 #include <string>
 #include <functional>
@@ -25,8 +24,7 @@ Client::Client(Host* host, const string& env_path) :
     _computer(nullptr),
     _config(nullptr),
     _env_path(env_path),
-    _host(host),
-    _globals(nullptr)
+    _host(host)
 {
     add("list", &Client::component_list);
     add("invoke", &Client::component_invoke);
@@ -55,14 +53,13 @@ Host* Client::host() const
 
 bool Client::load()
 {
-    if (_config || _globals)
+    if (_config)
     {
         lerr << "Client is either already loaded or did not close properly";
         return false;
     }
 
     _config = new Config();
-    _globals = new SandboxMethods(this);
 
     if (!_config->load(envPath(), "client"))
     {
@@ -134,7 +131,7 @@ bool Client::postInit()
             lerr << pc->type() << "[" << pc->address() << "] failed to postInit\n";
             return false;
         }
-        // machine.lua handles component_added for us
+        // the vm boot handles component_added for us
         // _computer->pushSignal(ValuePack({"component_added", pc->address(), pc->type()}));
     }
 
@@ -152,7 +149,6 @@ bool Client::loadLuaComponentApi()
 
     _computer->stackLog(_host->stackLog());
     _computer->newlib(this);
-    _computer->newlib(_globals);
     _computer->newlib(OSApi::get());
     _computer->newlib(GlobalMethods::get());
     _computer->newlib(SystemApi::get());
@@ -173,9 +169,6 @@ void Client::close()
     for (auto pc : _components)
         delete pc;
         
-    delete _globals;
-    _globals = nullptr;
-
     _components.clear();
 }
 
@@ -331,4 +324,46 @@ RunState Client::run()
 void Client::pushSignal(const ValuePack& pack)
 {
     _computer->pushSignal(pack);
+}
+
+bool Client::add_component(Value& component_config)
+{
+    if (component_config.len() == 0)
+        return false;
+
+    string type = component_config.get(1).toString();
+
+    Component* pc = _host->create(type);
+    if (!pc || !pc->initialize(this, component_config))
+    {
+        return false;
+    }
+
+    _components.push_back(pc);
+    _computer->pushSignal(ValuePack({"component_added", pc->address(), pc->type()}));
+
+    if (!pc->postInit())
+    {
+        lerr << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+        return false;
+    }
+
+    return true;
+}
+
+bool Client::remove_component(const string& address)
+{
+    for (auto it = _components.begin(); it != _components.end(); it++)
+    {
+        Component* pc = *it;
+        if (pc->address() == address)
+        {
+            _computer->pushSignal(ValuePack({"component_removed", pc->address(), pc->type()}));
+            _components.erase(it);
+            delete pc;
+            return true;
+        }
+    }
+
+    return false;
 }

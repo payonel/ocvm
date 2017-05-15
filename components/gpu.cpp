@@ -347,7 +347,8 @@ int Gpu::setViewport(lua_State* lua)
 
 int Gpu::getScreen(lua_State* lua)
 {
-    check(lua);
+    if (!_screen)
+        return ValuePack::ret(lua, Value::nil);
     return ValuePack::ret(lua, _screen->address());
 }
 
@@ -586,6 +587,11 @@ void Gpu::invalidate()
 void Gpu::winched(int width, int height)
 {
     setResolution(width, height);
+}
+
+void Gpu::unbind()
+{
+    _screen = nullptr;
 }
 
 Color Gpu::deflate(const Color& color)

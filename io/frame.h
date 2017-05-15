@@ -56,6 +56,7 @@ class FrameGpu
 {
 public:
     virtual void winched(int width, int height) = 0;
+    virtual void unbind() = 0;
 };
 
 class Frame

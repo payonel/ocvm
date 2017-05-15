@@ -27,6 +27,8 @@ public:
     Computer* computer() const;
     void pushSignal(const ValuePack& pack);
     RunState run();
+    bool add_component(Value& component_config);
+    bool remove_component(const string& address);
 
     // global api that is actually computer specific
     // invoke by address

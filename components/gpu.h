@@ -69,6 +69,7 @@ protected:
 
     // FrameGpu overrides
     void winched(int width, int height) override;
+    void unbind();
 private:
     Screen* _screen = nullptr;
 
