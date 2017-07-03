@@ -1,7 +1,6 @@
 #include "worker.h"
 
 #include <thread>
-using namespace std;
 
 Worker::~Worker()
 {

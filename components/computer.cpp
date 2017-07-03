@@ -9,7 +9,9 @@
 #include <thread>
 #include <chrono>
 #include <cstring>
-using namespace std::chrono;
+using std::chrono::duration_cast;
+using std::chrono::duration;
+using std::chrono::system_clock;
 
 const float memory_scale = 1;
 

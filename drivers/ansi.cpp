@@ -7,9 +7,9 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+using std::stringstream;
 
 #include <iostream>
-using namespace std;
 
 static const unsigned char oc_to_ansi[256] =
 {

@@ -2,7 +2,10 @@
 
 #include <sstream>
 #include <fstream>
-using namespace std;
+using std::ofstream;
+using std::fstream;
+using std::endl;
+using std::stringstream;
 
 ofstream open_file(const string& filename, bool append)
 {

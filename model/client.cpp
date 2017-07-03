@@ -17,8 +17,6 @@
 #include <string>
 #include <functional>
 
-using std::make_tuple;
-
 Client::Client(Host* host, const string& env_path) : 
     LuaProxy("component"),
     _computer(nullptr),

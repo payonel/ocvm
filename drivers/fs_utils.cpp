@@ -3,7 +3,10 @@
 #include "model/log.h"
 #include <iostream>
 #include <fstream>
-using namespace std;
+using std::cerr;
+using std::ifstream;
+using std::ofstream;
+using std::error_code;
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>

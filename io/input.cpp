@@ -1,7 +1,7 @@
 #include "input.h"
 
 #include <thread>
-using namespace std;
+using std::unique_lock;
 
 InputSource::~InputSource()
 {

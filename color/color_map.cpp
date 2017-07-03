@@ -3,7 +3,6 @@
 #include <limits>
 #include <cstring>
 #include <algorithm>
-using namespace std;
 
 static int monochrome_color = 0xffffff;
 

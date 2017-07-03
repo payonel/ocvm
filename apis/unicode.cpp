@@ -5,7 +5,7 @@
 #include <fstream>
 #include <limits>
 #include <clocale>
-using namespace std;
+using std::ifstream;
 
 static const uint32_t end_1_byte = 0x00000080;
 static const uint32_t end_2_byte = 0x00000800;

@@ -5,7 +5,11 @@
 #include <bitset>
 #include <iostream>
 #include <stack>
-using namespace std;
+using std::shared_ptr;
+using std::vector;
+using std::stack;
+using std::cout;
+using std::bitset;
 
 struct KeyCodeData
 {
@@ -362,36 +366,36 @@ public:
         add_alt_sequence('.');
         add_alt_sequence('/');
 
-        // modifiers[keycode] = make_tuple(modifier index, nth instance of that modifier)
+        // modifiers[keycode] = std::make_tuple(modifier index, nth instance of that modifier)
         // shift:    0  0x01
         // caps:     1  0x02
         // control:  2  0x04
         // alt:      3  0x08
         // num lock: 4  0x10
-        modifiers[ 42] = make_tuple(0, 0); // left shift
-        modifiers[ 54] = make_tuple(0, 1); // right shift
-        modifiers[ 58] = make_tuple(1, 0); // caps lock
-        modifiers[ 29] = make_tuple(2, 0); // left control
-        modifiers[157] = make_tuple(2, 1); // right control
-        modifiers[ 56] = make_tuple(3, 0); // left alt
-        modifiers[184] = make_tuple(3, 1); // right alt
-        modifiers[ 69] = make_tuple(4, 0); // num lock
+        modifiers[ 42] = std::make_tuple(0, 0); // left shift
+        modifiers[ 54] = std::make_tuple(0, 1); // right shift
+        modifiers[ 58] = std::make_tuple(1, 0); // caps lock
+        modifiers[ 29] = std::make_tuple(2, 0); // left control
+        modifiers[157] = std::make_tuple(2, 1); // right control
+        modifiers[ 56] = std::make_tuple(3, 0); // left alt
+        modifiers[184] = std::make_tuple(3, 1); // right alt
+        modifiers[ 69] = std::make_tuple(4, 0); // num lock
 
-        // syms[71]  = make_tuple(55, 0xffff, 0);     // numpad 7
-        // syms[72]  = make_tuple(56, 0xffff, 0);     // numpad 8
-        // syms[73]  = make_tuple(57, 0xffff, 0);     // numpad 9
-        // syms[181] = make_tuple(47, 0xffff, 0);     // numpad /
-        // syms[75]  = make_tuple(52, 0xffff, 0);     // numpad 4
-        // syms[76]  = make_tuple(53, 0xffff, 0);     // numpad 5
-        // syms[77]  = make_tuple(54, 0xffff, 0);     // numpad 6
-        // syms[55]  = make_tuple(42, 0xffff, 0);     // numpad *
-        // syms[79]  = make_tuple(49, 0xffff, 0);     // numpad 1
-        // syms[80]  = make_tuple(50, 0xffff, 0);     // numpad 2
-        // syms[81]  = make_tuple(51, 0xffff, 0);     // numpad 3
-        // syms[74]  = make_tuple(45, 0xffff, 0);     // numpad -
-        // syms[82]  = make_tuple(48, 0xffff, 0);     // numpad 0
-        // syms[83]  = make_tuple(46, 0xffff, 0);     // numpad .
-        // syms[78]  = make_tuple(43, 0xffff, 0);     // numpad +
+        // syms[71]  = std::make_tuple(55, 0xffff, 0);     // numpad 7
+        // syms[72]  = std::make_tuple(56, 0xffff, 0);     // numpad 8
+        // syms[73]  = std::make_tuple(57, 0xffff, 0);     // numpad 9
+        // syms[181] = std::make_tuple(47, 0xffff, 0);     // numpad /
+        // syms[75]  = std::make_tuple(52, 0xffff, 0);     // numpad 4
+        // syms[76]  = std::make_tuple(53, 0xffff, 0);     // numpad 5
+        // syms[77]  = std::make_tuple(54, 0xffff, 0);     // numpad 6
+        // syms[55]  = std::make_tuple(42, 0xffff, 0);     // numpad *
+        // syms[79]  = std::make_tuple(49, 0xffff, 0);     // numpad 1
+        // syms[80]  = std::make_tuple(50, 0xffff, 0);     // numpad 2
+        // syms[81]  = std::make_tuple(51, 0xffff, 0);     // numpad 3
+        // syms[74]  = std::make_tuple(45, 0xffff, 0);     // numpad -
+        // syms[82]  = std::make_tuple(48, 0xffff, 0);     // numpad 0
+        // syms[83]  = std::make_tuple(46, 0xffff, 0);     // numpad .
+        // syms[78]  = std::make_tuple(43, 0xffff, 0);     // numpad +
     }
 
     unordered_map<_Code, tuple<unsigned int, unsigned int>> modifiers;

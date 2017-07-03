@@ -3,7 +3,6 @@
 #include <iostream>
 #include <sstream>
 #include <set>
-using namespace std;
 
 #include <stdio.h>
 #include <unistd.h>
@@ -21,6 +20,11 @@ using namespace std;
 
 #include "worker.h"
 #include "ansi.h"
+
+using std::set;
+using std::cout;
+using std::cerr;
+using std::flush;
 
 static unsigned long _original_kb_mode = 0;
 static struct sigaction sig_action_data;

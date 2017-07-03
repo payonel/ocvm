@@ -1,6 +1,5 @@
 #include "basic_term.h"
 #include <iostream>
-using namespace std;
 
 bool BasicTerm::update()
 {
@@ -18,7 +17,7 @@ void BasicTerm::onClose()
 
 void BasicTerm::write(Frame* pf, int x, int y, const Cell& cell)
 {
-    cout << cell.value << flush;
+    std::cout << cell.value << std::flush;
 }
 
 tuple<int, int> BasicTerm::maxResolution() const

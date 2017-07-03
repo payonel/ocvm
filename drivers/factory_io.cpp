@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
-using namespace std;
+using std::vector;
 
 unique_ptr<KeyboardDriver> Factory::create_kb(const string& kbTypeName)
 {   

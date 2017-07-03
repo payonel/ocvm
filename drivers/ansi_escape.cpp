@@ -5,7 +5,11 @@
 #include <sstream>
 #include <fstream>
 #include <thread>
-using namespace std;
+using std::thread;
+using std::cout;
+using std::flush;
+using std::ofstream;
+using std::fstream;
 
 #include <stdio.h>
 #include <unistd.h>

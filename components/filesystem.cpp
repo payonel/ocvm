@@ -5,7 +5,8 @@
 #include "apis/userdata.h"
 #include <fstream>
 #include <limits>
-using namespace std;
+using std::ifstream;
+using std::numeric_limits;
 
 constexpr inline int32_t truncate_double(const double& value)
 {

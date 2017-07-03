@@ -6,8 +6,6 @@
 #include "color/color_map.h"
 #include <iostream>
 
-using namespace std;
-
 Gpu::Gpu()
 {
     add("getResolution", &Gpu::getResolution);
@@ -405,7 +403,7 @@ tuple<int, Value> Gpu::makeColorContext(const Color& color)
         vp = color.rgb;
     }
 
-    return make_tuple(value, vp);
+    return std::make_tuple(value, vp);
 }
 
 int Gpu::getPaletteColor(lua_State* lua)
