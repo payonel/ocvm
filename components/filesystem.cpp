@@ -660,6 +660,11 @@ FileHandle* Filesystem::create(lua_State* lua, const string& filepath, fstream::
 {
     string fullpath = path() + clean(filepath, true, false);
     FileHandle* pfh = nullptr;
+
+    if (fs_utils::isDirectory(fullpath))
+    {
+        return nullptr;
+    }
     
     if ((mode & fstream::in) == fstream::in)
     {

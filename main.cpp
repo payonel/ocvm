@@ -13,7 +13,7 @@ void usage()
     cerr << "ocvm [ENV_PATH] [--frame=FRAME_TYPE] [--depth=DEPTH] [--log-allocs[=STACK_LOG]]\n"
             "  ENV_PATH     VM env path. Optional. defaults to ./tmp\n"
             "  FRAME_TYPE   Term emulator(ansi or basic). defaults to ansi\n"
-            "  DEPTH        Color depth(1, 8, 16, 256, or 16m). defaults to 256\n"
+            "  DEPTH        Color depth(1, 4, or 8). defaults to 8\n"
             "  STACK_LOG    Log allocations and stack traces to STACK_LOG.\n"
             "                 If enabled, defaults to stack.log\n";
     ::exit(1);

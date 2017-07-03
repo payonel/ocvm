@@ -524,6 +524,7 @@ RunState Computer::resume(int nargs)
         if (top > 0)
         {
             int type_id = lua_type(_state, 1);
+            lua_Number timeout_limit = 0;
             switch (type_id)
             {
                 case LUA_TFUNCTION:
@@ -531,9 +532,11 @@ RunState Computer::resume(int nargs)
                     top = lua_gettop(_state);
                     return resume(top);
                 break;
+                case LUA_TNIL:
+                    timeout_limit = std::numeric_limits<lua_Number>::max();
                 case LUA_TNUMBER:
                     mark_gc();
-                    _standby = std::max(static_cast<lua_Number>(0), lua_tonumber(_state, 1)) + now();
+                    _standby = std::max(timeout_limit, lua_tonumber(_state, 1)) + now();
                 break;
                 case LUA_TBOOLEAN:
                     if (lua_toboolean(_state, 1)) // reboot
@@ -547,7 +550,7 @@ RunState Computer::resume(int nargs)
                     // shutdown or reboot
                 break;
                 default:
-                    lout << "unsupported yield: " << lua_typename(_state, 1) << endl;
+                    lout << "unsupported yield: " << lua_typename(_state, type_id) << endl;
                     return RunState::Halt;
                 break;
             }
