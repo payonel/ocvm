@@ -12,8 +12,10 @@ using namespace std;
 
 #ifdef __linux__
 #include <linux/kd.h>
+#include <sys/select.h>
 #endif
 
+#include <time.h>
 #include <signal.h>
 #include <string.h> // memset
 
