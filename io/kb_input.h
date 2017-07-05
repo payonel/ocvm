@@ -23,7 +23,7 @@ struct KeyEvent : public InputEvent
     std::vector<char> insert;
 };
 
-class KeyboardInput : protected InputSource
+class KeyboardInput : public InputSource
 {
 public:
     bool open(unique_ptr<KeyboardDriver> driver);

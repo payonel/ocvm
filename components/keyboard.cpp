@@ -12,6 +12,11 @@ Keyboard::Keyboard()
 
 Keyboard::~Keyboard()
 {
+    Screen* pScreen = this->screen();
+    if (pScreen)
+    {
+        pScreen->disconnectKeyboard(this);
+    }
     delete _keyboard;
     _keyboard = nullptr;
 }
@@ -19,7 +24,7 @@ Keyboard::~Keyboard()
 bool Keyboard::onInitialize()
 {
     _preferredScreen = config().get(ConfigIndex::ScreenAddress).Or("").toString();
-    return _keyboard->open(Factory::create_kb());
+    return true;
 }
 
 bool Keyboard::postInit()
@@ -29,8 +34,7 @@ bool Keyboard::postInit()
         Screen* screen = dynamic_cast<Screen*>(pc);
         if (screen && (_preferredScreen.empty() || _preferredScreen == screen->address()))
         {
-            screen->addKeyboard(address());
-            return true;
+            return screen->connectKeyboard(this);
         }
     }
 
@@ -59,4 +63,25 @@ RunState Keyboard::update()
     }
 
     return RunState::Continue;
+}
+
+Screen* Keyboard::screen() const
+{
+    for (auto* pc : client()->components("screen", true))
+    {
+        Screen* screen = dynamic_cast<Screen*>(pc);
+        for (const auto& kb_addr : screen->keyboards())
+        {
+            if (kb_addr == address())
+            {
+                return screen;
+            }
+        }
+    }
+    return nullptr;
+}
+
+KeyboardInput* Keyboard::inputDevice() const
+{
+    return _keyboard;
 }

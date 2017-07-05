@@ -19,6 +19,7 @@ using std::fstream;
 
 #include "ansi.h"
 #include "apis/unicode.h"
+#include "raw_tty.h"
 
 tuple<int, int> current_resolution()
 {
@@ -127,6 +128,9 @@ bool AnsiEscapeTerm::onOpen()
 
     cout << Ansi::cursor_off;
     clear();
+
+    TtyReader::engine()->start(this);
+
     return true;
 }
 
@@ -137,6 +141,9 @@ void AnsiEscapeTerm::clear()
 
 void AnsiEscapeTerm::onClose()
 {
+    _kb_drv->stop();
+    _mouse_drv->stop();
+
     cout << Ansi::cursor_on;
     _states.clear();
     cout << Ansi::set_pos(1, 1);

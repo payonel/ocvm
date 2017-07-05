@@ -3,10 +3,10 @@
 #include "io/mouse_input.h"
 
 class TermBuffer;
-class MouseDriverImpl : public MouseDriver
+class MouseTerminalDriver
 {
 public:
-    void enqueue(TermBuffer* buffer);
+    unique_ptr<MouseEvent> parse(TermBuffer* buffer);
 private:
     int _pressed = 0x3;
     bool _dragging = false;

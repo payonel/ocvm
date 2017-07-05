@@ -70,6 +70,22 @@ EDepthType Framer::getInitialDepth() const
     return _initial_depth;
 }
 
+void Framer::push(unique_ptr<MouseEvent> pme)
+{
+    for (auto pFrame : _frames)
+    {
+        pFrame->push(std::move(pme));
+    }
+}
+
+void Framer::push(unique_ptr<KeyboardEvent> pke)
+{
+    for (auto pFrame : _frames)
+    {
+        pFrame->push(std::move(pke));
+    }
+}
+
 void Frame::framer(Framer* pfr)
 {
     _framer = pfr;

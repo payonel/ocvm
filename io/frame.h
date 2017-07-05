@@ -4,12 +4,16 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <memory>
 
 using std::tuple;
 using std::vector;
 using std::string;
+using std::unique_ptr;
 
 #include "color/color_types.h"
+#include "io/kb_input.h"
+#include "io/mouse_input.h"
 
 struct Cell
 {
@@ -43,6 +47,8 @@ public:
     virtual bool update() = 0;
     virtual tuple<int, int> maxResolution() const = 0;
     virtual void write(Frame* pf, int x, int y, const Cell& cell) = 0;
+    void push(unique_ptr<MouseEvent> pme) = 0;
+    void push(unique_ptr<KeyboardEvent> pke) = 0;
 protected:
     virtual bool onOpen() { return true; }
     virtual void onClose() { }
@@ -74,6 +80,9 @@ public:
     void set_gpu(FrameGpu* gpu);
 
     bool write(int x, int y, const Cell& cell);
+
+    virtual void push(unique_ptr<KeyEvent> pke) {}
+    virtual void push(unique_ptr<MouseEvent> pme) {}
 private:
     Framer* _framer;
     FrameGpu* _gpu;

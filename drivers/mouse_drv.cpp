@@ -4,9 +4,21 @@
 #include <iostream>
 using std::cout;
 
-void MouseDriverImpl::enqueue(TermBuffer* buffer)
+unique_ptr<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
 {
-    if (buffer->size() < 3) return; // ignore
+    if (!buffer->hasMouseCode())
+    {
+        return nullptr; // ignore
+    }
+
+    // eat the mouse code header
+    buffer->get();
+    buffer->get();
+    buffer->get();
+
+    if (buffer->size() < 3)
+        return nullptr; // ignore
+
     char b0 = buffer->get();
     char b1 = buffer->get();
     char b2 = buffer->get();
@@ -17,7 +29,7 @@ void MouseDriverImpl::enqueue(TermBuffer* buffer)
     {
         if (_pressed == 0x3) // odd
         {
-            return;
+            return nullptr;
         }
 
         if (_dragging)
@@ -33,7 +45,7 @@ void MouseDriverImpl::enqueue(TermBuffer* buffer)
     else if (btn >= 0x20)
     {        
         if (_pressed == 0x3)
-            return; // ignore drags if button state is released
+            return nullptr; // ignore drags if button state is released
 
         press = EPressType::Drag;
         _dragging = true;
@@ -44,7 +56,7 @@ void MouseDriverImpl::enqueue(TermBuffer* buffer)
         if (_dragging || _pressed != 0x3) // ignore press if dragging or pressed
         {
             _pressed = btn; // but still update
-            return;
+            return nullptr;
         }
 
         press = EPressType::Press;
@@ -68,5 +80,5 @@ void MouseDriverImpl::enqueue(TermBuffer* buffer)
     if (pm->y < 0)
         pm->y += 256;
 
-    _source->push(std::move(unique_ptr<MouseEvent>(pm)));
+    return unique_ptr<MouseEvent>(pm);
 }

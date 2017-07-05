@@ -16,13 +16,14 @@ typedef unsigned int _Mod;
 typedef unsigned char _Code;
 typedef unsigned char _Sym;
 
-class KeyboardDriverImpl : public KeyboardDriver
+class KeyboardTerminalDriver
 {
 public:
     KeyboardDriverImpl();
 
     void enqueue(bool bPressed, _Code keycode);
     void enqueue(TermBuffer* buffer);
+    unique_ptr<KeyboardEvent> parse(TermBuffer* buffer);
 
 protected:
     void update_modifier(bool bPressed, _Code keycode);
@@ -35,3 +36,16 @@ private:
     list<_Code> _lastUsedCodes;
     const size_t cache_size = 3;
 };
+
+class KeyboardLocalRawTtyDriver : public KeyboardTerminalDriver
+{
+public:
+    unique_ptr<KeyboardEvent> parse(TermBuffer* buffer) override;
+};
+
+class KeyboardPtyDriver : public KeyboardTerminalDriver
+{
+public:
+    unique_ptr<KeyboardEvent> parse(TermBuffer* buffer) override;
+};
+

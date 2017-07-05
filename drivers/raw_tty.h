@@ -4,37 +4,38 @@
 #include "kb_drv.h"
 #include "term_buffer.h"
 
-class TermInputDriver : public virtual InputDriver
+class TtyResponder
 {
 public:
-    ~TermInputDriver();
-    virtual void enqueue(TermBuffer* buffer) = 0;
+    ~TtyResponder();
+    virtual void push(unique_ptr<MouseEvent> pme) = 0;
+    virtual void push(unique_ptr<KeyboardEvent> pke) = 0;
+};
 
-protected:
-    bool onStart() override;
+class TtyReader : public Worker
+{
+public:
+    TtyReader(TtyReader&) = delete;
+    void operator= (TtyReader&) = delete;
+
+    void start(TtyResponder* responder);
+    static TtyReader* engine();
+    bool hasMasterTty() const;
+    bool hasTerminalOut() const;
+
+private:
+    TtyReader()
+    void flush_stdin();
+    void onStart() override;
+    bool runOnce() override;
     void onStop() override;
-};
 
-class MouseTerminalDriver : public TermInputDriver, public MouseDriverImpl
-{
-public:
-    void enqueue(TermBuffer* buffer) override;
-    static bool isAvailable();
-protected:
-    bool onStart() override;
-    void onStop() override;
-};
+    bool _master_tty;
+    bool _terminal_out;
+    termios* _original = nullptr;
+    TtyResponder* _responder;
+    TermBuffer _buffer;
 
-class KeyboardLocalRawTtyDriver : public TermInputDriver, public KeyboardDriverImpl
-{
-public:
-    void enqueue(TermBuffer* buffer) override;
-    static bool isAvailable();
-};
-
-class KeyboardPtyDriver : public TermInputDriver, public KeyboardDriverImpl
-{
-public:
-    void enqueue(TermBuffer* buffer) override;
-    static bool isAvailable();
+    unique_ptr<MouseTerminalDriver> _mouse_drv;
+    unique_ptr<KeyboardTerminalDriver> _kb_drv;
 };

@@ -11,7 +11,7 @@ struct AnsiFrameState
 {
 };
 
-class AnsiEscapeTerm : public Framer
+class AnsiEscapeTerm : public Framer, public virtual TtyResponder
 {
 public:
     AnsiEscapeTerm();
@@ -20,6 +20,8 @@ public:
     tuple<int, int> maxResolution() const override;
     void clear() override;
     void write(Frame* pf, int x, int y, const Cell& cell) override;
+
+    using Framer::push;
 protected:
     bool onOpen() override;
     void onClose() override;

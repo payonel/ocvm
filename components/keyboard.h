@@ -3,6 +3,7 @@
 #include "model/value.h"
 
 class KeyboardInput;
+class Screen;
 
 class Keyboard : public Component
 {
@@ -14,10 +15,12 @@ public:
 
     Keyboard();
     ~Keyboard();
+    KeyboardInput* inputDevice() const;
     bool postInit() override;
     RunState update() override;
 protected:
     bool onInitialize() override;
+    Screen* screen() const;
 private:
     string _preferredScreen;
     KeyboardInput* _keyboard = nullptr;

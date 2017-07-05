@@ -535,3 +535,35 @@ void KeyboardDriverImpl::update_modifier(bool bPressed, _Code keycode)
     }
 }
 
+void KeyboardLocalRawTtyDriver::enqueue(TermBuffer* buffer)
+{
+    if (buffer->hasMouseCode())
+        return;
+
+    bool released;
+    unsigned int keycode = buffer->get();
+
+    switch (keycode)
+    {
+        case 0xE0: // double byte
+            keycode = buffer->get();
+            released = keycode & 0x80;
+            keycode |= 0x80; // add press indicator
+            break;
+        case 0xE1: // triple byte
+            keycode = buffer->get(); // 29(released) or 29+0x80[157](pressed)
+            released = keycode & 0x80;
+            // NUMLK is a double byte 0xE0, 69 (| x80)
+            // PAUSE is a triple byte 0xE1, 29 (| x80), 69 (| 0x80)
+            // because triple byte press state is encoded in the 2nd byte
+            // the third byte should retain 0x80
+            keycode = buffer->get() | 0x80;
+            break;
+        default:
+            released = keycode & 0x80;
+            keycode &= 0x7F; // remove pressed indicator
+            break;
+    }
+
+    KeyboardDriverImpl::enqueue(!released, keycode);
+}

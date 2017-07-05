@@ -4,6 +4,7 @@
 #include "io/frame.h"
 
 class MouseInput;
+class Keyboard;
 
 class Screen : public Component, public Frame
 {
@@ -15,10 +16,15 @@ public:
     int getKeyboards(lua_State*);
     int getAspectRatio(lua_State*);
 
-    void addKeyboard(const string& addr);
+    bool connectKeyboard(Keyboard* kb);
+    bool disconnectKeyboard(Keyboard* kb);
+    vector<string> keyboards() const;
+
+    void push(unique_ptr<KeyEvent> pke) override;
+    void push(unique_ptr<MouseEvent> pme) override;
 protected:
     bool onInitialize() override;
 private:
-    vector<string> _keyboards;
+    vector<Keyboard*> _keyboards;
     MouseInput* _mouse = nullptr;
 };

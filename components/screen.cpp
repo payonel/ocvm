@@ -7,8 +7,11 @@
 #include "model/host.h"
 #include "apis/unicode.h"
 
-#include "io/mouse_input.h"
 #include "model/log.h"
+
+#include "keyboard.h"
+
+#include <algorithm>
 
 Screen::Screen()
 {
@@ -31,7 +34,7 @@ bool Screen::onInitialize()
     if (!client()->host()->getFramer()->add(this, 0))
         return false;
 
-    return _mouse->open(Factory::create_mouse());
+    return true;
 }
 
 RunState Screen::update()
@@ -66,9 +69,19 @@ int Screen::getKeyboards(lua_State* lua)
     Value list = Value::table();
     for (const auto& kb : _keyboards)
     {
-        list.insert(kb);
+        list.insert(kb->address());
     }
     return ValuePack::ret(lua, list);
+}
+
+vector<string> Screen::keyboards() const
+{
+    vector<string> addrs;
+    for (const Keyboard* kb : _keyboards)
+    {
+        addrs.push_back(kb->address());
+    }
+    return addrs;
 }
 
 int Screen::getAspectRatio(lua_State* lua)
@@ -76,8 +89,38 @@ int Screen::getAspectRatio(lua_State* lua)
     return ValuePack::ret(lua, 1, 1);
 }
 
-void Screen::addKeyboard(const string& addr)
+bool Screen::connectKeyboard(Keyboard* kb)
 {
-    _keyboards.push_back(addr);
+    _keyboards.push_back(kb);
+    return true;
+}
+
+bool Screen::disconnectKeyboard(Keyboard* kb)
+{
+    return _keyboards.erase(std::remove(_keyboards.begin(), _keyboards.end(), kb), _keyboards.end()) == _keyboards.end();
+}
+
+void Screen::push(unique_ptr<KeyEvent> pke)
+{
+    if (_keyboards.size() == 0)
+        return;
+    else if (_keyboards.size() == 1)
+        _keyboards.at(0)->inputDevice()->push(std::move(pke));
+    else
+    {
+        // kb events are duplicated to all kbs
+        for (auto* kb : _keyboards)
+        {
+            auto* kb_input = kb->inputDevice();
+            KeyEvent* copy = new KeyEvent;
+            *copy = *pke;
+            kb_input->push(unique_ptr<KeyEvent>(copy));
+        }
+    }
+}
+
+void Screen::push(unique_ptr<MouseEvent> pme)
+{
+    _mouse->push(std::move(pme));
 }
 

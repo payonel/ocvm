@@ -25,7 +25,7 @@ struct MouseEvent : public InputEvent
     int btn;
 };
 
-class MouseInput : protected InputSource
+class MouseInput : public InputSource
 {
 public:
     bool open(unique_ptr<MouseDriver> driver);
