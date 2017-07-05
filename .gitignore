@@ -3,3 +3,10 @@ tmp
 ocvm**
 system/**
 /log
+testing**
+selene**
+openos**
+SecureOS**
+multiICE**
+plan9k**
+stack.log
