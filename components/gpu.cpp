@@ -32,6 +32,7 @@ Gpu::Gpu()
 
 Gpu::~Gpu()
 {
+    unbind();
     delete [] _cells;
     _cells = nullptr;
 }
@@ -584,6 +585,10 @@ void Gpu::invalidate()
 
 void Gpu::unbind()
 {
+    if (_screen)
+    {
+        _screen->gpu(nullptr);
+    }
     _screen = nullptr;
 }
 
