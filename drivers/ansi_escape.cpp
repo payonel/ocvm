@@ -97,6 +97,7 @@ AnsiEscapeTerm::AnsiEscapeTerm()
 
 AnsiEscapeTerm::~AnsiEscapeTerm()
 {
+    TtyReader::engine()->stop();
     register_winch(false);
     close();
 }
@@ -141,9 +142,6 @@ void AnsiEscapeTerm::clear()
 
 void AnsiEscapeTerm::onClose()
 {
-    _kb_drv->stop();
-    _mouse_drv->stop();
-
     cout << Ansi::cursor_on;
     _states.clear();
     cout << Ansi::set_pos(1, 1);
@@ -216,4 +214,3 @@ tuple<int, int> AnsiEscapeTerm::maxResolution() const
 {
     return current_resolution();
 }
-

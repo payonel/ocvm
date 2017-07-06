@@ -12,11 +12,11 @@ Keyboard::Keyboard()
 
 Keyboard::~Keyboard()
 {
-    Screen* pScreen = this->screen();
-    if (pScreen)
-    {
-        pScreen->disconnectKeyboard(this);
-    }
+    // Screen* pScreen = this->screen();
+    // if (pScreen)
+    // {
+        // pScreen->disconnectKeyboard(this);
+    // }
     delete _keyboard;
     _keyboard = nullptr;
 }
@@ -44,21 +44,21 @@ bool Keyboard::postInit()
 
 RunState Keyboard::update()
 {
-    unique_ptr<KeyEvent> pke(_keyboard->pop());
-    if (pke)
+    KeyEvent ke;
+    while (_keyboard->pop(ke))
     {
-        if (pke->keycode == 1)
+        if (ke.keycode == 1)
         {
             lout << "shell abort";
             return RunState::Halt;
         }
-        else if (pke->insert.size())
+        else if (ke.insert.size())
         {
-            client()->pushSignal({"clipboard", address(), pke->insert});
+            client()->pushSignal({"clipboard", address(), ke.insert});
         }
         else
         {
-            client()->pushSignal({pke->bPressed ? "key_down" : "key_up", address(), pke->keysym, pke->keycode});
+            client()->pushSignal({ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode});
         }
     }
 

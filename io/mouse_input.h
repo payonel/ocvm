@@ -1,13 +1,6 @@
 #pragma once
 
-#include <string>
-using std::string;
-
 #include "input.h"
-
-class MouseDriver : public virtual InputDriver
-{
-};
 
 enum class EPressType
 {
@@ -17,7 +10,7 @@ enum class EPressType
     Drop
 };
 
-struct MouseEvent : public InputEvent
+struct MouseEvent
 {
     EPressType press;
     int x;
@@ -25,17 +18,6 @@ struct MouseEvent : public InputEvent
     int btn;
 };
 
-class MouseInput : public InputSource
+class MouseInput : public InputSource<MouseEvent>
 {
-public:
-    bool open(unique_ptr<MouseDriver> driver);
-    using InputSource::close;
-
-    unique_ptr<MouseEvent> pop();
-private:
-};
-
-namespace Factory
-{
-    unique_ptr<MouseDriver> create_mouse(const string& mouseTypeName = "");
 };

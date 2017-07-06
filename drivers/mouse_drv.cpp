@@ -4,11 +4,11 @@
 #include <iostream>
 using std::cout;
 
-unique_ptr<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
+vector<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
 {
     if (!buffer->hasMouseCode())
     {
-        return nullptr; // ignore
+        return {}; // ignore
     }
 
     // eat the mouse code header
@@ -17,7 +17,7 @@ unique_ptr<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
     buffer->get();
 
     if (buffer->size() < 3)
-        return nullptr; // ignore
+        return {}; // ignore
 
     char b0 = buffer->get();
     char b1 = buffer->get();
@@ -29,7 +29,7 @@ unique_ptr<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
     {
         if (_pressed == 0x3) // odd
         {
-            return nullptr;
+            return {};
         }
 
         if (_dragging)
@@ -45,7 +45,7 @@ unique_ptr<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
     else if (btn >= 0x20)
     {        
         if (_pressed == 0x3)
-            return nullptr; // ignore drags if button state is released
+            return {}; // ignore drags if button state is released
 
         press = EPressType::Drag;
         _dragging = true;
@@ -56,7 +56,7 @@ unique_ptr<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
         if (_dragging || _pressed != 0x3) // ignore press if dragging or pressed
         {
             _pressed = btn; // but still update
-            return nullptr;
+            return {};
         }
 
         press = EPressType::Press;
@@ -65,20 +65,20 @@ unique_ptr<MouseEvent> MouseTerminalDriver::parse(TermBuffer* buffer)
     if (_pressed == 0x3)
         _pressed = btn;
 
-    MouseEvent* pm = new MouseEvent;
-    pm->press = press;
-    pm->btn = _pressed;
+    MouseEvent me;
+    me.press = press;
+    me.btn = _pressed;
 
     if (press != EPressType::Drag)
         _pressed = btn;
 
-    pm->x = (unsigned char)b1 - 32;
-    pm->y = (unsigned char)b2 - 32;
+    me.x = (unsigned char)b1 - 32;
+    me.y = (unsigned char)b2 - 32;
 
-    if (pm->x < 0)
-        pm->x += 256;
-    if (pm->y < 0)
-        pm->y += 256;
+    if (me.x < 0)
+        me.x += 256;
+    if (me.y < 0)
+        me.y += 256;
 
-    return unique_ptr<MouseEvent>(pm);
+    return {me};
 }

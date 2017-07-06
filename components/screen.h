@@ -20,8 +20,8 @@ public:
     bool disconnectKeyboard(Keyboard* kb);
     vector<string> keyboards() const;
 
-    void push(unique_ptr<KeyEvent> pke) override;
-    void push(unique_ptr<MouseEvent> pme) override;
+    void push(KeyEvent ke) override;
+    void push(MouseEvent me) override;
 protected:
     bool onInitialize() override;
 private:

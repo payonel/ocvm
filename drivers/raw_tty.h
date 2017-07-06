@@ -3,14 +3,13 @@
 #include "mouse_drv.h"
 #include "kb_drv.h"
 #include "term_buffer.h"
+#include "worker.h"
 
-class TtyResponder
-{
-public:
-    ~TtyResponder();
-    virtual void push(unique_ptr<MouseEvent> pme) = 0;
-    virtual void push(unique_ptr<KeyboardEvent> pke) = 0;
-};
+#include <memory>
+using std::unique_ptr;
+
+struct termios;
+class Framer;
 
 class TtyReader : public Worker
 {
@@ -18,14 +17,14 @@ public:
     TtyReader(TtyReader&) = delete;
     void operator= (TtyReader&) = delete;
 
-    void start(TtyResponder* responder);
     static TtyReader* engine();
-    bool hasMasterTty() const;
-    bool hasTerminalOut() const;
+    void start(Framer* pFramer);
+    void stop();
 
 private:
-    TtyReader()
-    void flush_stdin();
+    bool hasMasterTty() const;
+    bool hasTerminalOut() const;
+    TtyReader();
     void onStart() override;
     bool runOnce() override;
     void onStop() override;
@@ -33,9 +32,10 @@ private:
     bool _master_tty;
     bool _terminal_out;
     termios* _original = nullptr;
-    TtyResponder* _responder;
     TermBuffer _buffer;
 
     unique_ptr<MouseTerminalDriver> _mouse_drv;
     unique_ptr<KeyboardTerminalDriver> _kb_drv;
+
+    Framer* _pFramer = nullptr;
 };

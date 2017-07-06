@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io/frame.h"
+#include "raw_tty.h"
 
 #include <vector>
 #include <map>
@@ -11,7 +12,7 @@ struct AnsiFrameState
 {
 };
 
-class AnsiEscapeTerm : public Framer, public virtual TtyResponder
+class AnsiEscapeTerm : public Framer
 {
 public:
     AnsiEscapeTerm();
@@ -22,6 +23,7 @@ public:
     void write(Frame* pf, int x, int y, const Cell& cell) override;
 
     using Framer::push;
+
 protected:
     bool onOpen() override;
     void onClose() override;

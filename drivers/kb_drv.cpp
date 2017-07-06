@@ -405,69 +405,12 @@ private:
 
 } kb_data;
 
-KeyboardDriverImpl::KeyboardDriverImpl()
+KeyboardTerminalDriver::KeyboardTerminalDriver()
 {
     _modifier_state = 0;
 }
 
-void KeyboardDriverImpl::enqueue(TermBuffer* buffer)
-{
-    _Mod mod;
-    _Code code;
-    if (!kb_data.lookup(buffer, &code, &mod))
-    {
-        if (buffer->size()) // insert?
-        {
-            unique_ptr<KeyEvent> pkey(new KeyEvent);
-            while (buffer->size())
-                pkey->insert.push_back(buffer->get());
-            _source->push(std::move(pkey));
-        }
-        return;
-    }
-
-    if (mod != _modifier_state)
-    {
-        // send key release
-        // ~new (0101) & old (1001) = 0001
-        _Mod released = ~mod & _modifier_state;
-        auto codes = kb_data.getModCodes(released);
-        for (auto modCode : codes)
-            enqueue(false, modCode);
-
-        // send key press
-        // new (1010) & ~old (0110) = 0010
-        _Mod pressed = mod & ~_modifier_state;
-        codes = kb_data.getModCodes(pressed);
-        for (auto modCode : codes)
-            enqueue(true, modCode);
-
-        _modifier_state = mod;
-    }
-
-    // keep history of last N pressed keys
-    const auto& existing_iterator = _pressedCodesCache.find(code);
-    if (existing_iterator != _pressedCodesCache.end())
-    {
-        _lastUsedCodes.erase(existing_iterator->second);
-    }
-
-    _lastUsedCodes.push_front(code);
-    _pressedCodesCache[code] = _lastUsedCodes.begin();
-
-    // N+1 key in history is released
-    if (_lastUsedCodes.size() > cache_size)
-    {
-        auto old_code = _lastUsedCodes.back();
-        _pressedCodesCache.erase(old_code);
-        _lastUsedCodes.pop_back();
-        enqueue(false, old_code);
-    }
-
-    enqueue(true, code);
-}
-
-void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
+void KeyboardTerminalDriver::mark(bool bPressed, _Code keycode, vector<KeyEvent>* pOut)
 {
     // filter out some events
     switch (keycode)
@@ -487,35 +430,35 @@ void KeyboardDriverImpl::enqueue(bool bPressed, _Code keycode)
             break;
     }
 
-    KeyEvent* pkey = new KeyEvent;
-    pkey->bPressed = bPressed;
-    pkey->keycode = keycode;
+    KeyEvent ke;
+    ke.bPressed = bPressed;
+    ke.keycode = keycode;
 
-    update_modifier(bPressed, pkey->keycode);
-    pkey->keysym = kb_data.lookup(pkey->keycode, static_cast<ModBit>(_modifier_state));
+    update_modifier(bPressed, ke.keycode);
+    ke.keysym = kb_data.lookup(ke.keycode, static_cast<ModBit>(_modifier_state));
 
-    pkey->bShift =   (_modifier_state & (_Mod)ModBit::Shift);
-    pkey->bCaps =    (_modifier_state & (_Mod)ModBit::Caps);
-    pkey->bControl = (_modifier_state & (_Mod)ModBit::Control);
-    pkey->bAlt =     (_modifier_state & (_Mod)ModBit::Alt);
-    pkey->bNumLock = (_modifier_state & (_Mod)ModBit::NumLock);
+    ke.bShift =   (_modifier_state & (_Mod)ModBit::Shift);
+    ke.bCaps =    (_modifier_state & (_Mod)ModBit::Caps);
+    ke.bControl = (_modifier_state & (_Mod)ModBit::Control);
+    ke.bAlt =     (_modifier_state & (_Mod)ModBit::Alt);
+    ke.bNumLock = (_modifier_state & (_Mod)ModBit::NumLock);
 
     // unusual in-game shifted keycodes
     if (_modifier_state & (_Mod)ModBit::Shift)
     {
         switch (keycode) // keycodes shift
         {
-            case  3: pkey->keycode = 145; break; // 2
-            case  7: pkey->keycode = 144; break; // 6
-            case 12: pkey->keycode = 147; break; // -
-            case 39: pkey->keycode = 146; break; // ;
+            case  3: ke.keycode = 145; break; // 2
+            case  7: ke.keycode = 144; break; // 6
+            case 12: ke.keycode = 147; break; // -
+            case 39: ke.keycode = 146; break; // ;
         }
     }
 
-    _source->push(std::move(unique_ptr<KeyEvent>(pkey)));
+    pOut->push_back(ke);
 }
 
-void KeyboardDriverImpl::update_modifier(bool bPressed, _Code keycode)
+void KeyboardTerminalDriver::update_modifier(bool bPressed, _Code keycode)
 {
     const auto& modifier_set_iterator = kb_data.modifiers.find(keycode);
     if (modifier_set_iterator != kb_data.modifiers.end())
@@ -535,10 +478,10 @@ void KeyboardDriverImpl::update_modifier(bool bPressed, _Code keycode)
     }
 }
 
-void KeyboardLocalRawTtyDriver::enqueue(TermBuffer* buffer)
+vector<KeyEvent> KeyboardLocalRawTtyDriver::parse(TermBuffer* buffer)
 {
     if (buffer->hasMouseCode())
-        return;
+        return {};
 
     bool released;
     unsigned int keycode = buffer->get();
@@ -565,5 +508,70 @@ void KeyboardLocalRawTtyDriver::enqueue(TermBuffer* buffer)
             break;
     }
 
-    KeyboardDriverImpl::enqueue(!released, keycode);
+    vector<KeyEvent> vke;
+    mark(!released, keycode, &vke);
+    return vke;
+}
+
+vector<KeyEvent> KeyboardPtyDriver::parse(TermBuffer* buffer)
+{
+    if (buffer->hasMouseCode())
+        return {};
+
+    vector<KeyEvent> events;
+
+    _Mod mod;
+    _Code code;
+    if (!kb_data.lookup(buffer, &code, &mod))
+    {
+        if (buffer->size()) // insert?
+        {
+            KeyEvent ke;
+            while (buffer->size())
+                ke.insert.push_back(buffer->get());
+            events.push_back(ke);
+        }
+        return {};
+    }
+
+    if (mod != _modifier_state)
+    {
+        // send key release
+        // ~new (0101) & old (1001) = 0001
+        _Mod released = ~mod & _modifier_state;
+        auto codes = kb_data.getModCodes(released);
+        for (auto modCode : codes)
+            mark(false, modCode, &events);
+
+        // send key press
+        // new (1010) & ~old (0110) = 0010
+        _Mod pressed = mod & ~_modifier_state;
+        codes = kb_data.getModCodes(pressed);
+        for (auto modCode : codes)
+            mark(true, modCode, &events);
+
+        _modifier_state = mod;
+    }
+
+    // keep history of last N pressed keys
+    const auto& existing_iterator = _pressedCodesCache.find(code);
+    if (existing_iterator != _pressedCodesCache.end())
+    {
+        _lastUsedCodes.erase(existing_iterator->second);
+    }
+
+    _lastUsedCodes.push_front(code);
+    _pressedCodesCache[code] = _lastUsedCodes.begin();
+
+    // N+1 key in history is released
+    if (_lastUsedCodes.size() > cache_size)
+    {
+        auto old_code = _lastUsedCodes.back();
+        _pressedCodesCache.erase(old_code);
+        _lastUsedCodes.pop_back();
+        mark(false, old_code, &events);
+    }
+
+    mark(true, code, &events);
+    return events;
 }

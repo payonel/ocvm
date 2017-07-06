@@ -47,8 +47,8 @@ public:
     virtual bool update() = 0;
     virtual tuple<int, int> maxResolution() const = 0;
     virtual void write(Frame* pf, int x, int y, const Cell& cell) = 0;
-    void push(unique_ptr<MouseEvent> pme) = 0;
-    void push(unique_ptr<KeyboardEvent> pke) = 0;
+    virtual void push(MouseEvent me);
+    virtual void push(KeyEvent ke);
 protected:
     virtual bool onOpen() { return true; }
     virtual void onClose() { }
@@ -81,8 +81,8 @@ public:
 
     bool write(int x, int y, const Cell& cell);
 
-    virtual void push(unique_ptr<KeyEvent> pke) {}
-    virtual void push(unique_ptr<MouseEvent> pme) {}
+    virtual void push(KeyEvent pke) {}
+    virtual void push(MouseEvent pme) {}
 private:
     Framer* _framer;
     FrameGpu* _gpu;

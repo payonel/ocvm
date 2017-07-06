@@ -1,14 +1,10 @@
 #pragma once
 
 #include "input.h"
-#include <string>
-using std::string;
+#include <vector>
+using std::vector;
 
-class KeyboardDriver : public virtual InputDriver
-{
-};
-
-struct KeyEvent : public InputEvent
+struct KeyEvent
 {
     unsigned int keysym;
     unsigned int keycode;
@@ -23,17 +19,6 @@ struct KeyEvent : public InputEvent
     std::vector<char> insert;
 };
 
-class KeyboardInput : public InputSource
+class KeyboardInput : public InputSource<KeyEvent>
 {
-public:
-    bool open(unique_ptr<KeyboardDriver> driver);
-    using InputSource::close;
-
-    unique_ptr<KeyEvent> pop();
-private:
-};
-
-namespace Factory
-{
-    unique_ptr<KeyboardDriver> create_kb(const string& kbTypeName = "");
 };

@@ -18,8 +18,8 @@
 #include <signal.h>
 #include <string.h> // memset
 
-#include "worker.h"
 #include "ansi.h"
+#include "io/frame.h"
 
 using std::set;
 using std::cout;
@@ -42,9 +42,10 @@ static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
     exit_function();
 }
 
-void TtyReader::start(TtyResponder* responder)
+void TtyReader::start(Framer* pFramer)
 {
-    _responder = responder;
+    _pFramer = pFramer;
+
     if (hasMasterTty())
     {
         _kb_drv.reset(new KeyboardLocalRawTtyDriver);
@@ -55,10 +56,18 @@ void TtyReader::start(TtyResponder* responder)
     }
     if (hasTerminalOut())
     {
+        cout << Ansi::mouse_prd_on << flush;
         _mouse_drv.reset(new MouseTerminalDriver);
     }
 
-    start();
+    Worker::start();
+}
+
+void TtyReader::stop()
+{
+    make_lock();
+    _pFramer = nullptr;
+    Worker::stop();
 }
 
 // static
@@ -75,28 +84,6 @@ TtyReader* TtyReader::engine()
         sigaction(SIGTERM, &sig_action_data, nullptr);
     }
     return &one;
-}
-
-void TtyReader::flush_stdin()
-{
-    char byte;
-    while (true)
-    {
-        char byte = 0;
-        struct timeval tv { 0L, 0L };
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(0, &fds);
-        if (select(1, &fds, nullptr, nullptr, &tv))
-        {
-            if (read(0, &byte, sizeof(char)) > 0)
-            {
-                _buffer.push(byte);
-            }
-        }
-        
-        break;
-    }
 }
 
 bool TtyReader::hasMasterTty() const
@@ -162,19 +149,39 @@ void TtyReader::onStart()
 
 bool TtyReader::runOnce()
 {
-    flush_stdin();
+    while (true)
+    {
+        char byte = 0;
+        struct timeval tv { 0L, 0L };
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(0, &fds);
+        if (select(1, &fds, nullptr, nullptr, &tv))
+        {
+            if (read(0, &byte, sizeof(char)) > 0)
+            {
+                _buffer.push(byte);
+                continue;
+            }
+        }
+
+        break;
+    }
+
     auto old_size = _buffer.size();
     if (old_size > 0)
     {
-        if (_mouse_drv)
+        if (_mouse_drv && _pFramer)
         {
-            auto me = _mouse_drv->parse(&_buffer);
-            if (me) _responder->push(me);
+            auto vme = _mouse_drv->parse(&_buffer);
+            for (const auto& me : vme)
+                _pFramer->push(me);
         }
-        if (_kb_drv)
+        if (_kb_drv && _pFramer)
         {
-            auto ke = _kb_drv->parse(&_buffer);
-            if (ke) _responder->push(ke);
+            auto vke = _kb_drv->parse(&_buffer);
+            for (const auto& ke : vke)
+                _pFramer->push(ke);
         }
 
         if (old_size == _buffer.size()) // nothing could read the buffer
@@ -204,87 +211,7 @@ void TtyReader::onStop()
     {
         ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
     }
+    cout << Ansi::mouse_prd_off << flush;
     delete _original;
     _original = nullptr;
-}
-
-void KeyboardLocalRawTtyDriver::enqueue(TermBuffer* buffer)
-{
-    if (buffer->hasMouseCode())
-        return;
-
-    bool released;
-    unsigned int keycode = buffer->get();
-
-    switch (keycode)
-    {
-        case 0xE0: // double byte
-            keycode = buffer->get();
-            released = keycode & 0x80;
-            keycode |= 0x80; // add press indicator
-            break;
-        case 0xE1: // triple byte
-            keycode = buffer->get(); // 29(released) or 29+0x80[157](pressed)
-            released = keycode & 0x80;
-            // NUMLK is a double byte 0xE0, 69 (| x80)
-            // PAUSE is a triple byte 0xE1, 29 (| x80), 69 (| 0x80)
-            // because triple byte press state is encoded in the 2nd byte
-            // the third byte should retain 0x80
-            keycode = buffer->get() | 0x80;
-            break;
-        default:
-            released = keycode & 0x80;
-            keycode &= 0x7F; // remove pressed indicator
-            break;
-    }
-
-    KeyboardDriverImpl::enqueue(!released, keycode);
-}
-
-void KeyboardPtyDriver::enqueue(TermBuffer* buffer)
-{
-    if (buffer->hasMouseCode())
-        return;
-
-    KeyboardDriverImpl::enqueue(buffer);
-}
-
-bool KeyboardPtyDriver::isAvailable()
-{
-    return true;
-}
-
-TermInputDriver::~TermInputDriver()
-{
-    TtyReader::engine()->remove(this);
-}
-
-bool TermInputDriver::onStart()
-{
-    TtyReader::engine()->add(this);
-    return true;
-}
-
-void TermInputDriver::onStop()
-{
-    TtyReader::engine()->remove(this);
-}
-
-bool MouseTerminalDriver::onStart()
-{
-    if (TermInputDriver::onStart())
-    {
-        if (TtyReader::engine()->hasTerminalOut())
-        {
-            cout << Ansi::mouse_prd_on << flush;
-        }
-        return true;
-    }
-    return false;
-}
-
-void MouseTerminalDriver::onStop()
-{
-    TermInputDriver::onStop();
-    cout << Ansi::mouse_prd_off << flush;
 }

@@ -39,10 +39,9 @@ bool Screen::onInitialize()
 
 RunState Screen::update()
 {
-    unique_ptr<MouseEvent> pe(_mouse->pop());
-    if (pe)
+    MouseEvent me;
+    while (_mouse->pop(me))
     {
-        MouseEvent& me = *static_cast<MouseEvent*>(pe.get());
         string msg;
         switch (me.press)
         {
@@ -100,27 +99,24 @@ bool Screen::disconnectKeyboard(Keyboard* kb)
     return _keyboards.erase(std::remove(_keyboards.begin(), _keyboards.end(), kb), _keyboards.end()) == _keyboards.end();
 }
 
-void Screen::push(unique_ptr<KeyEvent> pke)
+void Screen::push(KeyEvent ke)
 {
     if (_keyboards.size() == 0)
         return;
     else if (_keyboards.size() == 1)
-        _keyboards.at(0)->inputDevice()->push(std::move(pke));
+        _keyboards.at(0)->inputDevice()->push(ke);
     else
     {
         // kb events are duplicated to all kbs
         for (auto* kb : _keyboards)
         {
-            auto* kb_input = kb->inputDevice();
-            KeyEvent* copy = new KeyEvent;
-            *copy = *pke;
-            kb_input->push(unique_ptr<KeyEvent>(copy));
+            kb->inputDevice()->push(ke);
         }
     }
 }
 
-void Screen::push(unique_ptr<MouseEvent> pme)
+void Screen::push(MouseEvent me)
 {
-    _mouse->push(std::move(pme));
+    _mouse->push(me);
 }
 
