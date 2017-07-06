@@ -362,8 +362,8 @@ bool Computer::postInit()
     string machine_path = SystemApi::machine_path();
     if (luaL_loadfile(_state, machine_path.c_str()))
     {
-        lerr << "failed to load machine [" << machine_path << "]\n";
-        lerr << lua_tostring(_state, -1) << "\n";
+        lout << "failed to load machine [" << machine_path << "]\n";
+        lout << lua_tostring(_state, -1) << "\n";
         lua_pop(_state, 1);
         return false;
     }
@@ -561,10 +561,10 @@ RunState Computer::resume(int nargs)
     }
     else
     {
-        lerr << "vm crash: ";
-        lerr << lua_tostring(_state, -1) << "\n";
-        lerr << "machine stack: " << Value::stack(_machine) << endl;
-        lerr << "machine status: " << Value(_machine).serialize() << endl;
+        lout << "vm crash: ";
+        lout << lua_tostring(_state, -1) << "\n";
+        lout << "machine stack: " << Value::stack(_machine) << endl;
+        lout << "machine status: " << Value(_machine).serialize() << endl;
         return RunState::Halt;
     }
 

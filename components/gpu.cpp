@@ -32,6 +32,7 @@ Gpu::Gpu()
 
 Gpu::~Gpu()
 {
+    unbind();
     delete [] _cells;
     _cells = nullptr;
 }
@@ -68,13 +69,13 @@ int Gpu::bind(lua_State* lua)
     }
     if (_screen) // previously a different screen
     {
-        _screen->set_gpu(nullptr);
+        _screen->gpu(nullptr);
     }
     _screen = screen;
-    _screen->set_gpu(this);
-    ColorMap::initialize_color_state(_color_state, _screen->framer()->getInitialDepth());
+    _screen->gpu(this);
+    ColorMap::initialize_color_state(_color_state, _screen->frame()->depth());
 
-    tuple<int, int> max = _screen->framer()->maxResolution();
+    tuple<int, int> max = _screen->frame()->size();
     setResolution(std::get<0>(max), std::get<1>(max));
 
     return 0;
@@ -97,7 +98,7 @@ int Gpu::setResolution(lua_State* lua)
     int width = Value::checkArg<int>(lua, 1);
     int height = Value::checkArg<int>(lua, 2);
 
-    tuple<int, int> max = _screen->framer()->maxResolution();
+    tuple<int, int> max = _screen->frame()->size();
     if (width < 1 || width > std::get<0>(max) || height < 1 || height > std::get<1>(max))
     {
         return luaL_error(lua, "unsupported resolution");
@@ -108,7 +109,7 @@ int Gpu::setResolution(lua_State* lua)
 
 bool Gpu::setResolution(int width, int height)
 {
-    if (!_screen || !_screen->framer())
+    if (!_screen || !_screen->frame())
         return false;
 
     if (width == _width && height == _height)
@@ -159,7 +160,7 @@ int Gpu::get(lua_State* lua)
 int Gpu::maxResolution(lua_State* lua)
 {
     check(lua);
-    tuple<int, int> res = _screen->framer()->maxResolution();
+    tuple<int, int> res = _screen->frame()->size();
     return ValuePack::ret(lua, std::get<0>(res), std::get<1>(res));
 }
 
@@ -479,7 +480,7 @@ int Gpu::set(int x, int y, const Cell& cell, bool bForce)
                     pNext->locked = false;
             }
             if (_screen)
-                _screen->write(x, y, cell);
+                _screen->frame()->write(x, y, cell);
             *pCell = cell;
         }
     }
@@ -568,27 +569,26 @@ void Gpu::resizeBuffer(int width, int height)
 
 void Gpu::invalidate()
 {
-    if (!_screen || !_screen->framer())
+    if (!_screen)
         return;
 
-    _screen->framer()->clear();
+    _screen->frame()->clear();
 
     for (int y = 1; y <= _height; y++)
     {
         for (int x = 1; x <= _width; x++)
         {
-            _screen->write(x, y, *get(x, y));
+            _screen->frame()->write(x, y, *get(x, y));
         }
     }
 }
 
-void Gpu::winched(int width, int height)
-{
-    setResolution(width, height);
-}
-
 void Gpu::unbind()
 {
+    if (_screen)
+    {
+        _screen->gpu(nullptr);
+    }
     _screen = nullptr;
 }
 

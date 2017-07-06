@@ -1,5 +1,4 @@
 #pragma once
-#include <list>
 #include <string>
 #include <sstream>
 
@@ -7,15 +6,12 @@ using std::stringstream;
 using std::string;
 using std::endl;
 
-class Frame;
-
-class LogHandler;
 class Logger
 {
 public:
-    Logger(LogHandler* handler);
-    
-    static Frame* getFrame();
+    Logger(string logPath);
+    void log_path(const string& path);
+    string log_path() const;
 
     Logger& operator<< (const string& text);
     Logger& operator<< (std::ostream& (*)(std::ostream&));
@@ -28,8 +24,7 @@ public:
         return *this << ss.str();
     }
 private:
-    LogHandler* _handler;
+    string _log_path;
 };
 
 extern Logger lout;
-extern Logger lerr;

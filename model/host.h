@@ -3,15 +3,15 @@
 #include "config.h"
 
 class Component;
-class Framer;
+class Frame;
 
 class Host
 {
 public:
-    Host(Framer* framer);
+    Host(string frameType);
     ~Host();
 
-    Framer* getFramer() const;
+    Frame* createFrame() const;
     Component* create(const string& type) const;
     void close();
 
@@ -19,6 +19,6 @@ public:
     void stackLog(const string& stack_log) { _stack_log = stack_log; }
 
 private:
-    Framer* _framer;
+    string _frameType;
     string _stack_log;
 };

@@ -11,7 +11,7 @@ using std::vector;
 enum class EDepthType;
 class Screen;
 
-class Gpu : public Component, public FrameGpu
+class Gpu : public Component
 {
 public:
     Gpu();
@@ -42,6 +42,10 @@ public:
     int maxDepth(lua_State* lua);
     int getPaletteColor(lua_State* lua);
     int setPaletteColor(lua_State* lua);
+
+    // Screen callbacks
+    bool setResolution(int width, int height);
+    void unbind();
 protected:
     vector<const Cell*> scan(int x, int y, int width) const;
     const Cell* get(int x, int y) const;
@@ -49,7 +53,6 @@ protected:
     void set(int x, int y, const vector<char>& text, bool bVertical);
 
     Cell* at(int x, int y) const;
-    bool setResolution(int width, int height);
 
     bool onInitialize() override;
     void check(lua_State* lua) const; // throws if no screen
@@ -66,10 +69,6 @@ protected:
     void inflate_all();
     void deflate_all();
     unsigned char encode(int rgb);
-
-    // FrameGpu overrides
-    void winched(int width, int height) override;
-    void unbind();
 private:
     Screen* _screen = nullptr;
 

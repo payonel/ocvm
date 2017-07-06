@@ -19,6 +19,7 @@ using std::fstream;
 
 #include "ansi.h"
 #include "apis/unicode.h"
+#include "raw_tty.h"
 
 tuple<int, int> current_resolution()
 {
@@ -80,7 +81,7 @@ static void register_winch(bool doit)
         sigaddset(&g_sigset, SIGUSR1);
         if (pthread_sigmask(SIG_BLOCK, &g_sigset, nullptr))
         {
-            lerr << "failed to mask threads for winch - resize will be ignored\n";
+            lout << "failed to mask threads for winch - resize will be ignored\n";
             return;
         }
 
@@ -97,10 +98,9 @@ AnsiEscapeTerm::AnsiEscapeTerm()
 AnsiEscapeTerm::~AnsiEscapeTerm()
 {
     register_winch(false);
-    close();
 }
 
-bool AnsiEscapeTerm::update()
+void AnsiEscapeTerm::onUpdate()
 {
     if (_winched)
     {
@@ -109,44 +109,30 @@ bool AnsiEscapeTerm::update()
         auto rez = current_resolution();
         int width = std::get<0>(rez);
         int height = std::get<1>(rez);
-        for (auto pair : _states)
-        {
-            Frame* pFrame = pair.first;
-            pFrame->winched(width, height);
-        }
+        winched(width, height);
     }
     cout << flush;
-
-    return true;
 }
 
-bool AnsiEscapeTerm::onOpen()
+tuple<int, int> AnsiEscapeTerm::onOpen()
 {
     //switch to alternative buffer screen
     // cout << esc << "47h";
 
     cout << Ansi::cursor_off;
     clear();
-    return true;
-}
 
-void AnsiEscapeTerm::clear()
-{
-    cout << Ansi::clear_term << Ansi::set_pos(1, 1) << flush;
+    TtyReader::engine()->start(this);
+
+    return current_resolution();
 }
 
 void AnsiEscapeTerm::onClose()
 {
+    TtyReader::engine()->stop();
     cout << Ansi::cursor_on;
-    _states.clear();
     cout << Ansi::set_pos(1, 1);
     cout << flush;
-}
-
-bool AnsiEscapeTerm::onAdd(Frame* pf)
-{
-    _states[pf] = {};
-    return true;
 }
 
 static string replace_all(const string& src, const string& match, const string& replacement)
@@ -175,38 +161,28 @@ string AnsiEscapeTerm::scrub(const string& value) const
     return replace_all(value, "\t", string{(char)226, (char)144, (char)137, ' '});
 }
 
-void AnsiEscapeTerm::write(Frame* pf, int x, int y, const Cell& cell)
+void AnsiEscapeTerm::onWrite(int x, int y, const Cell& cell)
 {
-    if (pf->scrolling())
+    string cmd = "";
+    if (x != _x || y != _y)
     {
-        ofstream flog("log", fstream::app);
-        flog << cell.value;
-        flog.close();
+        if (x == 1 && y == _y + 1) // new line
+            cmd += "\r\n";
+        else
+            cmd += Ansi::set_pos(x, y);
     }
-    else if (!cell.locked)
-    {
-        string cmd = "";
-        if (x != _x || y != _y)
-        {
-            if (x == 1 && y == _y + 1) // new line
-                cmd += "\r\n";
-            else
-                cmd += Ansi::set_pos(x, y);
-        }
-        if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
-            cmd += Ansi::set_color(cell.fg, cell.bg);
+    if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
+        cmd += Ansi::set_color(cell.fg, cell.bg);
 
-        string text = scrub(cell.value);
-        cout << cmd << text;
-        _x = x + cell.width;
-        _y = y;
-        _fg_rgb = cell.fg.rgb;
-        _bg_rgb = cell.bg.rgb;
-    }
+    string text = scrub(cell.value);
+    cout << cmd << text;
+    _x = x + cell.width;
+    _y = y;
+    _fg_rgb = cell.fg.rgb;
+    _bg_rgb = cell.bg.rgb;
 }
 
-tuple<int, int> AnsiEscapeTerm::maxResolution() const
+void AnsiEscapeTerm::onClear()
 {
-    return current_resolution();
+    cout << Ansi::clear_term << Ansi::set_pos(1, 1) << flush;
 }
-

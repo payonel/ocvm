@@ -74,8 +74,8 @@ bool Config::load(const string& path, const string& name)
     }
     else
     {
-        lerr << "\nConfiguration could not load\n";
-        lerr << lua_tostring(lua, -1) << endl;
+        lout << "\nConfiguration could not load\n";
+        lout << lua_tostring(lua, -1) << endl;
         return false;
     }
     lua_close(lua);

@@ -1,13 +1,13 @@
 #include "basic_term.h"
 #include "ansi_escape.h"
 
-Framer* Factory::create_framer(const string& framerTypeName)
+Frame* Factory::create_frame(const string& frameTypeName)
 {
-    if (framerTypeName == "basic")
+    if (frameTypeName == "basic")
     {
         return new BasicTerm;
     }
-    else if (framerTypeName == "ansi")
+    else if (frameTypeName == "ansi")
     {
         return new AnsiEscapeTerm;
     }

@@ -4,12 +4,16 @@
 #include <iostream>
 #include <vector>
 #include <tuple>
+#include <memory>
 
 using std::tuple;
 using std::vector;
 using std::string;
+using std::unique_ptr;
 
 #include "color/color_types.h"
+#include "io/kb_input.h"
+#include "io/mouse_input.h"
 
 struct Cell
 {
@@ -20,68 +24,77 @@ struct Cell
     int width;
 };
 
-class Frame;
-
-class Framer
-{
-public:
-    Framer();
-    virtual ~Framer();
-    bool add(Frame* pf, size_t index = static_cast<size_t>(-1));
-
-    bool open();
-    void close();
-    void invalidate(Frame* pf);
-    void invalidate(Frame* pf, int x, int y);
-
-    // virtuals
-    virtual void setInitialDepth(EDepthType depth);
-    virtual EDepthType getInitialDepth() const;
-    virtual void clear() {}
-
-    // pure virtuals
-    virtual bool update() = 0;
-    virtual tuple<int, int> maxResolution() const = 0;
-    virtual void write(Frame* pf, int x, int y, const Cell& cell) = 0;
-protected:
-    virtual bool onOpen() { return true; }
-    virtual void onClose() { }
-    virtual bool onAdd(Frame* pf) { return true; }
-    vector<Frame*> _frames;
-private:
-    EDepthType _initial_depth;
-};
-
-class FrameGpu
-{
-public:
-    virtual void winched(int width, int height) = 0;
-    virtual void unbind() = 0;
-};
+class Screen;
 
 class Frame
 {
+protected:
+    // REQUIRED PURE VIRTUALS
+    // this is called when the emulator wants you to render text in your window
+    virtual void onWrite(int x, int y, const Cell& cell) = 0;
+
+    // It is required to return the initial size of the window from onOpen
+    // If the user later changes the size of the window ...
+    // (e.g. dragging the border with a mouse)
+    // then you need to call winched with the new resolution
+    virtual tuple<int, int> onOpen() = 0;
+
+    // The following methods are likely helpful to derived types
 public:
-    Frame();
-    virtual ~Frame();
-    void framer(Framer* pfr);
-    Framer* framer() const;
+    // call close when this window would like to abort the vm
+    //  e.g. the user tries to close the window frame
+    void close();
 
-    bool scrolling() const;
-    void scrolling(bool enable);
+    // Call mouseEvent when you want to push mouse events to the vm
+    // see io/mouse_input.h for MouseEvent details
+    void mouseEvent(const MouseEvent& me);
 
+    // Call keyEvent when you want to push key events to the vm
+    // see io/kb_input.h for KeyEvent details
+    void keyEvent(const KeyEvent& ke);
+
+    // it is optional to override depth
+    virtual EDepthType depth() { return EDepthType::_8; }
+
+protected:
+    // You need to call winched if the user is resizing the Frame window manually
+    // The VM does not call winched, you do (e.g. from onUpdate())
+    // this is reported to component.gpu.maxResolution()
     void winched(int width, int height);
-    void set_gpu(FrameGpu* gpu);
 
-    bool write(int x, int y, const Cell& cell);
+    // it is optional to override these methods as you need them
+    virtual void onUpdate() {}
+    virtual void onClose() {}
+    virtual void onClear() {}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+    // The remaining methods should only be called by the emulator
+public:
+    virtual ~Frame();
+
+    // called by Screen when initializing
+    void open(Screen* screen);
+
+    // called by Screen during vm loop
+    bool update();
+
+    // called by the gpu
+    void write(int x, int y, const Cell& cell);
+    void clear();
+
+    // size is updated by calling winched
+    tuple<int, int> size() const;
 private:
-    Framer* _framer;
-    FrameGpu* _gpu;
-    bool _scrolling;
+    Screen* _screen = nullptr;
+
+    int _width;
+    int _height;
 };
 
 namespace Factory
 {
-    Framer* create_framer(const string& framerTypeName);
+    // Add your frame type to create_frame
+    // see drivers/factory_shell.cpp
+    Frame* create_frame(const string& frameTypeName);
 };
 

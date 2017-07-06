@@ -53,7 +53,7 @@ bool Client::load()
 {
     if (_config)
     {
-        lerr << "Client is either already loaded or did not close properly";
+        lout << "Client is either already loaded or did not close properly";
         return false;
     }
 
@@ -61,7 +61,7 @@ bool Client::load()
 
     if (!_config->load(envPath(), "client"))
     {
-        lerr << "failed to load client config\n";
+        lout << "failed to load client config\n";
         return false;
     }
 
@@ -71,7 +71,7 @@ bool Client::load()
 
     if (!loadLuaComponentApi())
     {
-        lerr << "failed to load lua component api\n";
+        lout << "failed to load lua component api\n";
         return false;
     }
 
@@ -101,7 +101,7 @@ bool Client::createComponents()
                 Component* pc = _host->create(key);
                 if (!(pc && pc->initialize(this, component_config)))
                 {
-                    lerr << "failed! The host could not create: " << key << endl;
+                    lout << "failed! The host could not create: " << key << endl;
                     return false;
                 }
                 else
@@ -126,7 +126,7 @@ bool Client::postInit()
     {
         if (!pc->postInit())
         {
-            lerr << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+            lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
             return false;
         }
         // the vm boot handles component_added for us
@@ -141,7 +141,7 @@ bool Client::loadLuaComponentApi()
     // computer required
     if (!_computer)
     {
-        lerr << "emulation requires exactly one computer component\n";
+        lout << "emulation requires exactly one computer component\n";
         return false;
     }
 
@@ -164,10 +164,13 @@ void Client::close()
         _config = nullptr;
     }
 
-    for (auto pc : _components)
-        delete pc;
-        
+    // some components detach from each other during dtor
+    // and to find each other, they may use component.list
+    // but there is no need to when dtoring the client (this)
+    vector<Component*> comp_copy = _components;
     _components.clear();
+    for (auto pc : comp_copy)
+        delete pc;
 }
 
 vector<Component*> Client::components(string filter, bool exact) const
@@ -342,7 +345,7 @@ bool Client::add_component(Value& component_config)
 
     if (!pc->postInit())
     {
-        lerr << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+        lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
         return false;
     }
 

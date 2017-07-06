@@ -1,39 +1,32 @@
 #pragma once
 
-#include <memory>
 #include <mutex>
 #include <queue>
-using std::unique_ptr;
+#include <memory>
 using std::mutex;
 using std::queue;
+using std::unique_lock;
 
-struct InputEvent {};
-class InputSource;
-
-class InputDriver
-{
-public:
-    virtual ~InputDriver();
-    bool start(InputSource*);
-    void stop();
-protected:
-    virtual bool onStart() = 0;
-    virtual void onStop() = 0;
-    InputSource* _source = nullptr;
-};
-
+template <typename TEvent>
 class InputSource
 {
 public:
-    virtual ~InputSource();
+    bool pop(TEvent& te)
+    {
+        unique_lock<mutex> lk(_m);
+        if (_events.size() == 0)
+            return false; // empty
+        te = _events.front();
+        _events.pop();
+        return true;
+    }
 
-    bool open(unique_ptr<InputDriver> pDriver);
-    void close();
-
-    unique_ptr<InputEvent> pop();
-    void push(unique_ptr<InputEvent>);
+    void push(const TEvent& te)
+    {
+        unique_lock<mutex> lk(_m);
+        _events.push(te);
+    }
 private:
     mutex _m;
-    queue<InputEvent*> _events;
-    unique_ptr<InputDriver> _driver;
+    queue<TEvent> _events;
 };

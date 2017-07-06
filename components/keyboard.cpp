@@ -12,14 +12,24 @@ Keyboard::Keyboard()
 
 Keyboard::~Keyboard()
 {
+    detach();
     delete _keyboard;
     _keyboard = nullptr;
+}
+
+void Keyboard::detach()
+{
+    Screen* pScreen = screen();
+    if (pScreen)
+    {
+        pScreen->disconnectKeyboard(this);
+    }
 }
 
 bool Keyboard::onInitialize()
 {
     _preferredScreen = config().get(ConfigIndex::ScreenAddress).Or("").toString();
-    return _keyboard->open(Factory::create_kb());
+    return true;
 }
 
 bool Keyboard::postInit()
@@ -29,8 +39,7 @@ bool Keyboard::postInit()
         Screen* screen = dynamic_cast<Screen*>(pc);
         if (screen && (_preferredScreen.empty() || _preferredScreen == screen->address()))
         {
-            screen->addKeyboard(address());
-            return true;
+            return screen->connectKeyboard(this);
         }
     }
 
@@ -40,23 +49,44 @@ bool Keyboard::postInit()
 
 RunState Keyboard::update()
 {
-    unique_ptr<KeyEvent> pke(_keyboard->pop());
-    if (pke)
+    KeyEvent ke;
+    while (_keyboard->pop(ke))
     {
-        if (pke->keycode == 1)
+        if (ke.keycode == 1)
         {
             lout << "shell abort";
             return RunState::Halt;
         }
-        else if (pke->insert.size())
+        else if (ke.insert.size())
         {
-            client()->pushSignal({"clipboard", address(), pke->insert});
+            client()->pushSignal({"clipboard", address(), ke.insert});
         }
         else
         {
-            client()->pushSignal({pke->bPressed ? "key_down" : "key_up", address(), pke->keysym, pke->keycode});
+            client()->pushSignal({ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode});
         }
     }
 
     return RunState::Continue;
+}
+
+Screen* Keyboard::screen() const
+{
+    for (auto* pc : client()->components("screen", true))
+    {
+        Screen* screen = dynamic_cast<Screen*>(pc);
+        for (const auto& kb_addr : screen->keyboards())
+        {
+            if (kb_addr == address())
+            {
+                return screen;
+            }
+        }
+    }
+    return nullptr;
+}
+
+KeyboardInput* Keyboard::inputDevice() const
+{
+    return _keyboard;
 }

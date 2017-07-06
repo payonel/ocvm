@@ -1,12 +1,14 @@
 #pragma once
 
 #include "io/mouse_input.h"
+#include <vector>
+using std::vector;
 
 class TermBuffer;
-class MouseDriverImpl : public MouseDriver
+class MouseTerminalDriver
 {
 public:
-    void enqueue(TermBuffer* buffer);
+    vector<MouseEvent> parse(TermBuffer* buffer);
 private:
     int _pressed = 0x3;
     bool _dragging = false;

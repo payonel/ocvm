@@ -4,8 +4,10 @@
 #include "io/frame.h"
 
 class MouseInput;
+class Keyboard;
+class Gpu;
 
-class Screen : public Component, public Frame
+class Screen : public Component
 {
 public:
     Screen();
@@ -15,10 +17,20 @@ public:
     int getKeyboards(lua_State*);
     int getAspectRatio(lua_State*);
 
-    void addKeyboard(const string& addr);
+    bool connectKeyboard(Keyboard* kb);
+    bool disconnectKeyboard(Keyboard* kb);
+    vector<string> keyboards() const;
+
+    void push(const KeyEvent& ke);
+    void push(const MouseEvent& me);
+    void gpu(Gpu* gpu);
+    Gpu* gpu() const;
+    Frame* frame() const;
 protected:
     bool onInitialize() override;
 private:
-    vector<string> _keyboards;
-    MouseInput* _mouse = nullptr;
+    vector<Keyboard*> _keyboards;
+    unique_ptr<MouseInput> _mouse;
+    unique_ptr<Frame> _frame;
+    Gpu* _gpu;
 };

@@ -3,38 +3,39 @@
 #include "mouse_drv.h"
 #include "kb_drv.h"
 #include "term_buffer.h"
+#include "worker.h"
 
-class TermInputDriver : public virtual InputDriver
+#include <memory>
+using std::unique_ptr;
+
+struct termios;
+class AnsiEscapeTerm;
+
+class TtyReader : public Worker
 {
 public:
-    ~TermInputDriver();
-    virtual void enqueue(TermBuffer* buffer) = 0;
+    TtyReader(TtyReader&) = delete;
+    void operator= (TtyReader&) = delete;
 
-protected:
-    bool onStart() override;
+    static TtyReader* engine();
+    void start(AnsiEscapeTerm* pTerm);
+    void stop();
+
+private:
+    bool hasMasterTty() const;
+    bool hasTerminalOut() const;
+    TtyReader();
+    void onStart() override;
+    bool runOnce() override;
     void onStop() override;
-};
 
-class MouseTerminalDriver : public TermInputDriver, public MouseDriverImpl
-{
-public:
-    void enqueue(TermBuffer* buffer) override;
-    static bool isAvailable();
-protected:
-    bool onStart() override;
-    void onStop() override;
-};
+    bool _master_tty;
+    bool _terminal_out;
+    termios* _original = nullptr;
+    TermBuffer _buffer;
 
-class KeyboardLocalRawTtyDriver : public TermInputDriver, public KeyboardDriverImpl
-{
-public:
-    void enqueue(TermBuffer* buffer) override;
-    static bool isAvailable();
-};
+    unique_ptr<MouseTerminalDriver> _mouse_drv;
+    unique_ptr<KeyboardTerminalDriver> _kb_drv;
 
-class KeyboardPtyDriver : public TermInputDriver, public KeyboardDriverImpl
-{
-public:
-    void enqueue(TermBuffer* buffer) override;
-    static bool isAvailable();
+    AnsiEscapeTerm* _pTerm = nullptr;
 };

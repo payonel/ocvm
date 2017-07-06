@@ -28,7 +28,9 @@
         "mutex": "cpp",
         "unordered_map": "cpp",
         "filesystem": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "*.tcc": "cpp",
+        "istream": "cpp"
     },
     "files.exclude": {
         "**/.git": true,
