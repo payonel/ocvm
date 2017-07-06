@@ -2,69 +2,35 @@
 #include "io/frame.h"
 
 #include <iostream>
+#include <fstream>
 #include <functional>
 using std::cout;
-using std::cerr;
 using std::function;
+using std::ofstream;
+using std::fstream;
 
-class LogHandler
-{
-public:
-    virtual void write(const string& text)
-    {
-        Logger::getFrame()->write(1, 1, {text, {}, {}, false, (int)text.size()});
-    }
-} log_handler;
+Logger lout("log");
 
-class LogErrorHandler : public LogHandler
-{
-public:
-    void write(const string& text) override
-    {
-        _buffer.push_back(text);
-        LogHandler::write(text);
-    }
-    ~LogErrorHandler()
-    {
-        for (const auto& text : _buffer)
-            cerr << text;
-    }
-private:
-    vector<string> _buffer;
-} err_handler;
-
-class LogProfHandler : public LogHandler
-{
-public:
-    void write(const string& text) override
-    {
-        //LogHandler::write(text);
-    }
-} prof_handler;
-
-Logger::Logger(LogHandler* handler) :
-    _handler(handler)
+Logger::Logger(string logPath) :
+    _log_path(logPath)
 {
 }
 
-Logger lout(&log_handler);
-Logger lerr(&err_handler);
-
-Frame* Logger::getFrame()
+void Logger::log_path(const string& path)
 {
-    static Frame single_log_frame;
-    static bool initialized = false;
-    if (!initialized)
-    {
-        initialized = true;
-        single_log_frame.scrolling(true);
-    }
-    return &single_log_frame;
+    _log_path = path;
+}
+
+string Logger::log_path() const
+{
+    return _log_path;
 }
 
 Logger& Logger::operator<< (const string& text)
 {
-    _handler->write(text);
+    ofstream flog(_log_path, fstream::app);
+    flog << text;
+    flog.close();
     return *this;
 }
 

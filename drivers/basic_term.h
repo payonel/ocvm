@@ -2,13 +2,9 @@
 
 #include "io/frame.h"
 
-class BasicTerm : public Framer
+class BasicTerm : public Frame
 {
-public:
-    bool update() override;
-    tuple<int, int> maxResolution() const override;
 protected:
-    bool onOpen() override;
-    void onClose() override;
-    void write(Frame* pf, int x, int y, const Cell& cell) override;
+    void onWrite(int x, int y, const Cell& cell) override;
+    tuple<int, int> onOpen() override;
 };

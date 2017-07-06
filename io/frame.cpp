@@ -1,127 +1,69 @@
 #include "frame.h"
-#include "model/log.h"
-#include <iostream>
-
-Framer::Framer()
-{
-    _initial_depth = EDepthType::_8;
-}
-
-Framer::~Framer()
-{
-}
-
-bool Framer::add(Frame* pframe, size_t index)
-{
-    for (auto pf : _frames)
-    {
-        if (pf == pframe)
-        {
-            lout << "attempt to add the same frame twice\n";
-            return false;
-        }
-    }
-
-    if (index < _frames.size()) // reorder
-    {
-        _frames.insert(_frames.begin() + index, pframe);
-    }
-    else
-    {
-        _frames.push_back(pframe);
-    }
-
-    pframe->framer(this);
-
-    return onAdd(pframe);
-}
-
-Frame::Frame() :
-    _framer(nullptr),
-    _gpu(nullptr),
-    _scrolling(false)
-{
-}
+#include "components/screen.h"
+#include "components/gpu.h"
 
 Frame::~Frame()
 {
-    if (_gpu)
-        _gpu->unbind();
+    _screen = nullptr;
 }
 
-bool Framer::open()
+void Frame::open(Screen* screen)
 {
-    return onOpen();
+    _screen = screen;
+    auto rez = onOpen();
+    _width = std::get<0>(rez);
+    _height = std::get<1>(rez);
 }
 
-void Framer::close()
+bool Frame::update()
+{
+    if (!_screen)
+        return false;
+
+    onUpdate();
+    return true;
+}
+
+void Frame::close()
 {
     onClose();
-    _frames.clear();
+    _screen = nullptr;
 }
 
-void Framer::setInitialDepth(EDepthType depth)
+void Frame::write(int x, int y, const Cell& cell)
 {
-    _initial_depth = depth;
-}
-
-EDepthType Framer::getInitialDepth() const
-{
-    return _initial_depth;
-}
-
-void Framer::push(MouseEvent me)
-{
-    for (auto pFrame : _frames)
+    if (!cell.locked)
     {
-        pFrame->push(me);
+        onWrite(x, y, cell);
     }
 }
 
-void Framer::push(KeyEvent ke)
+tuple<int, int> Frame::size() const
 {
-    for (auto pFrame : _frames)
-    {
-        pFrame->push(ke);
-    }
+    return std::make_tuple(_width, _height);
 }
 
-void Frame::framer(Framer* pfr)
+void Frame::clear()
 {
-    _framer = pfr;
-}
-
-Framer* Frame::framer() const
-{
-    return _framer;
-}
-
-void Frame::scrolling(bool enable)
-{
-    _scrolling = enable;
-}
-
-bool Frame::scrolling() const
-{
-    return _scrolling;
+    onClear();
 }
 
 void Frame::winched(int width, int height)
 {
-    if (_gpu)
-        _gpu->winched(width, height);
+    _width = width;
+    _height = height;
+    if (_screen->gpu())
+        _screen->gpu()->setResolution(width, height);
 }
 
-bool Frame::write(int x, int y, const Cell& cell)
+void Frame::mouseEvent(const MouseEvent& me)
 {
-    if (!_framer)
-        return false;
-    
-    _framer->write(this, x, y, cell);
-    return true;
+    if (_screen)
+        _screen->push(me);
 }
 
-void Frame::set_gpu(FrameGpu* gpu)
+void Frame::keyEvent(const KeyEvent& ke)
 {
-    _gpu = gpu;
+    if (_screen)
+        _screen->push(ke);
 }

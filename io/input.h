@@ -21,7 +21,7 @@ public:
         return true;
     }
 
-    void push(TEvent te)
+    void push(const TEvent& te)
     {
         unique_lock<mutex> lk(_m);
         _events.push(te);

@@ -3,34 +3,23 @@
 #include "io/frame.h"
 #include "raw_tty.h"
 
-#include <vector>
-#include <map>
+#include <tuple>
 
-using std::map;
-
-struct AnsiFrameState
-{
-};
-
-class AnsiEscapeTerm : public Framer
+class AnsiEscapeTerm : public Frame
 {
 public:
     AnsiEscapeTerm();
-    ~AnsiEscapeTerm();
-    bool update() override;
-    tuple<int, int> maxResolution() const override;
-    void clear() override;
-    void write(Frame* pf, int x, int y, const Cell& cell) override;
-
-    using Framer::push;
+    virtual ~AnsiEscapeTerm();
 
 protected:
-    bool onOpen() override;
+    void onWrite(int x, int y, const Cell& cell) override;
+    virtual tuple<int, int> onOpen() override;
+    void onUpdate() override;
     void onClose() override;
-    bool onAdd(Frame* pf) override;
-    string scrub(const string& value) const;
+    void onClear() override;
+
 private:
-    map<Frame*, AnsiFrameState> _states;
+    string scrub(const string& value) const;
 
     int _x = 0;
     int _y = 0;

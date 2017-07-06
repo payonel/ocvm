@@ -19,7 +19,7 @@
 #include <string.h> // memset
 
 #include "ansi.h"
-#include "io/frame.h"
+#include "drivers/ansi_escape.h"
 
 using std::set;
 using std::cout;
@@ -42,9 +42,9 @@ static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
     exit_function();
 }
 
-void TtyReader::start(Framer* pFramer)
+void TtyReader::start(AnsiEscapeTerm* pTerm)
 {
-    _pFramer = pFramer;
+    _pTerm = pTerm;
 
     if (hasMasterTty())
     {
@@ -66,7 +66,7 @@ void TtyReader::start(Framer* pFramer)
 void TtyReader::stop()
 {
     make_lock();
-    _pFramer = nullptr;
+    _pTerm = nullptr;
     Worker::stop();
 }
 
@@ -171,17 +171,17 @@ bool TtyReader::runOnce()
     auto old_size = _buffer.size();
     if (old_size > 0)
     {
-        if (_mouse_drv && _pFramer)
+        if (_mouse_drv && _pTerm)
         {
             auto vme = _mouse_drv->parse(&_buffer);
             for (const auto& me : vme)
-                _pFramer->push(me);
+                _pTerm->mouseEvent(me);
         }
-        if (_kb_drv && _pFramer)
+        if (_kb_drv && _pTerm)
         {
             auto vke = _kb_drv->parse(&_buffer);
             for (const auto& ke : vke)
-                _pFramer->push(ke);
+                _pTerm->keyEvent(ke);
         }
 
         if (old_size == _buffer.size()) // nothing could read the buffer

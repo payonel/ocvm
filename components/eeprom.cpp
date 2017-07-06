@@ -29,7 +29,7 @@ bool Eeprom::onInitialize()
 
     if (client()->envPath().empty())
     {
-        lerr << "bug, eeprom env dir path empty\n";
+        lout << "bug, eeprom env dir path empty\n";
         return false;
     }
 
@@ -49,7 +49,7 @@ bool Eeprom::postInit()
         lout << "no computer eeprom found, copying from system\n";
         if (!fs_utils::copy(originalBiosPath, biosPath()))
         {
-            lerr << "Could not create an initial bios from: " << originalBiosPath << endl;
+            lout << "Could not create an initial bios from: " << originalBiosPath << endl;
             return false;
         }
     }

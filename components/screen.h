@@ -5,8 +5,9 @@
 
 class MouseInput;
 class Keyboard;
+class Gpu;
 
-class Screen : public Component, public Frame
+class Screen : public Component
 {
 public:
     Screen();
@@ -20,11 +21,16 @@ public:
     bool disconnectKeyboard(Keyboard* kb);
     vector<string> keyboards() const;
 
-    void push(KeyEvent ke) override;
-    void push(MouseEvent me) override;
+    void push(const KeyEvent& ke);
+    void push(const MouseEvent& me);
+    void gpu(Gpu* gpu);
+    Gpu* gpu() const;
+    Frame* frame() const;
 protected:
     bool onInitialize() override;
 private:
     vector<Keyboard*> _keyboards;
-    MouseInput* _mouse = nullptr;
+    unique_ptr<MouseInput> _mouse;
+    unique_ptr<Frame> _frame;
+    Gpu* _gpu;
 };

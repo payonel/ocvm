@@ -1,26 +1,12 @@
 #include "basic_term.h"
 #include <iostream>
 
-bool BasicTerm::update()
+void BasicTerm::onWrite(int x, int y, const Cell& cell)
 {
-    return true;// cin.get() != 'q';
+    std::cout << cell.value;
 }
 
-bool BasicTerm::onOpen()
-{
-    return true;
-}
-
-void BasicTerm::onClose()
-{
-}
-
-void BasicTerm::write(Frame* pf, int x, int y, const Cell& cell)
-{
-    std::cout << cell.value << std::flush;
-}
-
-tuple<int, int> BasicTerm::maxResolution() const
+tuple<int, int> BasicTerm::onOpen()
 {
     return std::make_tuple(40, 10);
 }

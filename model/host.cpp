@@ -1,5 +1,4 @@
 #include "model/host.h"
-#include "io/frame.h"
 #include "drivers/fs_utils.h"
 #include "components/component.h"
 #include "components/screen.h"
@@ -11,8 +10,8 @@
 #include "components/internet.h"
 #include "components/sandbox.h"
 
-Host::Host(Framer* framer) :
-    _framer(framer)
+Host::Host(string frameType) :
+    _frameType(frameType)
 {
 }
 
@@ -59,9 +58,9 @@ Component* Host::create(const string& type) const
     return nullptr;
 }
 
-Framer* Host::getFramer() const
+Frame* Host::createFrame() const
 {
-    return _framer;
+    return Factory::create_frame(_frameType);
 }
 
 void Host::close()

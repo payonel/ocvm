@@ -9,7 +9,7 @@
 using std::unique_ptr;
 
 struct termios;
-class Framer;
+class AnsiEscapeTerm;
 
 class TtyReader : public Worker
 {
@@ -18,7 +18,7 @@ public:
     void operator= (TtyReader&) = delete;
 
     static TtyReader* engine();
-    void start(Framer* pFramer);
+    void start(AnsiEscapeTerm* pTerm);
     void stop();
 
 private:
@@ -37,5 +37,5 @@ private:
     unique_ptr<MouseTerminalDriver> _mouse_drv;
     unique_ptr<KeyboardTerminalDriver> _kb_drv;
 
-    Framer* _pFramer = nullptr;
+    AnsiEscapeTerm* _pTerm = nullptr;
 };

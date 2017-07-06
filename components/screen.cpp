@@ -1,40 +1,59 @@
-#include "screen.h"
-
 #include <iostream>
 #include <vector>
+#include <algorithm>
+
+#include "screen.h"
+#include "gpu.h"
+#include "keyboard.h"
 
 #include "model/client.h"
 #include "model/host.h"
-#include "apis/unicode.h"
-
 #include "model/log.h"
 
-#include "keyboard.h"
-
-#include <algorithm>
+#include "apis/unicode.h"
 
 Screen::Screen()
 {
     add("getKeyboards", &Screen::getKeyboards);
     add("getAspectRatio", &Screen::getAspectRatio);
-    scrolling(false);
 
-    _mouse = new MouseInput;
+    _mouse.reset(new MouseInput);
 }
 
 Screen::~Screen()
 {
-    delete _mouse;
-    _mouse = nullptr;
+    if (_frame)
+    {
+        _frame->close();
+    }
+    if (_gpu)
+    {
+        _gpu->unbind();
+    }
+    _gpu = nullptr;
 }
 
 bool Screen::onInitialize()
 {
-    // we now have a client and can add ourselves to the framer
-    if (!client()->host()->getFramer()->add(this, 0))
+    // we now have a client and we are ready to create the frame for this screen
+    _frame.reset(client()->host()->createFrame());
+    if (!_frame)
+    {
         return false;
+    }
+    _frame->open(this);
 
     return true;
+}
+
+void Screen::gpu(Gpu* gpu)
+{
+    _gpu = gpu;
+}
+
+Gpu* Screen::gpu() const
+{
+    return _gpu;
 }
 
 RunState Screen::update()
@@ -58,6 +77,11 @@ RunState Screen::update()
         }
         if (!msg.empty())
             client()->pushSignal({msg, address(), me.x, me.y, me.btn / 2});
+    }
+
+    if (!_frame->update())
+    {
+        return RunState::Halt;
     }
 
     return RunState::Continue;
@@ -99,7 +123,7 @@ bool Screen::disconnectKeyboard(Keyboard* kb)
     return _keyboards.erase(std::remove(_keyboards.begin(), _keyboards.end(), kb), _keyboards.end()) == _keyboards.end();
 }
 
-void Screen::push(KeyEvent ke)
+void Screen::push(const KeyEvent& ke)
 {
     if (_keyboards.size() == 0)
         return;
@@ -115,8 +139,12 @@ void Screen::push(KeyEvent ke)
     }
 }
 
-void Screen::push(MouseEvent me)
+void Screen::push(const MouseEvent& me)
 {
     _mouse->push(me);
 }
 
+Frame* Screen::frame() const
+{
+    return _frame.get();
+}
