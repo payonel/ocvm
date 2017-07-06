@@ -164,10 +164,13 @@ void Client::close()
         _config = nullptr;
     }
 
-    for (auto pc : _components)
-        delete pc;
-        
+    // some components detach from each other during dtor
+    // and to find each other, they may use component.list
+    // but there is no need to when dtoring the client (this)
+    vector<Component*> comp_copy = _components;
     _components.clear();
+    for (auto pc : comp_copy)
+        delete pc;
 }
 
 vector<Component*> Client::components(string filter, bool exact) const

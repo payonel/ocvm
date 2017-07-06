@@ -22,6 +22,11 @@ Screen::Screen()
 
 Screen::~Screen()
 {
+    // make a copy of the vector because detach modifies the vector
+    vector<Keyboard*> kb_copy = _keyboards;
+    for (auto& kb : kb_copy)
+        kb->detach();
+
     if (_frame)
     {
         _frame->close();
@@ -30,6 +35,7 @@ Screen::~Screen()
     {
         _gpu->unbind();
     }
+
     _gpu = nullptr;
 }
 

@@ -12,13 +12,18 @@ Keyboard::Keyboard()
 
 Keyboard::~Keyboard()
 {
-    // Screen* pScreen = this->screen();
-    // if (pScreen)
-    // {
-        // pScreen->disconnectKeyboard(this);
-    // }
+    detach();
     delete _keyboard;
     _keyboard = nullptr;
+}
+
+void Keyboard::detach()
+{
+    Screen* pScreen = screen();
+    if (pScreen)
+    {
+        pScreen->disconnectKeyboard(this);
+    }
 }
 
 bool Keyboard::onInitialize()

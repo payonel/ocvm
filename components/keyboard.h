@@ -18,6 +18,7 @@ public:
     KeyboardInput* inputDevice() const;
     bool postInit() override;
     RunState update() override;
+    void detach();
 protected:
     bool onInitialize() override;
     Screen* screen() const;
