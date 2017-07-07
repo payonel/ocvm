@@ -1,8 +1,5 @@
 #include "ansi.h"
 #include "color/color_types.h"
-#if __has_include("log.h")
-    #include "log.h"
-#endif
 #include <sstream>
 #include <vector>
 #include <algorithm>
