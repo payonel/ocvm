@@ -52,14 +52,14 @@ RunState Keyboard::update()
     KeyEvent ke;
     while (_keyboard->pop(ke))
     {
-        if (ke.keycode == 1)
+        if (ke.insert.size())
+        {
+            client()->pushSignal({"clipboard", address(), ke.insert});
+        }
+        else if (ke.keycode == 1)
         {
             lout << "shell abort";
             return RunState::Halt;
-        }
-        else if (ke.insert.size())
-        {
-            client()->pushSignal({"clipboard", address(), ke.insert});
         }
         else
         {

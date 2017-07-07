@@ -52,7 +52,7 @@ void Frame::winched(int width, int height)
 {
     _width = width;
     _height = height;
-    if (_screen->gpu())
+    if (_screen && _screen->gpu())
         _screen->gpu()->setResolution(width, height);
 }
 

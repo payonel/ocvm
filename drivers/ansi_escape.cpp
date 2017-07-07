@@ -167,9 +167,13 @@ void AnsiEscapeTerm::onWrite(int x, int y, const Cell& cell)
     if (x != _x || y != _y)
     {
         if (x == 1 && y == _y + 1) // new line
+        {
             cmd += "\r\n";
+        }
         else
+        {
             cmd += Ansi::set_pos(x, y);
+        }
     }
     if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
         cmd += Ansi::set_color(cell.fg, cell.bg);
