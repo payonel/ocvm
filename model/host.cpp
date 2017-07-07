@@ -9,6 +9,7 @@
 #include "components/keyboard.h"
 #include "components/internet.h"
 #include "components/sandbox.h"
+#include "components/modem.h"
 
 Host::Host(string frameType) :
     _frameType(frameType)
@@ -53,6 +54,10 @@ Component* Host::create(const string& type) const
     else if (type == "sandbox")
     {
         return new Sandbox;
+    }
+    else if (type == "modem")
+    {
+        return new Modem;
     }
 
     return nullptr;

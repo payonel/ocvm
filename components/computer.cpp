@@ -462,9 +462,10 @@ RunState Computer::update()
     RunState result = resume(nargs);
     if (bFirstTimeRun)
     {
-        _baseline = memoryUsedRaw();
+        // we seem to allocate a bit more above real oc
+        _baseline = memoryUsedRaw() + 91227;
         _baseline_initialized = true;
-        lout << "lua env baseline\n";
+        lout << "lua env baseline: " << _baseline << endl;
     }
     return result;
 }
