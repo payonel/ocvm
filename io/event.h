@@ -8,6 +8,9 @@ using std::mutex;
 using std::queue;
 using std::unique_lock;
 using std::vector;
+using std::string;
+
+#include "model/value.h"
 
 enum class EPressType
 {
@@ -42,6 +45,11 @@ struct KeyEvent
 
 struct ModemEvent
 {
+    string receiver_address;
+    string sender_address;
+    int port;
+    // int distance; // always zero
+    ValuePack arguments; // nil, boolean, number, or string. limit 8
 };
 
 template <typename TEvent>
