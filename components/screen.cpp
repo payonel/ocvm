@@ -14,11 +14,73 @@
 
 Screen::Screen()
 {
-    add("getKeyboards", &Screen::getKeyboards);
+    add("isOn", &Screen::isOn);
     add("getAspectRatio", &Screen::getAspectRatio);
+    add("getKeyboards", &Screen::getKeyboards);
+    add("setTouchModeInverted", &Screen::setTouchModeInverted);
+    add("turnOn", &Screen::turnOn);
+    add("turnOff", &Screen::turnOff);
+    add("isPrecise", &Screen::isPrecise);
+    add("isTouchInverted", &Screen::isTouchInverted);
+    add("setPrecise", &Screen::setPrecise);
 
     _mouse.reset(new MouseInput);
 }
+
+///////////////////////////// COMPONENT API /////////////////////////////
+
+int Screen::isOn(lua_State* lua)
+{
+    return ValuePack::ret(lua, _frame->on());
+}
+
+int Screen::getAspectRatio(lua_State* lua)
+{
+    return ValuePack::ret(lua, 1, 1);
+}
+
+int Screen::getKeyboards(lua_State* lua)
+{
+    Value list = Value::table();
+    for (const auto& kb : _keyboards)
+    {
+        list.insert(kb->address());
+    }
+    return ValuePack::ret(lua, list);
+}
+
+int Screen::setTouchModeInverted(lua_State* lua)
+{
+    return ValuePack::ret(lua, Value::nil, "not supported");
+}
+
+int Screen::turnOn(lua_State* lua)
+{
+    return ValuePack::ret(lua, _frame->on(true));
+}
+
+int Screen::turnOff(lua_State* lua)
+{
+    return ValuePack::ret(lua, _frame->on(false));
+}
+
+int Screen::isPrecise(lua_State* lua)
+{
+    return ValuePack::ret(lua, false);
+}
+
+int Screen::isTouchInverted(lua_State* lua)
+{
+    return ValuePack::ret(lua, false);
+}
+
+int Screen::setPrecise(lua_State* lua)
+{
+    return ValuePack::ret(lua, Value::nil, "not supported");
+}
+
+
+/////////////////////////////////////////////////////////////////////////
 
 Screen::~Screen()
 {
@@ -93,16 +155,6 @@ RunState Screen::update()
     return RunState::Continue;
 }
 
-int Screen::getKeyboards(lua_State* lua)
-{
-    Value list = Value::table();
-    for (const auto& kb : _keyboards)
-    {
-        list.insert(kb->address());
-    }
-    return ValuePack::ret(lua, list);
-}
-
 vector<string> Screen::keyboards() const
 {
     vector<string> addrs;
@@ -111,11 +163,6 @@ vector<string> Screen::keyboards() const
         addrs.push_back(kb->address());
     }
     return addrs;
-}
-
-int Screen::getAspectRatio(lua_State* lua)
-{
-    return ValuePack::ret(lua, 1, 1);
 }
 
 bool Screen::connectKeyboard(Keyboard* kb)

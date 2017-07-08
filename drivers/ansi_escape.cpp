@@ -184,6 +184,11 @@ void AnsiEscapeTerm::onWrite(int x, int y, const Cell& cell)
     _y = y;
     _fg_rgb = cell.fg.rgb;
     _bg_rgb = cell.bg.rgb;
+
+    // if _x or _y are outside the window, flush
+    auto rez = size();
+    if (_x > std::get<0>(rez) || _y > std::get<1>(rez))
+        cout << flush;
 }
 
 void AnsiEscapeTerm::onClear()

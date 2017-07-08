@@ -14,8 +14,16 @@ public:
     ~Screen();
     RunState update() override;
 
-    int getKeyboards(lua_State*);
+    // Component API
+    int isOn(lua_State*);
     int getAspectRatio(lua_State*);
+    int getKeyboards(lua_State*);
+    int setTouchModeInverted(lua_State*);
+    int turnOn(lua_State*);
+    int turnOff(lua_State*);
+    int isPrecise(lua_State*);
+    int isTouchInverted(lua_State*);
+    int setPrecise(lua_State*);
 
     bool connectKeyboard(Keyboard* kb);
     bool disconnectKeyboard(Keyboard* kb);

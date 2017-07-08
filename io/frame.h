@@ -84,11 +84,16 @@ public:
 
     // size is updated by calling winched
     tuple<int, int> size() const;
+
+    // the screen component uses the frame for turning on and off
+    bool on() const;
+    bool on(bool bOn);
 private:
     Screen* _screen = nullptr;
 
     int _width;
     int _height;
+    bool _isOn;
 };
 
 namespace Factory

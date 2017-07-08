@@ -46,6 +46,7 @@ public:
     // Screen callbacks
     bool setResolution(int width, int height);
     void unbind();
+    void invalidate();
 protected:
     vector<const Cell*> scan(int x, int y, int width) const;
     const Cell* get(int x, int y) const;
@@ -62,7 +63,6 @@ protected:
     tuple<int, Value> makeColorContext(const Color& color);
 
     void resizeBuffer(int width, int height);
-    void invalidate();
 
     // color mapping to oc 256 codes
     Color deflate(const Color& color);

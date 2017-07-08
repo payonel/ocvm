@@ -10,6 +10,7 @@ Frame::~Frame()
 void Frame::open(Screen* screen)
 {
     _screen = screen;
+    _isOn = true;
     auto rez = onOpen();
     _width = std::get<0>(rez);
     _height = std::get<1>(rez);
@@ -32,10 +33,9 @@ void Frame::close()
 
 void Frame::write(int x, int y, const Cell& cell)
 {
-    if (!cell.locked)
-    {
-        onWrite(x, y, cell);
-    }
+    if (cell.locked || !on())
+        return;
+    onWrite(x, y, cell);
 }
 
 tuple<int, int> Frame::size() const
@@ -66,4 +66,27 @@ void Frame::keyEvent(const KeyEvent& ke)
 {
     if (_screen)
         _screen->push(ke);
+}
+
+bool Frame::on() const
+{
+    return _isOn;
+}
+
+bool Frame::on(bool bOn)
+{
+    bool was_changed = _isOn != bOn;
+    _isOn = bOn;
+    if (was_changed)
+    {
+        if (bOn)
+        {
+            _screen->gpu()->invalidate();
+        }
+        else
+        {
+            clear();
+        }
+    }
+    return was_changed;
 }
