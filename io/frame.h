@@ -12,8 +12,7 @@ using std::string;
 using std::unique_ptr;
 
 #include "color/color_types.h"
-#include "io/kb_input.h"
-#include "io/mouse_input.h"
+#include "io/event.h"
 
 struct Cell
 {
@@ -46,11 +45,11 @@ public:
     void close();
 
     // Call mouseEvent when you want to push mouse events to the vm
-    // see io/mouse_input.h for MouseEvent details
+    // see io/event.h for MouseEvent details
     void mouseEvent(const MouseEvent& me);
 
     // Call keyEvent when you want to push key events to the vm
-    // see io/kb_input.h for KeyEvent details
+    // see io/event.h for KeyEvent details
     void keyEvent(const KeyEvent& ke);
 
     // it is optional to override depth

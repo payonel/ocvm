@@ -1,6 +1,6 @@
 #pragma once
 
-#include "io/mouse_input.h"
+#include "io/event.h"
 #include <vector>
 using std::vector;
 

@@ -23,8 +23,6 @@ Screen::Screen()
     add("isPrecise", &Screen::isPrecise);
     add("isTouchInverted", &Screen::isTouchInverted);
     add("setPrecise", &Screen::setPrecise);
-
-    _mouse.reset(new MouseInput);
 }
 
 ///////////////////////////// COMPONENT API /////////////////////////////
@@ -127,7 +125,7 @@ Gpu* Screen::gpu() const
 RunState Screen::update()
 {
     MouseEvent me;
-    while (_mouse->pop(me))
+    while (EventSource<MouseEvent>::pop(me))
     {
         string msg;
         switch (me.press)
@@ -181,20 +179,15 @@ void Screen::push(const KeyEvent& ke)
     if (_keyboards.size() == 0)
         return;
     else if (_keyboards.size() == 1)
-        _keyboards.at(0)->inputDevice()->push(ke);
+        _keyboards.at(0)->push(ke);
     else
     {
         // kb events are duplicated to all kbs
         for (auto* kb : _keyboards)
         {
-            kb->inputDevice()->push(ke);
+            kb->push(ke);
         }
     }
-}
-
-void Screen::push(const MouseEvent& me)
-{
-    _mouse->push(me);
 }
 
 Frame* Screen::frame() const

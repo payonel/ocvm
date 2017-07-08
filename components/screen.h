@@ -2,12 +2,12 @@
 #include "component.h"
 #include "model/value.h"
 #include "io/frame.h"
+#include "io/event.h"
 
-class MouseInput;
 class Keyboard;
 class Gpu;
 
-class Screen : public Component
+class Screen : public Component, public EventSource<MouseEvent>
 {
 public:
     Screen();
@@ -30,7 +30,8 @@ public:
     vector<string> keyboards() const;
 
     void push(const KeyEvent& ke);
-    void push(const MouseEvent& me);
+    using EventSource<MouseEvent>::push;
+
     void gpu(Gpu* gpu);
     Gpu* gpu() const;
     Frame* frame() const;
@@ -38,7 +39,6 @@ protected:
     bool onInitialize() override;
 private:
     vector<Keyboard*> _keyboards;
-    unique_ptr<MouseInput> _mouse;
     unique_ptr<Frame> _frame;
     Gpu* _gpu;
 };

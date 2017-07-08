@@ -1,6 +1,6 @@
 #pragma once
 
-#include "io/kb_input.h"
+#include "io/event.h"
 #include "term_buffer.h"
 
 #include <tuple>

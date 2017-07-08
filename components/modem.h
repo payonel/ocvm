@@ -1,8 +1,9 @@
 #pragma once
 
 #include "component.h"
+#include "io/event.h"
 
-class Modem : public Component
+class Modem : public Component, public EventSource<ModemEvent>
 {
 public:
     Modem();

@@ -1,11 +1,11 @@
 #pragma once
 #include "component.h"
 #include "model/value.h"
+#include "io/event.h"
 
-class KeyboardInput;
 class Screen;
 
-class Keyboard : public Component
+class Keyboard : public Component, public EventSource<KeyEvent>
 {
 public:
     enum ConfigIndex
@@ -15,7 +15,6 @@ public:
 
     Keyboard();
     ~Keyboard();
-    KeyboardInput* inputDevice() const;
     bool postInit() override;
     RunState update() override;
     void detach();
@@ -24,5 +23,4 @@ protected:
     Screen* screen() const;
 private:
     string _preferredScreen;
-    KeyboardInput* _keyboard = nullptr;
 };

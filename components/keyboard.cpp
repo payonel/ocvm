@@ -3,18 +3,13 @@
 #include "model/client.h"
 #include "model/log.h"
 
-#include "io/kb_input.h"
-
 Keyboard::Keyboard()
 {
-    _keyboard = new KeyboardInput;
 }
 
 Keyboard::~Keyboard()
 {
     detach();
-    delete _keyboard;
-    _keyboard = nullptr;
 }
 
 void Keyboard::detach()
@@ -50,7 +45,7 @@ bool Keyboard::postInit()
 RunState Keyboard::update()
 {
     KeyEvent ke;
-    while (_keyboard->pop(ke))
+    while (EventSource<KeyEvent>::pop(ke))
     {
         if (ke.insert.size())
         {
@@ -84,9 +79,4 @@ Screen* Keyboard::screen() const
         }
     }
     return nullptr;
-}
-
-KeyboardInput* Keyboard::inputDevice() const
-{
-    return _keyboard;
 }
