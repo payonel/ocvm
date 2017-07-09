@@ -36,6 +36,7 @@ protected:
     bool onInitialize() override;
     RunState update() override;
     int tryPack(lua_State* lua, const vector<char>* pAddr, int port, vector<char>* pOut) const;
+    bool isApplicable(int port, vector<char>* target);
 
     unique_ptr<ModemDriver> _modem;
     size_t _maxPacketSize;
