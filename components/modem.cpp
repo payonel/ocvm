@@ -39,23 +39,66 @@ bool Modem::onInitialize()
     return true;
 }
 
-int Modem::tryPack(lua_State* lua, int offset, vector<char>* pOut) const
+template<typename T>
+void write(const T& num, vector<char>* pOut)
 {
+    const char* p = reinterpret_cast<const char*>(&num);
+    for (size_t i = 0; i < sizeof(T); i++)
+    {
+        pOut->push_back(*p++);
+    }
+}
+
+void write(const string& text, vector<char>* pOut)
+{
+    write<int32_t>(text.size(), pOut);
+    std::copy(text.begin(), text.end(), std::back_inserter(*pOut));
+}
+
+void write(const char* data, int len, vector<char>* pOut)
+{
+    write<int32_t>(len, pOut);
+    std::copy(data, data + len, std::back_inserter(*pOut));
+}
+
+int Modem::tryPack(lua_State* lua, const vector<char>* pAddr, int port, vector<char>* pOut) const
+{
+    if (port < 1 || port > 0xffff)
+        return luaL_error(lua, "invalid port number");
+
     pOut->clear();
+
+    int offset = 2; // first is at least the port
     int last_index = lua_gettop(lua);
+
+    // {sender, has_target(1 or 0), target, port, num_args, arg_type_id_1, arg_value_1, ..., arg_type_id_n, arg_value_n)
+    string addr = address();
+    write(addr, pOut);
+    
+    if (pAddr)
+    {
+        offset++;
+        write<bool>(true, pOut);
+        write(pAddr->data(), pAddr->size(), pOut);
+    }
+    else
+    {
+        write<bool>(false, pOut);
+    }
+
+    write<int32_t>(port, pOut);
+
     int num_arguments = last_index - offset + 1;
     if (num_arguments > _maxArguments)
     {
         return luaL_error(lua, "packet has too many parts");
     }
 
-    stringstream output(stringstream::in | stringstream::out | stringstream::binary);
-    output << static_cast<int32_t>(num_arguments);
+    write<int32_t>(num_arguments, pOut);
 
     // the accumulating packet size does not include the serialization
     // the ACTUAL packet size may be larger than what OC packs
     size_t total_packet_size = 0;
-    vector<char> strValue;
     const char* pValue;
     int valueLen;
 
@@ -63,7 +106,7 @@ int Modem::tryPack(lua_State* lua, int offset, vector<char>* pOut) const
     for (int index = offset; index <= last_index; ++index)
     {
         int type_id = lua_type(lua, index);
-        output << type_id;
+        write<int32_t>(type_id, pOut);
         switch (type_id)
         {
             case LUA_TSTRING:
@@ -72,18 +115,17 @@ int Modem::tryPack(lua_State* lua, int offset, vector<char>* pOut) const
                 valueLen = lua_rawlen(lua, index);
                 total_packet_size += valueLen;
                 total_packet_size += 2;
-                output << static_cast<int32_t>(valueLen);
-                std::copy(pValue, pValue + valueLen, std::ostream_iterator<char>(output));
+                write(pValue, valueLen, pOut);
             break;
             case LUA_TBOOLEAN:
                 // size: 6
                 total_packet_size += 6;
-                output << lua_toboolean(lua, index);
+                write<bool>(lua_toboolean(lua, index), pOut);
             break;
             case LUA_TNUMBER:
                 // size: 10
                 total_packet_size += 10;
-                output << static_cast<LUA_NUMBER>(lua_tonumber(lua, index));
+                write<LUA_NUMBER>(lua_tonumber(lua, index), pOut);
             break;
             case LUA_TNIL:
                 // size: 6
@@ -99,13 +141,6 @@ int Modem::tryPack(lua_State* lua, int offset, vector<char>* pOut) const
             return luaL_error(lua, ss.str().c_str());
         }
     }
-
-    auto* pbuf = output.rdbuf();
-    std::size_t buffer_size = pbuf->pubseekoff(0, output.end, output.in);
-    pbuf->pubseekpos(0, output.in);
-
-    pOut->resize(buffer_size);
-    pbuf->sgetn(pOut->data(), buffer_size);
 
     return 0;
 }
@@ -150,29 +185,22 @@ int Modem::isOpen(lua_State* lua)
 int Modem::broadcast(lua_State* lua)
 {
     int port = Value::checkArg<int>(lua, 1);
-    if (port < 1 || port > 0xffff)
-        return luaL_error(lua, "invalid port number");
-
     vector<char> payload;
-    int ret = tryPack(lua, 2, &payload);
+    int ret = tryPack(lua, nullptr, port, &payload);
     if (ret)
         return ret;
-
-    return ValuePack::ret(lua, _modem->broadcast(port, payload));
+    return ValuePack::ret(lua, _modem->send(payload));
 }
 
 int Modem::send(lua_State* lua)
 {
-    string address = Value::checkArg<string>(lua, 1);
+    vector<char> address = Value::checkArg<vector<char>>(lua, 1);
     int port = Value::checkArg<int>(lua, 2);
-    if (port < 1 || port > 0xffff)
-        return luaL_error(lua, "invalid port number");
-
     vector<char> payload;
-    int ret = tryPack(lua, 2, &payload);
+    int ret = tryPack(lua, &address, port, &payload);
     if (ret)
         return ret;
-    return ValuePack::ret(lua, _modem->send(address, port, payload));
+    return ValuePack::ret(lua, _modem->send(payload));
 }
 
 int Modem::open(lua_State* lua)
@@ -197,3 +225,9 @@ RunState Modem::update()
 
     return RunState::Continue;
 }
+
+// template<>
+// T Modem::read(const T* buffer) const
+// {
+// }
+

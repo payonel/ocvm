@@ -4,9 +4,11 @@
 #include "io/event.h"
 
 #include <memory>
+#include <vector>
 
 class ModemDriver;
 using std::unique_ptr;
+using std::vector;
 
 class Modem : public Component, public EventSource<ModemEvent>
 {
@@ -33,7 +35,7 @@ public:
 protected:
     bool onInitialize() override;
     RunState update() override;
-    int tryPack(lua_State* lua, int offset, vector<char>* pOut) const;
+    int tryPack(lua_State* lua, const vector<char>* pAddr, int port, vector<char>* pOut) const;
 
     unique_ptr<ModemDriver> _modem;
     size_t _maxPacketSize;

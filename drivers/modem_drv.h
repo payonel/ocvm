@@ -14,8 +14,7 @@ public:
     bool close(int port);
     bool open(int port);
     bool isOpen(int port);
-    bool broadcast(int port, const vector<char>& payload);
-    bool send(string address, int port, const vector<char>& payload);
+    bool send(const vector<char>& payload);
 
     bool start();
     void stop();

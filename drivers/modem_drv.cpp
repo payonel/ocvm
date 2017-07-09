@@ -20,12 +20,7 @@ bool ModemDriver::isOpen(int port)
     return false;
 }
 
-bool ModemDriver::broadcast(int port, const vector<char>& payload)
-{
-    return false;
-}
-
-bool ModemDriver::send(string address, int port, const vector<char>& payload)
+bool ModemDriver::send(const vector<char>& payload)
 {
     return false;
 }
