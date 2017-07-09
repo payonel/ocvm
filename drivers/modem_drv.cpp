@@ -22,7 +22,8 @@ bool ModemDriver::isOpen(int port)
 
 bool ModemDriver::send(const vector<char>& payload)
 {
-    return false;
+    _source->push({payload});
+    return true;
 }
 
 bool ModemDriver::start()

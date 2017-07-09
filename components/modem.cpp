@@ -211,23 +211,67 @@ int Modem::open(lua_State* lua)
     return ValuePack::ret(lua, _modem->open(port));
 }
 
+template<typename T>
+T read(const char** pInput)
+{
+    const char*& input = *pInput;
+    T result {};
+    char* p = reinterpret_cast<char*>(&result);
+    for (size_t i = 0; i < sizeof(T); i++)
+    {
+        *p++ = *input++;
+    }
+    return result;
+}
+
+template<typename T>
+T read_vector(const char** pInput)
+{
+    int size = read<int32_t>(pInput);
+    T result;
+    std::copy(*pInput, *pInput + size, std::back_inserter(result));
+    *pInput += size;
+    return result;
+}
+
 RunState Modem::update()
 {
     ModemEvent me;
     while (EventSource<ModemEvent>::pop(me))
     {
-        string send_address;
-        string recv_address;
-        int port = 0;
-        int distance = 0;
-        client()->pushSignal({"modem_message", send_address, recv_address, port, distance});
+        // broadcast packets have no sender address
+        // {sender, has_target(1 or 0), target, port, num_args, arg_type_id_1, arg_value_1, ..., arg_type_id_n, arg_value_n)
+        const char* input = me.payload.data();
+        string send_address = read_vector<string>(&input);
+        bool has_target = read<bool>(&input);
+        string recv_address = has_target ? read_vector<string>(&input) : address();
+        int port = read<int32_t>(&input);
+        int distance = 0; // always zero in simulation
+        ValuePack pack {"modem_message", send_address, recv_address, port, distance};
+
+        int num_args = read<int32_t>(&input);
+        for (int n = 0; n < num_args; n++)
+        {
+            int type_id = read<int32_t>(&input);
+            switch (type_id)
+            {
+                case LUA_TSTRING:
+                    pack.push_back(read_vector<vector<char>>(&input));
+                break;
+                case LUA_TBOOLEAN:
+                    pack.push_back(read<bool>(&input));
+                break;
+                case LUA_TNUMBER:
+                    pack.push_back(read<LUA_NUMBER>(&input));
+                break;
+                case LUA_TNIL:
+                    pack.push_back(Value::nil);
+                break;
+            }
+        }
+
+        client()->pushSignal(pack);
     }
 
     return RunState::Continue;
 }
-
-// template<>
-// T Modem::read(const T* buffer) const
-// {
-// }
-
