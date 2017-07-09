@@ -45,11 +45,7 @@ struct KeyEvent
 
 struct ModemEvent
 {
-    string receiver_address;
-    string sender_address;
-    int port;
-    // int distance; // always zero
-    ValuePack arguments; // nil, boolean, number, or string. limit 8
+    vector<char> payload;
 };
 
 template <typename TEvent>

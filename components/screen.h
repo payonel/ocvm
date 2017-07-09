@@ -40,5 +40,5 @@ protected:
 private:
     vector<Keyboard*> _keyboards;
     unique_ptr<Frame> _frame;
-    Gpu* _gpu;
+    Gpu* _gpu = nullptr;
 };

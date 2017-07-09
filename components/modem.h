@@ -3,14 +3,22 @@
 #include "component.h"
 #include "io/event.h"
 
+#include <memory>
+
+class ModemDriver;
+using std::unique_ptr;
+
 class Modem : public Component, public EventSource<ModemEvent>
 {
 public:
     Modem();
+    virtual ~Modem();
 
     enum ConfigIndex
     {
         SystemPort = Component::ConfigIndex::Next,
+        MaxPacketSize,
+        MaxArguments
     };
 
     int setWakeMessage(lua_State*);
@@ -24,4 +32,10 @@ public:
     int open(lua_State*);
 protected:
     bool onInitialize() override;
+    RunState update() override;
+    int tryPack(lua_State* lua, int offset, vector<char>* pOut) const;
+
+    unique_ptr<ModemDriver> _modem;
+    size_t _maxPacketSize;
+    int _maxArguments;
 };
