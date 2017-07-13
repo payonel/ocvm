@@ -6,6 +6,15 @@ using std::thread;
 using std::mutex;
 using std::unique_lock;
 
+class NiceWork
+{
+public:
+    void set();
+    ~NiceWork();
+private:
+    bool _work_done = false;
+};
+
 class Worker
 {
 public:
@@ -16,7 +25,7 @@ public:
     void stop();
 
 protected:
-    virtual void onStart() = 0;
+    virtual bool onStart() = 0;
     virtual bool runOnce() = 0;
     virtual void onStop() = 0;
 

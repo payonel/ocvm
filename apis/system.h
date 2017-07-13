@@ -13,6 +13,7 @@ public:
     static string fonts_path();
     static string bios_path();
     static string machine_path();
+    static int max_connections();
 
     static void configure(const Value& settings);
 private:
@@ -24,4 +25,5 @@ private:
     static string _fonts;
     static string _bios;
     static string _machine;
+    static int _max_connections;
 };

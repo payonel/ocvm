@@ -5,10 +5,12 @@
 
 #include <memory>
 #include <vector>
+#include <set>
 
 class ModemDriver;
 using std::unique_ptr;
 using std::vector;
+using std::set;
 
 class Modem : public Component, public EventSource<ModemEvent>
 {
@@ -41,4 +43,6 @@ protected:
     unique_ptr<ModemDriver> _modem;
     size_t _maxPacketSize;
     int _maxArguments;
+
+    set<int> _ports;
 };

@@ -114,7 +114,7 @@ TtyReader::TtyReader()
     _terminal_out = (isatty(fileno(stdout)));
 }
 
-void TtyReader::onStart()
+bool TtyReader::onStart()
 {
     //save current settings
     _original = new termios;
@@ -145,6 +145,7 @@ void TtyReader::onStart()
 #endif
 
     cout << flush;
+    return true;
 }
 
 bool TtyReader::runOnce()

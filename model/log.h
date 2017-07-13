@@ -23,6 +23,25 @@ public:
         ss << t;
         return *this << ss.str();
     }
+
+    string serialize(stringstream& ss)
+    {
+        return ss.str() + "\n";
+    }
+
+    template <typename T, typename ...Ts>
+    string serialize(stringstream& ss, const T& arg, const Ts&... args)
+    {
+        ss << arg;
+        return serialize(ss, args...);
+    }
+
+    template <typename ...Ts>
+    Logger& write(const Ts&... args)
+    {
+        stringstream ss;
+        return *this << serialize(ss, args...);
+    }
 private:
     string _log_path;
 };

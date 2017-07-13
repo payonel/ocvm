@@ -25,7 +25,7 @@ private:
     bool hasMasterTty() const;
     bool hasTerminalOut() const;
     TtyReader();
-    void onStart() override;
+    bool onStart() override;
     bool runOnce() override;
     void onStop() override;
 

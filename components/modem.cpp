@@ -1,6 +1,7 @@
 #include "modem.h"
 #include "drivers/modem_drv.h"
 #include "model/client.h"
+#include "model/log.h"
 
 #include <sstream>
 #include <iterator>
@@ -17,8 +18,6 @@ Modem::Modem()
     add("broadcast", &Modem::broadcast);
     add("send", &Modem::send);
     add("open", &Modem::open);
-
-    _modem.reset(new ModemDriver(this));
 }
 
 Modem::~Modem()
@@ -28,8 +27,11 @@ Modem::~Modem()
 
 bool Modem::onInitialize()
 {
+    int system_port = config().get(ConfigIndex::SystemPort).Or(56000).toNumber();
+    _modem.reset(new ModemDriver(this, system_port));
     if (!_modem->start())
     {
+        lout << "modem driver failed to start\n";
         return false;
     }
 
@@ -109,13 +111,9 @@ int Modem::tryPack(lua_State* lua, const vector<char>* pAddr, int port, vector<c
         write<int32_t>(type_id, pOut);
         switch (type_id)
         {
-            case LUA_TSTRING:
-                // size of string in bytes, +2
-                pValue = lua_tostring(lua, index);
-                valueLen = lua_rawlen(lua, index);
-                total_packet_size += valueLen;
-                total_packet_size += 2;
-                write(pValue, valueLen, pOut);
+            case LUA_TNIL:
+                // size: 6
+                total_packet_size += 6;
             break;
             case LUA_TBOOLEAN:
                 // size: 6
@@ -127,9 +125,13 @@ int Modem::tryPack(lua_State* lua, const vector<char>* pAddr, int port, vector<c
                 total_packet_size += 10;
                 write<LUA_NUMBER>(lua_tonumber(lua, index), pOut);
             break;
-            case LUA_TNIL:
-                // size: 6
-                total_packet_size += 6;
+            case LUA_TSTRING:
+                // size of string in bytes, +2
+                pValue = lua_tostring(lua, index);
+                valueLen = lua_rawlen(lua, index);
+                total_packet_size += valueLen;
+                total_packet_size += 2;
+                write(pValue, valueLen, pOut);
             break;
             default: return luaL_error(lua, "unsupported data type");
         }
@@ -160,7 +162,13 @@ int Modem::close(lua_State* lua)
     int port = Value::checkArg<int>(lua, 1);
     if (port < 1 || port > 0xffff)
         return luaL_error(lua, "invalid port number");
-    return ValuePack::ret(lua, _modem->close(port));
+    bool changed = false;
+    if (_ports.find(port) != _ports.end())
+    {
+        changed = true;
+        _ports.erase(port);
+    }
+    return ValuePack::ret(lua, changed);
 }
 
 int Modem::getWakeMessage(lua_State* lua)
@@ -178,8 +186,7 @@ int Modem::isOpen(lua_State* lua)
     int port = Value::checkArg<int>(lua, 1);
     if (port < 1 || port > 0xffff)
         return luaL_error(lua, "invalid port number");
-
-    return ValuePack::ret(lua, _modem->isOpen(port));
+    return ValuePack::ret(lua, _ports.find(port) != _ports.end());
 }
 
 int Modem::broadcast(lua_State* lua)
@@ -208,7 +215,13 @@ int Modem::open(lua_State* lua)
     int port = Value::checkArg<int>(lua, 1);
     if (port < 1 || port > 0xffff)
         return luaL_error(lua, "invalid port number");
-    return ValuePack::ret(lua, _modem->open(port));
+    bool changed = false;
+    if (_ports.find(port) == _ports.end())
+    {
+        changed = true;
+        _ports.insert(port);
+    }
+    return ValuePack::ret(lua, changed);
 }
 
 template<typename T>
@@ -238,8 +251,8 @@ RunState Modem::update()
     ModemEvent me;
     while (EventSource<ModemEvent>::pop(me))
     {
-        // broadcast packets have no sender address
-        // {sender, has_target(1 or 0), target, port, num_args, arg_type_id_1, arg_value_1, ..., arg_type_id_n, arg_value_n)
+        // broadcast packets have no target
+        // {sender, has_target(1 or 0)[, target], port, num_args, arg_type_id_1, arg_value_1, ..., arg_type_id_n, arg_value_n)
         const char* input = me.payload.data();
         vector<char> send_address = read_vector(&input);
         bool has_target = read<bool>(&input);
@@ -247,11 +260,6 @@ RunState Modem::update()
         if (has_target)
         {
             recv_address = read_vector(&input);
-        }
-        else
-        {
-            string addr = address();
-            recv_address = vector<char>(addr.begin(), addr.end());
         }
         int port = read<int32_t>(&input);
 
@@ -261,7 +269,7 @@ RunState Modem::update()
         }
 
         int distance = 0; // always zero in simulation
-        ValuePack pack {"modem_message", send_address, recv_address, port, distance};
+        ValuePack pack {"modem_message", send_address, address(), port, distance};
 
         int num_args = read<int32_t>(&input);
         for (int n = 0; n < num_args; n++)
@@ -292,22 +300,22 @@ RunState Modem::update()
 
 bool Modem::isApplicable(int port, vector<char>* target)
 {
-    if (!_modem->isOpen(port))
+    if (_ports.find(port) == _ports.end())
     {
         return false;
     }
 
-    if (!target)
-        return true;
-
-    string addr = address();
-    if (addr.size() != target->size())
-        return false;
-
-    for (size_t i = 0; i < addr.size(); i++)
+    if (target)
     {
-        if (addr.at(i) != target->at(i))
+        string addr = address();
+        if (addr.size() != target->size())
             return false;
+
+        for (size_t i = 0; i < addr.size(); i++)
+        {
+            if (addr.at(i) != target->at(i))
+                return false;
+        }
     }
 
     return true;
