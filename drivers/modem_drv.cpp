@@ -7,6 +7,42 @@
 #include <unistd.h>
 #include <netdb.h>
 
+bool ModemDriver::readNextModemMessage(ModemEvent& mev)
+{
+    if (!_connection)
+        return false;
+
+    vector<char> buffer;
+
+    // read next packet from server
+    constexpr ssize_t header_size = sizeof(int32_t);
+    if (!_connection->copy(&buffer, 0, header_size))
+        return false;
+
+    int32_t packet_size = 0;
+    char* p = reinterpret_cast<char*>(&packet_size);
+    p[0] = buffer[0];
+    p[1] = buffer[1];
+    p[2] = buffer[2];
+    p[3] = buffer[3];
+
+    ssize_t end = header_size + packet_size;
+    if (Connection::max_buffer_size < end)
+    {
+        lout.write("modem likely bad packet, size reported: ", packet_size);
+        _connection->move(header_size);
+        return false;
+    }
+
+    if (!_connection->copy(&mev.payload, header_size, packet_size))
+        return false;
+
+    _connection->move(end);
+
+    lout.write("modem packet completed: ", end, " bytes");
+    return true;
+}
+
 unique_ptr<FileLock> FileLock::create(const string& path)
 {
     // we can only attempt to create the server if we only the file lock
@@ -58,7 +94,6 @@ bool ServerPool::remove(int id)
         return false;
 
     lout << "modem ServerPool removed client: " << id << endl;
-    conn_it->second->stop();
     delete conn_it->second;
     _connections.erase(conn_it);
     return true;
@@ -95,7 +130,6 @@ bool ServerPool::runOnce()
         {
             auto client = new Connection(client_socket);
             _connections[client_socket] = client;
-            client->start();
         }
     }
 
@@ -104,7 +138,7 @@ bool ServerPool::runOnce()
     vector<int> removals;
     for (auto pair : _connections)
     {
-        if (pair.second->isRunning())
+        if (pair.second->state() == ConnectionState::Ready)
             ids.push_back(pair.first);
         else
             removals.push_back(pair.first);
@@ -120,19 +154,21 @@ bool ServerPool::runOnce()
     {
         Connection* conn = _connections.at(id);
 
-        ModemEvent me;
-        while (conn->pop(me))
+        vector<char> buffer;
+        conn->preload(Connection::max_buffer_size);
+        auto bytes = conn->bytes_available();
+
+        if (bytes && conn->copy(&buffer, 0, bytes))
         {
             work.set();
             // rebroadcast
             for (auto other_id : ids)
             {
-                if (other_id == id)
-                    continue; // skip self
-
                 Connection* sib = _connections.at(other_id);
-                sib->write(MessageType::RelayMessage, me.payload);
+                sib->write(buffer);
             }
+
+            conn->move(bytes);
         }
     }
 
@@ -247,13 +283,16 @@ bool ModemDriver::send(const vector<char>& payload)
 {
     // runOnce can reset the connection, lock it
     make_lock();
-    if (!connected())
+    if (!_connection || !_connection->can_write())
     {
         lout << "modem::send failed: not connected\n";
         return false;
     }
 
-    return _connection->write(MessageType::SourceMessage, payload);
+    int32_t data_size = static_cast<int32_t>(payload.size());
+    char* p = reinterpret_cast<char*>(&data_size);
+    vector<char> header { p[0], p[1], p[2], p[3] };
+    return _connection->write(header) && _connection->write(payload);
 }
 
 bool ModemDriver::onStart()
@@ -264,29 +303,34 @@ bool ModemDriver::onStart()
 bool ModemDriver::runOnce()
 {
     NiceWork work;
-    if (!connected())
+    if (!_connection)
     {
-        if (_connection)
+        _connection.reset(new Connection("127.0.0.1", _system_port));
+    }
+    switch (_connection->state())
+    {
+    case ConnectionState::Starting:
+        // still waiting for connection to complete
+        return true;
+    case ConnectionState::Failed:
+        // no server
+        _connection.reset(nullptr);
+        if (!_local_server)
         {
-            _connection->stop();
-            _connection.reset(nullptr);
+            _local_server = ServerPool::create(_system_port);
         }
-
-        _connection = Connection::create("127.0.0.1", _system_port);
-
-        if (!_connection) // if we still don't have a connection, perhaps we need a local server
-        {
-            lout << "modem: no remote server detected\n";
-            if (!_local_server)
-            {
-                _local_server = ServerPool::create(_system_port);
-            }
-            return true; // try connection again on next thread loop
-        }
+        return true;
+    case ConnectionState::Ready:
+        break;
+    case ConnectionState::Finished:
+    case ConnectionState::Closed:
+        // the server may have closed this connection
+        _connection.reset(nullptr);
+        return true;
     }
 
     ModemEvent me;
-    while (_connection->pop(me))
+    while (readNextModemMessage(me))
     {
         work.set();
         _source->push(me);
@@ -297,10 +341,6 @@ bool ModemDriver::runOnce()
 
 void ModemDriver::onStop()
 {
-    if (_connection)
-    {
-        _connection->stop();
-    }
     _connection.reset(nullptr);
     if (_local_server)
     {
@@ -308,9 +348,4 @@ void ModemDriver::onStop()
     }
     _local_server.reset(nullptr);
     lout << "modem shutdown\n";
-}
-
-bool ModemDriver::connected() const
-{
-    return _connection && _connection->ok();
 }

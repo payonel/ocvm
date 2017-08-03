@@ -2,18 +2,10 @@
 #include "model/log.h"
 
 #include <iostream>
-#include <sstream>
-#include <fstream>
-#include <thread>
-using std::thread;
 using std::cout;
 using std::flush;
-using std::ofstream;
-using std::fstream;
 
-#include <stdio.h>
 #include <unistd.h>
-#include <termios.h>
 #include <sys/ioctl.h>
 #include <signal.h>
 
@@ -41,71 +33,31 @@ tuple<int, int> current_resolution()
     return std::make_tuple(cols, lines);
 }
 
-static volatile bool g_stop_winching = false;
-static thread* winch_thread = nullptr;
-static bool _winched = false;
 static sigset_t g_sigset;
-
-static void winch_proc()
-{
-    while (!g_stop_winching)
-    {
-        int sig;
-        int result = sigwait(&g_sigset, &sig);
-        if (result == 0 && sig == SIGWINCH) // winched
-        {
-            _winched = true;
-        }
-    }
-
-    // remove mask
-    pthread_sigmask(SIG_UNBLOCK, &g_sigset, nullptr);
-}
-
-static void register_winch(bool doit)
-{
-    if (winch_thread)
-    {
-        if (doit)
-            return;
-
-        g_stop_winching = true;
-        raise(SIGUSR1); // so the thread will release
-        winch_thread = nullptr;
-    }
-    else if (doit)
-    {
-        // block winch signals
-        sigemptyset(&g_sigset);
-        sigaddset(&g_sigset, SIGWINCH);
-        sigaddset(&g_sigset, SIGUSR1);
-        if (pthread_sigmask(SIG_BLOCK, &g_sigset, nullptr))
-        {
-            lout << "failed to mask threads for winch - resize will be ignored\n";
-            return;
-        }
-
-        g_stop_winching = false;
-        winch_thread = new thread(&winch_proc);
-    }
-}
 
 AnsiEscapeTerm::AnsiEscapeTerm()
 {
-    register_winch(true);
+    sigemptyset(&g_sigset);
+    sigaddset(&g_sigset, SIGWINCH);
+
+    if (pthread_sigmask(SIG_BLOCK, &g_sigset, nullptr))
+    {
+        lout << "failed to mask threads for winch - resize will be ignored\n";
+        return;
+    }
 }
 
 AnsiEscapeTerm::~AnsiEscapeTerm()
 {
-    register_winch(false);
+    pthread_sigmask(SIG_UNBLOCK, &g_sigset, nullptr);
 }
 
 void AnsiEscapeTerm::onUpdate()
 {
-    if (_winched)
+    timespec timeout { 0, 0 }; // poll, do not block
+    if (sigtimedwait(&g_sigset, nullptr, &timeout) == SIGWINCH) // winched
     {
         cout << Ansi::clear_scroll << flush;
-        _winched = false;
         auto rez = current_resolution();
         int width = std::get<0>(rez);
         int height = std::get<1>(rez);
@@ -148,6 +100,11 @@ static string replace_all(const string& src, const string& match, const string& 
         {
             result += replacement;
             index += match.size() + 1;
+        }
+        else
+        {
+            // in case of signed size_t index is not >= src.size() here
+            break;
         }
     }
     return result;

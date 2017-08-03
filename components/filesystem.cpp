@@ -461,8 +461,9 @@ int Filesystem::setLabel(lua_State* lua)
     if (isTmpfs())
         return luaL_error(lua, "label is readonly");
 
+    string new_label = Value::checkArg<string>(lua, 1);
     int stack = getLabel(lua);
-    update(ConfigIndex::Label, Value::checkArg<string>(lua, 1));
+    update(ConfigIndex::Label, new_label);
     return stack;
 }
 
@@ -681,7 +682,7 @@ FileHandle* Filesystem::create(lua_State* lua, const string& filepath, fstream::
     if (!pfh->isOpen())
     {
         pfh->close(); // release resources if any
-        lua_pop(lua, 1); // releaes userdata
+        lua_pop(lua, 1); // release userdata
         return nullptr;
     }
 

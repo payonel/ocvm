@@ -3,42 +3,54 @@
 #include "io/event.h"
 #include "worker.h"
 
-#include <memory>
-using std::unique_ptr;
+#include <thread>
 
-enum class MessageType
+enum class ConnectionState
 {
-    SourceMessage,
-    RelayMessage
+    Starting,
+    Failed,
+    Ready,
+    Finished,
+    Closed
 };
 
-class Connection : public Worker, public EventSource<ModemEvent>
+class Connection
 {
 public:
     Connection(int id);
+    Connection(const string& host, int system_port);
     virtual ~Connection();
-    static unique_ptr<Connection> create(const string& host, int system_port);
 
-    bool write(MessageType type, const vector<char>& payload);
+    bool write(const vector<char>& vec);
 
     string label() const;
-    bool ok() const;
+    ConnectionState state() const;
+    ssize_t bytes_available() const;
+    bool preload(ssize_t bytes);
+    bool copy(vector<char>* pOut, ssize_t offset, ssize_t bytes);
+    bool move(ssize_t bytes);
+    bool can_read() const;
+    bool can_write() const;
+    void close();
+
+    const static ssize_t max_buffer_size = 1024 * 16; // 16K, 8K is the max OC packet, double that for fun
 
 protected:
-    bool onStart() override;
-    bool runOnce() override;
-    void onStop() override;
-
     bool read(ssize_t bytes);
 
 private:
     int _id = -1;
-    bool _client_side = false;
-    bool _failed = false;
+    string _host;
+    int _port;
 
-    const static ssize_t max_buffer_size = 1024 * 16; // 16K, 8K is the max OC packet, double that for fun
+    ConnectionState _state;
+    thread _connection_thread;
+
+    bool _client_side = false;
     char _internal_buffer[max_buffer_size];
     ssize_t _buffer_size = 0;
+
+    static void async_open(Connection* pc);
 };
 
 bool set_nonblocking(int id);

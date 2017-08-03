@@ -112,6 +112,24 @@ bool Value::checkArg<bool>(lua_State* lua, int index, const bool* pDefault)
     return lua_toboolean(lua, index);
 }
 
+template <>
+map<string, string> Value::checkArg<map<string, string>>(lua_State* lua, int index, const map<string, string>* pDefault)
+{
+    bool has_type = validate_argument_type(lua, index, LUA_TTABLE, pDefault);
+    
+    if (!has_type)
+        return *pDefault;
+
+    map<string, string> result;
+    Value t(lua, index);
+    for (const auto& pair : t._stable)
+    {
+        result[pair.first] = pair.second.toString();
+    }
+
+    return result;
+}
+
 Value::Value(const vector<char>& v)
 {
     _type = "string";

@@ -2,11 +2,11 @@
 
 #include "model/luaproxy.h"
 
-class UserData
+class UserData : public LuaProxy
 {
 public:
+    UserData();
     virtual ~UserData() {}
-    virtual vector<string> methods() const { return {}; }
     virtual void dispose() {}
 };
 
@@ -15,6 +15,7 @@ class UserDataApi : public LuaProxy
 public:
     static UserDataApi* get();
     static int methods(lua_State* lua);
+    static int invoke(lua_State* lua);
     static int dispose(lua_State* lua);
     static int apply(lua_State* lua);
     static int unapply(lua_State* lua);

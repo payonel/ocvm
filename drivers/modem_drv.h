@@ -45,11 +45,11 @@ class ModemDriver : public Worker
 public:
     ModemDriver(EventSource<ModemEvent>* source, int system_port);
     bool send(const vector<char>& payload);
-    bool connected() const;
 protected:
     bool onStart() override;
     bool runOnce() override;
     void onStop() override;
+    bool readNextModemMessage(ModemEvent& mev);
 
 private:
     // ctor assigned
