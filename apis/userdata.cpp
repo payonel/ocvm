@@ -1,8 +1,13 @@
 #include "userdata.h"
 
+UserData::UserData() : LuaProxy("unnamed")
+{
+}
+
 UserDataApi::UserDataApi() : LuaProxy("userdata")
 {
     cadd("methods", &UserDataApi::methods);
+    cadd("invoke", &UserDataApi::invoke);
     cadd("dispose", &UserDataApi::dispose);
     cadd("apply", &UserDataApi::apply);
     cadd("unapply", &UserDataApi::unapply);
@@ -28,12 +33,26 @@ int UserDataApi::methods(lua_State* lua)
 {
     UserData* data = check(lua);
     Value methods_table = Value::table();
-    for (const auto& method_name : data->methods())
+    for (const LuaMethod& info : data->methods())
     {
-        methods_table.insert(method_name);
+        methods_table.set(std::get<0>(info), true);
     }
 
     return ValuePack::ret(lua, methods_table);
+}
+
+int UserDataApi::invoke(lua_State* lua)
+{
+    UserData* data = check(lua);
+    // the pointer is probably safe from gc..probably
+    lua_remove(lua, 1);
+    string methodName = Value::checkArg<string>(lua, 1);
+    lua_remove(lua, 1);
+
+    int stacked = data->invoke(methodName, lua);
+    lua_pushboolean(lua, true);
+    lua_insert(lua, 1);
+    return stacked + 1;
 }
 
 int UserDataApi::dispose(lua_State* lua)
@@ -46,17 +65,17 @@ int UserDataApi::dispose(lua_State* lua)
 
 int UserDataApi::apply(lua_State* lua)
 {
-    return luaL_error(lua, "userdata.apply is not implemented");
+    return ValuePack::ret(lua, true);
 }
 
 int UserDataApi::unapply(lua_State* lua)
 {
-    return luaL_error(lua, "userdata.unapply is not implemented");
+    return ValuePack::ret(lua, true);
 }
 
 int UserDataApi::call(lua_State* lua)
 {
-    return luaL_error(lua, "userdata.call is not implemented");
+    return UserDataApi::invoke(lua);
 }
 
 int UserDataApi::save(lua_State* lua)
@@ -71,7 +90,7 @@ int UserDataApi::load(lua_State* lua)
 
 int UserDataApi::doc(lua_State* lua)
 {
-    return luaL_error(lua, "userdata.doc is not implemented");
+    return ValuePack::ret(lua, Value::nil);
 }
 
 UserDataApi* UserDataApi::get()
