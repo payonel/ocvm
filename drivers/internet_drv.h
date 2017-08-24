@@ -36,12 +36,12 @@ public:
 
 protected:
     void open(const string& addr, int port);
+    virtual Connection* connection() const = 0;
 
     Internet* _inet;
-    unique_ptr<Connection> _connection;
     bool _needs_connection;
     bool _needs_data;
-
+    
     virtual void _close();
 };
 
@@ -50,6 +50,10 @@ class TcpObject : public InternetConnection
 public:
     TcpObject(Internet* inet, const string& addr, int port);
     int write(lua_State* lua);
+protected:
+    Connection* connection() const override;
+private:
+    unique_ptr<Connection> _connection;
 };
 
 class PipedCommand
@@ -58,15 +62,15 @@ public:
     PipedCommand();
     virtual ~PipedCommand();
     bool open(const string& command, const vector<string>& args);
-    int stdin() const;
-    int stdout() const;
-    int stderr() const;
+    Connection* stdin() const;
+    Connection* stdout() const;
+    Connection* stderr() const;
     int id() const;
     void close();
 private:
-    int _stdin;
-    int _stdout;
-    int _stderr;
+    unique_ptr<Connection> _stdin;
+    unique_ptr<Connection> _stdout;
+    unique_ptr<Connection> _stderr;
     pid_t _child_id;
 };
 
@@ -78,10 +82,9 @@ public:
     int response(lua_State* lua);
 protected:
     bool update() override;
+    Connection* connection() const override;
 private:
     bool _response_ready;
     ValuePack _response;
-
-    unique_ptr<Connection> _response_connection;
     PipedCommand _cmd;
 };

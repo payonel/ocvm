@@ -187,8 +187,6 @@ void ServerPool::onStop()
     {
         remove(id);
     }
-
-    lout << "modem ServerPool thread shutdown\n";
 }
 
 unique_ptr<ServerPool> ServerPool::create(int system_port)

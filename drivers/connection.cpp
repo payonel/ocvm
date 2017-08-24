@@ -174,6 +174,9 @@ bool Connection::preload(ssize_t bytes)
                     lout.write(label(), " read failed: ", bytes_received, " errno:", errno);
 
                 _state = ConnectionState::Finished;
+
+                ::close(_id);
+                _id = -1;
             }
             return false;
         }

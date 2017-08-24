@@ -14,9 +14,6 @@ using std::stringstream;
 
 ////////////////// PIPED COMMAND ////////////////////////
 PipedCommand::PipedCommand() :
-    _stdin(-1),
-    _stdout(-1),
-    _stderr(-1),
     _child_id(-1)
 {
 }
@@ -43,17 +40,21 @@ bool PipedCommand::open(const string& command, const vector<string>& args)
 
     if (_child_id) // parent
     {
-        _stdin = pids[STDIN_FILENO][1];
+        int stdin = pids[STDIN_FILENO][1];
         ::close(pids[STDIN_FILENO][0]);
-        set_nonblocking(_stdin);
+        set_nonblocking(stdin);
 
-        _stdout = pids[STDOUT_FILENO][0];
+        int stdout = pids[STDOUT_FILENO][0];
         ::close(pids[STDOUT_FILENO][1]);
-        set_nonblocking(_stdout);
+        set_nonblocking(stdout);
 
-        _stderr = pids[STDERR_FILENO][0];
+        int stderr = pids[STDERR_FILENO][0];
         ::close(pids[STDERR_FILENO][1]);
-        set_nonblocking(_stderr);
+        set_nonblocking(stderr);
+
+        _stdin.reset(new Connection(stdin));
+        _stdout.reset(new Connection(stdout));
+        _stderr.reset(new Connection(stderr));
 
         // success
         return true;
@@ -83,19 +84,19 @@ bool PipedCommand::open(const string& command, const vector<string>& args)
     return false;
 }
 
-int PipedCommand::stdin() const
+Connection* PipedCommand::stdin() const
 {
-    return _stdin;
+    return _stdin.get();
 }
 
-int PipedCommand::stdout() const
+Connection* PipedCommand::stdout() const
 {
-    return _stdout;
+    return _stdout.get();
 }
 
-int PipedCommand::stderr() const
+Connection* PipedCommand::stderr() const
 {
-    return _stderr;
+    return _stderr.get();
 }
 
 int PipedCommand::id() const
@@ -106,9 +107,6 @@ int PipedCommand::id() const
 void PipedCommand::close()
 {
     ::close(_child_id);
-    ::close(_stdin);
-    ::close(_stdout);
-    ::close(_stderr);
 }
 
 /////////////////////////////////////////////////////////
@@ -148,7 +146,6 @@ static string escape(const string& text)
 
 InternetConnection::InternetConnection(Internet* inet) :
     _inet(inet),
-    _connection(),
     _needs_connection(false),
     _needs_data(false)
 {
@@ -165,7 +162,7 @@ void InternetConnection::dispose()
 
 int InternetConnection::finishConnect(lua_State* lua)
 {
-    _needs_connection = _connection->state() < ConnectionState::Ready;
+    _needs_connection = connection()->state() < ConnectionState::Ready;
     return ValuePack::ret(lua, !_needs_connection);
 }
 
@@ -177,7 +174,7 @@ int InternetConnection::close(lua_State* lua)
 
 void InternetConnection::_close()
 {
-    _connection->close();
+    connection()->close();
 }
 
 bool InternetConnection::update()
@@ -185,7 +182,7 @@ bool InternetConnection::update()
     bool updated = false;
     if (_needs_connection)
     {
-        if (_connection->state() >= ConnectionState::Ready)
+        if (connection()->state() >= ConnectionState::Ready)
         {
             _needs_connection = false;
             updated = true;
@@ -193,10 +190,10 @@ bool InternetConnection::update()
     }
     if (_needs_data)
     {
-        if (_connection->state() == ConnectionState::Ready)
+        if (connection()->state() == ConnectionState::Ready)
         {
-            auto avail = _connection->bytes_available();
-            if (_connection->preload(avail + 1))
+            auto avail = connection()->bytes_available();
+            if (connection()->preload(avail + 1))
             {
                 _needs_data = false;
                 updated = true;
@@ -210,21 +207,21 @@ bool InternetConnection::update()
 int InternetConnection::read(lua_State* lua)
 {
     _needs_data = true;
-    if (!_connection->can_read())
+    if (!connection()->can_read())
         return ValuePack::ret(lua, Value::nil, "not connected");
 
     vector<char> buffer;
     LUA_NUMBER default_n = INT_MAX;
     ssize_t n = static_cast<ssize_t>(Value::checkArg<LUA_NUMBER>(lua, 1, &default_n));
 
-    _connection->preload(n);
-    n = std::min(n, _connection->bytes_available());
-    _connection->copy(&buffer, 0, n);
-    _connection->move(buffer.size());
+    connection()->preload(n);
+    n = std::min(n, connection()->bytes_available());
+    connection()->copy(&buffer, 0, n);
+    connection()->move(buffer.size());
 
-    if (buffer.size() == 0 && _connection->state() == ConnectionState::Finished)
+    if (buffer.size() == 0 && connection()->state() == ConnectionState::Finished)
     {
-        _connection->close();
+        connection()->close();
         return ValuePack::ret(lua, Value::nil);
     }
 
@@ -252,6 +249,10 @@ int TcpObject::write(lua_State* lua)
     return ValuePack::ret(lua, buffer.size());
 }
 
+Connection* TcpObject::connection() const
+{
+    return _connection.get();
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -280,11 +281,9 @@ HttpObject::HttpObject(Internet* inet, const HttpAddress& addr, const string& po
     if (addr.valid)
     {
         args.push_back(addr.raw);
+        lout.write("http request: ", addr.raw);
         _cmd.open("/usr/bin/wget", args);
     }
-
-    _connection.reset(new Connection(_cmd.stdout()));
-    _response_connection.reset(new Connection(_cmd.stderr()));
 }
 
 int HttpObject::response(lua_State* lua)
@@ -299,7 +298,8 @@ bool HttpObject::update()
 {
     if (!_response_ready)
     {
-        if (!_response_connection->can_read())
+        Connection* resp = _cmd.stderr();
+        if (!resp->can_read())
         {
             _response_ready = true;
             _response.clear();
@@ -308,15 +308,15 @@ bool HttpObject::update()
         }
         else
         {
-            bool response_finished = _response_connection->state() == ConnectionState::Finished;
-            size_t prev_buffer_size = _response_connection->bytes_available();
-            _response_connection->preload(prev_buffer_size + 128);
-            size_t buffer_size = _response_connection->bytes_available();
+            bool response_finished = resp->state() == ConnectionState::Finished;
+            size_t prev_buffer_size = resp->bytes_available();
+            resp->preload(prev_buffer_size + 128);
+            size_t buffer_size = resp->bytes_available();
 
             _response_ready = response_finished && prev_buffer_size == buffer_size;
 
             vector<char> buffer;
-            _response_connection->copy(&buffer, 0, buffer_size);
+            resp->copy(&buffer, 0, buffer_size);
             size_t from = 0;
 
             while (from < buffer.size())
@@ -331,7 +331,7 @@ bool HttpObject::update()
 
                 stringstream ss;
                 string line(buffer.begin() + from, line_iterator);
-                _response_connection->move(line.size() + 1);
+                resp->move(line.size() + 1);
                 from = (line_iterator - buffer.begin()) + 1;
 
                 ss << line;
@@ -353,7 +353,7 @@ bool HttpObject::update()
                         _response_ready = true;
                         _response.push_back(Value::nil);
                         _response.push_back("failed to parse http response");
-                        _response_connection->close();
+                        resp->close();
                         break;
                     }
 
@@ -379,6 +379,11 @@ bool HttpObject::update()
     }
 
     return InternetConnection::update();
+}
+
+Connection* HttpObject::connection() const
+{
+    return _cmd.stdout();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
