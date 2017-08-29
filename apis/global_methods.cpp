@@ -17,14 +17,18 @@ int GlobalMethods::print(lua_State* lua)
 {
     bool bFirst = true;
     int top = lua_gettop(lua);
+    string msg;
     for (int i = 1; i <= top; i++)
     {
         string separator = bFirst ? "[--vm--] " : "\t";
-        lout << separator << Value(lua, i).toString();
+        msg += separator;
+        msg += Value(lua, i).toString();
         bFirst = false;
     }
 
-    lout << endl;
+    msg += "\n";
+
+    lout << msg;
     return 0;
 }
 
