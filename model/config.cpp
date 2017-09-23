@@ -32,9 +32,18 @@ bool Config::load(const string& path, const string& name)
     _path = path;
     _name = name;
 
-    // first check _path, else local for name
+    // if save path has no client.cfg, copy it from proc_root
+    if (!fs_utils::exists(savePath()))
+    {
+        if (!fs_utils::copy(fs_utils::proc_root() + "client.cfg", savePath()))
+        {
+            lout << "failed to copy new client.cfg\n";
+            return false;
+        }
+    }
+
     string table;
-    if (!fs_utils::read(savePath(), &table) && !fs_utils::read(name + ".cfg", &table))
+    if (!fs_utils::read(savePath(), &table))
     {
         lout << "config could not load: " << name << endl;
         return false;

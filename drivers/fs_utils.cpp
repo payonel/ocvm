@@ -248,3 +248,11 @@ string fs_utils::proc_root()
     }
     return path;
 }
+
+string fs_utils::pwd()
+{
+    error_code ec;
+    string path = fs::current_path(ec);
+    return path + "/";
+}
+

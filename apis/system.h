@@ -18,6 +18,7 @@ public:
     static void configure(const Value& settings);
 private:
     SystemApi();
+    static string make_path_absolute(const string& given_path);
 
     static double _timeout;
     static bool _gc;

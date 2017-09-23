@@ -29,5 +29,6 @@ namespace fs_utils
 
     bool run_safely(function<void()> func, function<void(const string&)> onError = nullptr);
     string proc_root();
+    string pwd();
 };
 

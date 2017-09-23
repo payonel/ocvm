@@ -31,11 +31,9 @@ Client::Client(Host* host, const string& env_path) :
     add("slot", &Client::component_slot);
     add("doc", &Client::component_doc);
 
-    // adjust env path if it is relative
-    if (env_path.find("/") != 0)
-        _env_path = fs_utils::proc_root() + _env_path;
-
     // make the env path if it doesn't already exist
+    if (_env_path.substr(0, 1) != "/")
+        _env_path = fs_utils::pwd() + _env_path;
     fs_utils::mkdir(_env_path);
 }
 

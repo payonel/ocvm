@@ -1,5 +1,6 @@
 #include "log.h"
 #include "io/frame.h"
+#include "drivers/fs_utils.h"
 
 #include <iostream>
 #include <fstream>
@@ -9,7 +10,7 @@ using std::function;
 using std::ofstream;
 using std::fstream;
 
-Logger lout("log");
+Logger lout(fs_utils::proc_root() + "/log");
 
 Logger::Logger(string logPath) :
     _log_path(logPath)
