@@ -166,38 +166,37 @@ void Computer::pushSignal(const ValuePack& pack)
 double Computer::trace(lua_State* coState, bool bForce)
 {
     double thenow = now();
-    if (_nexttrace < thenow || bForce)
-    {
-        _nexttrace = thenow + 1; // trace frequency
-        if (!coState)
-        {
-            lua_Debug ar;
-            lua_getstack(_state, 1, &ar);
-            for (int n = 1; n < 10 && !coState; n++)
-            {
-                const char* cstrVarName = lua_getlocal(_state, &ar, n);
-                if (!cstrVarName)
-                {
-                    break; // could not find coState
-                }
-                string varname = cstrVarName;
-                if (varname == "co")
-                {
-                    coState = lua_tothread(_state, -1);
-                }
-                lua_pop(_state, 1);
-            }
-        }
-        if (coState)
-        {
-            // int count = lua_gc(_state, LUA_GCCOUNT, 0) * 1024 + lua_gc(_state, LUA_GCCOUNTB, 0);
-            // lout << "mem: " << memory_used << " vs " << count << endl;
+    // if (_nexttrace < thenow || bForce)
+    // {
+    //     _nexttrace = thenow + 1; // trace frequency
+    //     if (!coState)
+    //     {
+    //         lua_Debug ar;
+    //         lua_getstack(_state, 1, &ar);
+    //         for (int n = 1; n < 10 && !coState; n++)
+    //         {
+    //             const char* cstrVarName = lua_getlocal(_state, &ar, n);
+    //             if (!cstrVarName)
+    //             {
+    //                 break; // could not find coState
+    //             }
+    //             string varname = cstrVarName;
+    //             if (varname == "co")
+    //             {
+    //                 coState = lua_tothread(_state, -1);
+    //             }
+    //             lua_pop(_state, 1);
+    //         }
+    //     }
+    //     if (coState)
+    //     {
+    //         // int count = lua_gc(_state, LUA_GCCOUNT, 0) * 1024 + lua_gc(_state, LUA_GCCOUNTB, 0);
+    //         // lout << "mem: " << memory_used << " vs " << count << endl;
 
-            //string stack = Value::stack(coState);
-            //lout << "stack: memory[" << memory_used << "]" << stack << endl;
-            // lprof << "stack\n";
-        }
-    }
+    //         string stack = Value::stack(coState);
+    //         lout << "stack: " << stack << endl;
+    //     }
+    // }
     return thenow;
 }
 
