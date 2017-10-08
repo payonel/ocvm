@@ -280,7 +280,7 @@ ModemDriver::ModemDriver(EventSource<ModemEvent>* source, int system_port) :
 bool ModemDriver::send(const vector<char>& payload)
 {
     // runOnce can reset the connection, lock it
-    make_lock();
+    auto lock = make_lock();
     if (!_connection || !_connection->can_write())
     {
         lout << "modem::send failed: not connected\n";
@@ -300,6 +300,8 @@ bool ModemDriver::onStart()
 
 bool ModemDriver::runOnce()
 {
+    auto lock = make_lock();
+
     NiceWork work;
     if (!_connection)
     {
@@ -339,6 +341,8 @@ bool ModemDriver::runOnce()
 
 void ModemDriver::onStop()
 {
+    auto lock = make_lock();
+
     _connection.reset(nullptr);
     if (_local_server)
     {
