@@ -24,7 +24,7 @@ bool Worker::isRunning()
 
 bool Worker::start()
 {
-    make_lock();
+    auto lock = make_lock();
     if (isRunning())
         return false;
 
@@ -38,14 +38,14 @@ bool Worker::start()
 void Worker::stop()
 {
     {
-        make_lock();
+        auto lock = make_lock();
         _continue = false;
     }
 
     if (_pthread)
         _pthread->join();
 
-    make_lock();
+    auto lock = make_lock();
     _running = false;
     delete _pthread;
     _pthread = nullptr;
@@ -54,19 +54,19 @@ void Worker::stop()
 void Worker::proc()
 {
     {
-        make_lock();
+        auto lock = make_lock();
         _continue = _continue && onStart();
     }
     while (_continue)
     {
         {
-            make_lock();
+            auto lock = make_lock();
             if (!runOnce())
                 break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    make_lock();
+    auto lock = make_lock();
     onStop();
     _running = false;
 }

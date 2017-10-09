@@ -63,13 +63,6 @@ void TtyReader::start(AnsiEscapeTerm* pTerm)
     Worker::start();
 }
 
-void TtyReader::stop()
-{
-    make_lock();
-    _pTerm = nullptr;
-    Worker::stop();
-}
-
 // static
 TtyReader* TtyReader::engine()
 {
@@ -204,6 +197,7 @@ bool TtyReader::runOnce()
 
 void TtyReader::onStop()
 {
+    _pTerm = nullptr;
 #ifdef __linux__
     // leave raw mode
     ioctl(0, KDSKBMODE, _original_kb_mode);

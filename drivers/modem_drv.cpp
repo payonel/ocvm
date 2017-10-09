@@ -300,8 +300,6 @@ bool ModemDriver::onStart()
 
 bool ModemDriver::runOnce()
 {
-    auto lock = make_lock();
-
     NiceWork work;
     if (!_connection)
     {
@@ -341,8 +339,6 @@ bool ModemDriver::runOnce()
 
 void ModemDriver::onStop()
 {
-    auto lock = make_lock();
-
     _connection.reset(nullptr);
     if (_local_server)
     {

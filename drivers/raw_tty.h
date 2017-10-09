@@ -19,7 +19,6 @@ public:
 
     static TtyReader* engine();
     void start(AnsiEscapeTerm* pTerm);
-    void stop();
 
 private:
     bool hasMasterTty() const;
