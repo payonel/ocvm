@@ -269,7 +269,7 @@ RunState Modem::update()
         }
 
         int distance = 0; // always zero in simulation
-        ValuePack pack {"modem_message", send_address, address(), port, distance};
+        ValuePack pack {"modem_message", address(), send_address, port, distance};
 
         int num_args = read<int32_t>(&input);
         for (int n = 0; n < num_args; n++)
