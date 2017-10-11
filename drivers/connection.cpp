@@ -190,6 +190,7 @@ bool Connection::copy(vector<char>* pOut, ssize_t offset, ssize_t bytes)
     if (!preload(offset + bytes))
         return false;
 
+    pOut->clear();
     std::copy(_internal_buffer + offset, _internal_buffer + offset + bytes, std::back_inserter(*pOut));
     return true;
 }
