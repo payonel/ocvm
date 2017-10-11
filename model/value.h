@@ -11,6 +11,7 @@ using std::vector;
 using std::map;
 using std::shared_ptr;
 using std::ostream;
+using std::size_t;
 
 class Value
 {

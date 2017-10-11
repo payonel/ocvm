@@ -30,7 +30,8 @@
         "filesystem": "cpp",
         "bitset": "cpp",
         "*.tcc": "cpp",
-        "istream": "cpp"
+        "istream": "cpp",
+        "cerrno": "cpp"
     },
     "files.exclude": {
         "**/.git": true,
