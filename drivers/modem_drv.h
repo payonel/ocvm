@@ -18,7 +18,8 @@ public:
     static unique_ptr<FileLock> create(const string& path);
     ~FileLock();
 private:
-    FileLock(int fd);
+    FileLock(const string& path, int fd);
+    string _path;
     int _fd;
 };
 
