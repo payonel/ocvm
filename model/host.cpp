@@ -73,6 +73,31 @@ void Host::close()
 {
 }
 
+string Host::stackLog() const
+{ 
+    return _stack_log;
+}
+
+void Host::stackLog(const string& stack_log)
+{
+    _stack_log = stack_log;
+}
+
+string Host::biosPath() const
+{
+    return _bios_path;
+}
+
+void Host::biosPath(const string& bios_path)
+{
+    _bios_path = bios_path;
+}
+
+string Host::fontsPath() const
+{
+    return _fonts_path;
+}
+
 void Host::fontsPath(const string& fonts_path)
 {
     _fonts_path = fonts_path;
@@ -81,4 +106,14 @@ void Host::fontsPath(const string& fonts_path)
         std::cerr << "Failed lot load fonts: " << fonts_path << std::endl;
         ::exit(1);
     }
+}
+
+string Host::machinePath() const
+{
+    return _machine_path;
+}
+
+void Host::machinePath(const string& machine_path)
+{
+    _machine_path = machine_path;
 }
