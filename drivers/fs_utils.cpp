@@ -211,7 +211,7 @@ bool fs_utils::rename(const string& from, const string& to)
     return ec.value() == 0;
 }
 
-string fs_utils::proc_root()
+string proc_root()
 {
     static string path;
     if (path.empty())
@@ -249,10 +249,29 @@ string fs_utils::proc_root()
     return path;
 }
 
-string fs_utils::pwd()
+string pwd()
 {
     error_code ec;
     string path = fs::current_path(ec);
     return path + "/";
 }
 
+string fs_utils::make_proc_path(const string& given_path)
+{
+    static string path = proc_root();
+    if (given_path.substr(0, 1) != "/")
+    {
+        return path + given_path;
+    }
+    return given_path;
+}
+
+string fs_utils::make_pwd_path(const string& given_path)
+{
+    static string pwd_path = pwd();
+    if (given_path.substr(0, 1) != "/")
+    {
+        return pwd_path + given_path;
+    }
+    return given_path;
+}

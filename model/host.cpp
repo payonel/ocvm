@@ -10,6 +10,7 @@
 #include "components/internet.h"
 #include "components/sandbox.h"
 #include "components/modem.h"
+#include "apis/unicode.h"
 
 Host::Host(string frameType) :
     _frameType(frameType)
@@ -70,4 +71,14 @@ Frame* Host::createFrame() const
 
 void Host::close()
 {
+}
+
+void Host::fontsPath(const string& fonts_path)
+{
+    _fonts_path = fonts_path;
+    if (!UnicodeApi::configure(_fonts_path))
+    {
+        std::cerr << "Failed lot load fonts: " << fonts_path << std::endl;
+        ::exit(1);
+    }
 }

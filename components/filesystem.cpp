@@ -3,6 +3,7 @@
 #include "model/log.h"
 #include "drivers/fs_utils.h"
 #include "apis/userdata.h"
+#include "apis/system.h"
 #include <fstream>
 #include <limits>
 using std::ifstream;
@@ -238,7 +239,7 @@ bool Filesystem::onInitialize()
     if (source_uri.type() == "string") // loot disk
     {
         _isReadOnly = true;
-        _src = fs_utils::proc_root() + source_uri.toString();
+        _src = fs_utils::make_proc_path(source_uri.toString());
         _tmpfs = false;
         if (!fs_utils::exists(_src))
         {

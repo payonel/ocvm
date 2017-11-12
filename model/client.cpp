@@ -32,8 +32,7 @@ Client::Client(Host* host, const string& env_path) :
     add("doc", &Client::component_doc);
 
     // make the env path if it doesn't already exist
-    if (_env_path.substr(0, 1) != "/")
-        _env_path = fs_utils::pwd() + _env_path;
+    _env_path = fs_utils::make_pwd_path(_env_path);
     fs_utils::mkdir(_env_path);
 }
 

@@ -5,16 +5,19 @@
 #include "io/frame.h"
 #include "model/log.h"
 #include "components/computer.h"
+#include "drivers/fs_utils.h"
 
 using std::cerr;
 
 void usage()
 {
-    cerr << "ocvm [ENV_PATH] [--frame=FRAME_TYPE] [--log-allocs[=STACK_LOG]]\n"
-            "  ENV_PATH     VM env path. Optional. defaults to ./tmp\n"
-            "  FRAME_TYPE   Term emulator(ansi or basic). defaults to ansi\n"
-            "  STACK_LOG    Log allocations and stack traces to STACK_LOG.\n"
-            "                 If enabled, defaults to stack.log\n";
+    cerr << "ocvm [ENV_PATH] [--frame=FRAME_TYPE] [--log-allocs[=STACK_LOG]] [--bios=BIOS_PATH] [--machine=MACHINE_PATH] [--fonts=FONTS_PATH]\n"
+            "  ENV_PATH     (optional) VM env path. Default ./tmp\n"
+            "  FRAME_TYPE   Term emulator(ansi or basic). Default ansi\n"
+            "  STACK_LOG    Path to log mallocs and stacks. Default stack.log\n"
+            "  BIOS_PATH    Path to eeprom code. Default system/bios.lua\n"
+            "  MACHINE_PATH Path to machine. Default system/machine.lua\n"
+            "  FONTS_PATH   Path to fonts.hex. Default system/fonts.hex\n";
     ::exit(1);
 }
 
@@ -25,14 +28,20 @@ struct Args
 
     enum
     {
-        LogAllocKey,
+        LogAllocKey = 0,
         FrameKey,
+        BiosKey,
+        MachineKey,
+        FontsKey
     };
 
-    const string keys[3] =
+    const string keys[FontsKey+1] =
     {
         "log-allocs",
         "frame",
+        "bios",
+        "machine",
+        "fonts"
     };
 
     string get(int n) const
@@ -71,6 +80,41 @@ struct Args
         if (key == keys[LogAllocKey])
             return "stack.log";
         return "";
+    }
+
+    string client_env_path() const
+    {
+        string value = get(1);
+        return value.empty() ? "tmp" : value;
+    }
+
+    string frame_type() const
+    {
+        string value = get(keys[Args::FrameKey]);
+        return value.empty() ? "ansi" : value;
+    }
+
+    string stack_log() const
+    {
+        return get(keys[Args::LogAllocKey]);
+    }
+
+    string bios_path() const
+    {
+        string value = get(keys[Args::BiosKey]);
+        return value.empty() ? fs_utils::make_proc_path("system/bios.lua") : value;
+    }
+
+    string machine_path() const
+    {
+        string value = get(keys[Args::MachineKey]);
+        return value.empty() ? fs_utils::make_proc_path("system/machine.lua") : value;
+    }
+
+    string fonts_path() const
+    {
+        string value = get(keys[Args::FontsKey]);
+        return value.empty() ? fs_utils::make_proc_path("system/font.hex") : value;
     }
 };
 
@@ -130,27 +174,19 @@ Args load_args(int argc, char** argv)
     return args;
 }
 
-string get_env_path(const string& value)
-{
-    return value.empty() ? "tmp" : value;
-}
-
-string get_frame_type(const string& value)
-{
-    return value.empty() ? "ansi" : value;
-}
-
 int main(int argc, char** argv)
 {
     auto args = load_args(argc, argv);
-    string client_env_path = get_env_path(args.get(1));
-    string frame_type = get_frame_type(args.get("frame"));
-    string stack_log = args.get("log-allocs");
+    string client_env_path = fs_utils::make_pwd_path(args.client_env_path());
 
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
-    Host host(frame_type);
-    host.stackLog(stack_log);
+    Host host(args.frame_type());
+    host.stackLog(args.stack_log());
+    host.biosPath(args.bios_path());
+    host.machinePath(args.machine_path());
+    host.fontsPath(args.fonts_path());
+    
     RunState run;
 
     do

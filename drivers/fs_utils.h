@@ -28,7 +28,8 @@ namespace fs_utils
     bool rename(const string& from, const string& to);
 
     bool run_safely(function<void()> func, function<void(const string&)> onError = nullptr);
-    string proc_root();
-    string pwd();
+
+    string make_proc_path(const string& given_path);
+    string make_pwd_path(const string& given_path);
 };
 

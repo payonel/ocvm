@@ -51,36 +51,37 @@ UnicodeApi* UnicodeApi::get()
     return &it;
 }
 
-void UnicodeApi::configure(const string& fonts_path)
+bool UnicodeApi::configure(const string& fonts_path)
 {
     font_width.clear();
-    if (fs_utils::read(fonts_path))
+    if (!fs_utils::read(fonts_path))
+        return false;
+    ifstream file(fonts_path);
+
+    while (file)
     {
-        ifstream file(fonts_path);
+        uint32_t key;
+        file >> std::hex >> key;
+        char delimiter = file.get();
 
-        while (file)
+        string bmp;
+        getline(file, bmp);
+
+        if (!file || delimiter != ':' || bmp.size() % 32 != 0)
         {
-            uint32_t key;
-            file >> std::hex >> key;
-            char delimiter = file.get();
-
-            string bmp;
-            getline(file, bmp);
-
-            if (!file || delimiter != ':' || bmp.size() % 32 != 0)
-            {
-                lout << "unicode font load finished\n";
-                break;
-            }
-
-            font_width[key] = bmp.size() / 32;
+            lout << "unicode font load finished\n";
+            break;
         }
 
-        file.close();
+        font_width[key] = bmp.size() / 32;
     }
+
+    file.close();
 
     // custom overrides
     font_width[9] = 2;
+
+    return true;
 }
 
 vector<char> UnicodeApi::wtrunc(const vector<char>& text, const size_t width)

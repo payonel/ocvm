@@ -1,6 +1,7 @@
 #include "computer.h"
 #include "model/log.h"
 #include "model/client.h"
+#include "model/host.h"
 #include "filesystem.h"
 #include "apis/system.h"
 
@@ -358,7 +359,7 @@ bool Computer::postInit()
     _machine = lua_newthread(_state);
     lout << "machine thread created\n";
 
-    string machine_path = SystemApi::machine_path();
+    string machine_path = client()->host()->machinePath();
     if (luaL_loadfile(_state, machine_path.c_str()))
     {
         lout << "failed to load machine [" << machine_path << "]\n";

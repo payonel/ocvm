@@ -10,7 +10,7 @@ using std::function;
 using std::ofstream;
 using std::fstream;
 
-Logger lout(fs_utils::proc_root() + "/log");
+Logger lout(fs_utils::make_proc_path("log"));
 
 Logger::Logger(string logPath) :
     _log_path(logPath)

@@ -35,7 +35,7 @@ bool Config::load(const string& path, const string& name)
     // if save path has no client.cfg, copy it from proc_root
     if (!fs_utils::exists(savePath()))
     {
-        if (!fs_utils::copy(fs_utils::proc_root() + "client.cfg", savePath()))
+        if (!fs_utils::copy(fs_utils::make_proc_path("client.cfg"), savePath()))
         {
             lout << "failed to copy new client.cfg\n";
             return false;

@@ -23,7 +23,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/ocvm",
-            "args": ["~/tmp/oc/openos"],
+            "args": ["~/tmp/oc/tmp"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],
