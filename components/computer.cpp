@@ -711,7 +711,7 @@ int Computer::isRunning(lua_State* lua)
 void Computer::mark_gc()
 {
     _gc_ticks++;
-    if (_gc_ticks >= 20)
+    if (_gc_ticks >= 10)
     {
         lua_gc(_state, LUA_GCCOLLECT, 0); // data, last param, not used for collect
         _gc_ticks = 0;
