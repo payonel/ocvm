@@ -418,12 +418,12 @@ int Computer::totalMemory(lua_State* lua)
 
 int Computer::energy(lua_State* lua)
 {
-    return ValuePack::ret(lua, std::numeric_limits<double>::max());
+    return ValuePack::ret(lua, std::numeric_limits<LUA_NUMBER>::max());
 }
 
 int Computer::maxEnergy(lua_State* lua)
 {
-    return ValuePack::ret(lua, std::numeric_limits<double>::max());
+    return ValuePack::ret(lua, std::numeric_limits<LUA_NUMBER>::max());
 }
 
 RunState Computer::update()
