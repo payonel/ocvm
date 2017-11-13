@@ -44,6 +44,9 @@ public:
     int maxEnergy(lua_State* lua);
     int realTime(lua_State* lua);
     int uptime(lua_State* lua);
+
+    // non-spec methods (for vm debugging)
+    int crash(lua_State* lua);
 protected:
     bool onInitialize() override;
     RunState resume(int nargs);

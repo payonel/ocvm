@@ -43,6 +43,8 @@ Computer::Computer()
     add("realTime", &Computer::realTime);
     add("uptime", &Computer::uptime);
     add("isRunning", &Computer::isRunning);
+
+    add("crash", &Computer::crash);
 }
 
 void Computer::stackLog(const string& stack_log)
@@ -211,36 +213,62 @@ int Computer::uptime(lua_State* lua)
     return ValuePack::ret(lua, trace() - _start_time);
 }
 
-void Computer::injectCustomLua()
+struct load_reader_data
 {
-    lua_getglobal(_state, name().c_str()); // +1
+    string code;
+    bool used = false;
+};
 
-    string code = "return [=====[" + address() + "]=====]";
-    luaL_loadstring(_state, code.c_str()); // (function) +1
-    lua_setfield(_state, -2, "address"); // computer.address = function, pops loadstring -1
+const char* load_reader(lua_State* lua, void* pvReader, size_t* pSizeOut)
+{
+    load_reader_data* pReader = static_cast<load_reader_data*>(pvReader);
+    if (pReader->used)
+    {
+        *pSizeOut = 0;
+        return nullptr;
+    }
+    pReader->used = true;
+    *pSizeOut = pReader->code.size();
+    return pReader->code.data();
+}
 
-    lua_getglobal(_state, "os"); // +1
+static void inject_address(lua_State* lua, const string& address)
+{
+    lua_getglobal(lua, "computer"); // push computer, +1
+    string code = "return [=====[" + address + "]=====]";
+    luaL_loadstring(lua, code.c_str()); // (function) +1
+    lua_setfield(lua, -2, "address"); // computer.address = function, pops loadstring -1
+    lua_pop(lua, 1); // pop computer, -1
+}
 
-    lua_pushstring(_state, "time"); // +1
-    lua_gettable(_state, -2); // push time on stack, pop key name, +1-1
-    lua_setfield(_state, -2, "_time"); // os._time = os.time, pops time, -1
+static void inject_time(lua_State* lua)
+{
+    lua_getglobal(lua, "os"); // push os, +1
+    lua_pushstring(lua, "time"); // +1
+    lua_gettable(lua, -2); // push time on stack, pop key name, +1-1
+    lua_setfield(lua, -2, "_time"); // os._time = os.time, pops time, -1
     // now override time function
     luaL_loadstring
-    (_state,
+    (lua,
         "local t = ...              \n"
         "if type(t) == 'table' then \n"
         "    t.isdst = false        \n"
         "end                        \n"
         "return os._time(...)       \n"
     ); // +1
-    lua_setfield(_state, -2, "time"); // os.time = function, pops function, -1
+    lua_setfield(lua, -2, "time"); // os.time = function, pops function, -1
+    lua_pop(lua, 1); // pop os, -1
+}
 
-    lua_pushstring(_state, "date"); // +1
-    lua_gettable(_state, -2); // push date on stack, pop key name, +1-1
-    lua_setfield(_state, -2, "_date"); // os._date = os.date, pops time, -1
+static void inject_date(lua_State* lua)
+{
+    lua_getglobal(lua, "os"); // push os, +1
+    lua_pushstring(lua, "date"); // +1
+    lua_gettable(lua, -2); // push date on stack, pop key name, +1-1
+    lua_setfield(lua, -2, "_date"); // os._date = os.date, pops time, -1
     // now override date function (to be exception safe)
     luaL_loadstring
-    (_state,
+    (lua,
         "if select('#', ...) == 0 then                      \n"
         "    return os._date()                              \n"
         "end                                                \n"
@@ -271,24 +299,39 @@ void Computer::injectCustomLua()
         "end                                                \n"
         "return ok and ret or ''                            \n"
     ); // +1
-    lua_setfield(_state, -2, "date"); // os.date = function, pops function, -1
+    lua_setfield(lua, -2, "date"); // os.date = function, pops function, -1
+    lua_pop(lua, 1); // pop os, -1
+}
 
-    lua_pop(_state, 1); // pop os, -1
+static void inject_xp_load(lua_State* lua)
+{
+    // backup the original load
+    lua_getglobal(lua, "load"); // +1
+    lua_setglobal(lua, "_load"); // -1
 
-    //stringstream ss;
-    //ss << _start_time;
-    //string startTimeText = ss.str();
-    //string code = "return " + startTimeText + " + os.clock()";
-    //luaL_loadstring(_state, code.c_str()); // +1
-    //lua_setfield(_state, -2, "realTime"); // -1
+    load_reader_data data
+    {
+        "load = _load                                           \n"
+        "local func, msg = load(...)                            \n"
+        "if not func then                                       \n"
+        "    return func, msg                                   \n"
+        "end                                                    \n"
+        "return function(...)                                   \n"
+        "    return select(2, assert(xpcall(func, computer.crash, ...))) \n"
+        "end                                                    \n"
+    };
 
-    // lua_getglobal(_state, "os"); // +1
-    // lua_pushstring(_state, "clock"); //+1
-    // lua_gettable(_state, -2); // push clock on stack, pop key name, +1-1
-    // lua_remove(_state, -2); // pop os, -1   
-    // lua_setfield(_state, -2, "uptime"); // computer.uptime = os.clock, pops clock, -1
+    lua_load(lua, load_reader, &data, "_load", "t"); // function, +1
 
-    lua_pop(_state, 1); // -1
+    lua_setglobal(lua, "load"); // pop function, -1
+}
+
+void Computer::injectCustomLua()
+{
+    inject_address(_state, address());
+    inject_time(_state);
+    inject_date(_state);
+    inject_xp_load(_state);
 }
 
 int Computer::setArchitecture(lua_State* lua)
@@ -520,7 +563,7 @@ RunState Computer::resume(int nargs)
             Value yield_value = thread.get(thread_index + 1);
             if (!yield_value)
             {
-                string report = std::string(lua_tostring(_state, -1));
+                string report = thread.get(thread.len()).toString();
                 client()->append_crash("kernel panic: " + report);
             }
             else
@@ -707,4 +750,16 @@ size_t Computer::freeMemory()
         return 0;
 
     return _total_memory - vm_used;
+}
+
+int Computer::crash(lua_State* lua)
+{
+    client()->append_crash(lua_tostring(lua, -1));
+    luaL_traceback(lua, lua, nullptr, 1);
+    if (lua_type(lua, -1) == LUA_TSTRING)
+    {
+        client()->append_crash(lua_tostring(lua, -1));
+    }
+    lua_pop(lua, 1);
+    return lua_gettop(lua);
 }
