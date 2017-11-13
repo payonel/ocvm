@@ -11,13 +11,15 @@ using std::cerr;
 
 void usage()
 {
-    cerr << "ocvm [ENV_PATH] [--frame=FRAME_TYPE] [--log-allocs[=STACK_LOG]] [--bios=BIOS_PATH] [--machine=MACHINE_PATH] [--fonts=FONTS_PATH]\n"
-            "  ENV_PATH     (optional) VM env path. Default ./tmp\n"
-            "  FRAME_TYPE   Term emulator(ansi or basic). Default ansi\n"
-            "  STACK_LOG    Path to log mallocs and stacks. Default stack.log\n"
-            "  BIOS_PATH    Path to eeprom code. Default system/bios.lua\n"
-            "  MACHINE_PATH Path to machine. Default system/machine.lua\n"
-            "  FONTS_PATH   Path to fonts.hex. Default system/fonts.hex\n";
+    cerr << "ocvm [ENV_PATH] [OPTIONS]\n"
+            "   ENV_PATH            (optional) VM env path. Default ./tmp\n"
+            "OPTIONS\n"
+            "  --frame=TYPE         Term emulator type. Can be 'ansi' (default) or 'basic'.\n"
+            "  --log-allocs[=PATH]  Enable logging mallocs and stacks.\n"
+            "                       Optional custom path, default stack.log\n"
+            "  --bios=PATH          Path to custom eeprom bios code\n"
+            "  --machine=PATH       Path to custom machine.lua\n"
+            "  --fonts=PATH         Path to custom fonts.hex\n";
     ::exit(1);
 }
 
