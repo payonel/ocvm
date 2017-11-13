@@ -16,6 +16,7 @@
 
 #include <string>
 #include <functional>
+#include <iostream>
 
 Client::Client(Host* host, const string& env_path) : 
     LuaProxy("component"),
@@ -168,6 +169,9 @@ void Client::close()
     _components.clear();
     for (auto pc : comp_copy)
         delete pc;
+
+    // now the screen should be closed, we can report crash info
+    std::cerr << _crash;
 }
 
 vector<Component*> Client::components(string filter, bool exact) const
@@ -364,4 +368,10 @@ bool Client::remove_component(const string& address)
     }
 
     return false;
+}
+
+void Client::append_crash(const string& report)
+{
+    _crash += report;
+    _crash += "\n";
 }

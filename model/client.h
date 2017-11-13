@@ -30,6 +30,8 @@ public:
     bool add_component(Value& component_config);
     bool remove_component(const string& address);
 
+    void append_crash(const string& report);
+
     // global api that is actually computer specific
     // invoke by address
     int component_invoke(lua_State* lua);
@@ -49,4 +51,5 @@ private:
     string _env_path;
     Host* _host;
     SandboxMethods* _globals;
+    string _crash;
 };

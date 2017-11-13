@@ -510,7 +510,9 @@ RunState Computer::resume(int nargs)
             Value yield_value = thread.get(thread_index + 1);
             if (!yield_value)
             {
-                lout << "kernel panic: " << thread.toString() << endl;
+                string report = std::string(lua_tostring(_state, -1));
+                lout << "############### kernel panic: " << report << endl;
+                client()->append_crash("kernel panic: " + report);
             }
             else
             {
