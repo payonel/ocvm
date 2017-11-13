@@ -372,6 +372,7 @@ bool Client::remove_component(const string& address)
 
 void Client::append_crash(const string& report)
 {
+    lout << "crash: " << report << endl;
     _crash += report;
     _crash += "\n";
 }

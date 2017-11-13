@@ -18,6 +18,8 @@ using std::error_code;
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
+#include <wordexp.h>
+
 static string handle_exception(std::exception& exp)
 {
     return exp.what();
@@ -36,6 +38,25 @@ static string handle_exception(std::exception_ptr&& p)
     }
 
     return "unknown exception";
+}
+
+string resolve(const string& path)
+{
+    string result = path;
+    if (path.size() > 0 && path.find("~") == 0)
+    {
+        ::wordexp_t exp_result;
+        if (::wordexp(path.c_str(), &exp_result, 0) == 0)
+        {
+            if (exp_result.we_wordc == 1)
+            {
+                result = std::string(exp_result.we_wordv[0]);
+            }
+            ::wordfree(&exp_result);
+        }
+    }
+
+    return result;
 }
 
 bool fs_utils::run_safely(function<void()> func, function<void(const string&)> onError)
@@ -61,7 +82,7 @@ bool fs_utils::run_safely(function<void()> func, function<void(const string&)> o
 bool fs_utils::read(const string& path, vector<char>& outData)
 {
     ifstream file;
-    file.open(path);
+    file.open(resolve(path));
     if (!file)
         return false;
 
@@ -79,7 +100,7 @@ bool fs_utils::read(const string& path, vector<char>& outData)
 bool fs_utils::read(const string& path, string* pOutData)
 {
     ifstream file;
-    file.open(path);
+    file.open(resolve(path));
     if (!file)
         return false;
 
@@ -95,20 +116,22 @@ bool fs_utils::read(const string& path, string* pOutData)
 
 bool fs_utils::copy(const string& src, const string& dst)
 {
-    if (!fs_utils::exists(src))
+    string resolved_src = resolve(src);
+    string resolved_dst = resolve(dst);
+    if (!fs_utils::exists(resolved_src))
     {
         return false;
     }
 
     error_code ec;
-    fs::copy(src, dst, fs::copy_options::recursive, ec);
+    fs::copy(resolved_src, resolved_dst, fs::copy_options::recursive, ec);
     return ec.value() == 0;
 }
 
 bool fs_utils::write(const vector<char>& data, const string& dst)
 {
     ofstream file;
-    file.open(dst);
+    file.open(resolve(dst));
     if (!file)
         return false;
     

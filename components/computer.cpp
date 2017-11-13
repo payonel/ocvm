@@ -356,34 +356,44 @@ int Computer::pushSignal(lua_State* lua)
 
 bool Computer::postInit()
 {
-    _machine = lua_newthread(_state);
-    lout << "machine thread created\n";
-
-    string machine_path = client()->host()->machinePath();
-    if (luaL_loadfile(_state, machine_path.c_str()))
-    {
-        lout << "failed to load machine [" << machine_path << "]\n";
-        lout << lua_tostring(_state, -1) << "\n";
-        lua_pop(_state, 1);
-        return false;
-    }
-    lout << "machine function loaded\n";
-
-    if (_machine == nullptr)
-        return false;
-
+    bool tmpfsIsSet = false;
     for (auto* pc : client()->components("filesystem", true))
     {
         auto pfs = dynamic_cast<Filesystem*>(pc);
         if (pfs && pfs->isTmpfs())
         {
             setTmpAddress(pc->address());
-            return true;
+            tmpfsIsSet = true;
         }
     }
 
-    lout << "missing tmpfs\n";
-    return false;
+    if (!tmpfsIsSet)
+    {
+        client()->append_crash("missing tmpfs");
+        return false;
+    }
+
+    _machine = lua_newthread(_state);
+    if (_machine == nullptr)
+    {
+        client()->append_crash("failed to create machine state");
+        return false;
+    }
+
+    lout << "machine thread created\n";
+
+    string machine_path = client()->host()->machinePath();
+
+    if (luaL_loadfile(_state, machine_path.c_str()))
+    {
+        client()->append_crash("failed to load machine [" + machine_path + "]");
+        client()->append_crash(lua_tostring(_state, -1));
+        lua_pop(_state, 1);
+        return false;
+    }
+    lout << "machine function loaded\n";
+
+    return true;
 }
 
 int Computer::removeUser(lua_State* lua)
@@ -511,7 +521,6 @@ RunState Computer::resume(int nargs)
             if (!yield_value)
             {
                 string report = std::string(lua_tostring(_state, -1));
-                lout << "############### kernel panic: " << report << endl;
                 client()->append_crash("kernel panic: " + report);
             }
             else
