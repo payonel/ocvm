@@ -17,6 +17,7 @@ public:
     vector<string> keys() const;
 private:
     string savePath() const;
+    void clear_n(Value& t);
     Value _data;
     string _path;
     string _name;

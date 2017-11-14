@@ -56,6 +56,7 @@ public:
 
     // table functions
     vector<string> keys() const;
+    vector<std::tuple<Value, Value*>> pairs();
     const Value& get(const string& key) const;
     Value& get(const string& key);
     const Value& get(int index) const;

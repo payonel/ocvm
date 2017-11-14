@@ -315,12 +315,18 @@ Value& Value::get(int key)
 
 Value& Value::set(const string& key, const Value& value)
 {
-    _stable[key] = value;
+    if (value.type_id() == LUA_TNIL)
+        _stable.erase(key);
+    else
+        _stable[key] = value;
     return *this;
 }
 Value& Value::set(int key, const Value& value)
 {
-    _ntable[key] = value;
+    if (value.type_id() == LUA_TNIL)
+        _ntable.erase(key);
+    else
+        _ntable[key] = value;
     set("n", len());
     return *this;
 }
@@ -583,6 +589,20 @@ string Value::stack(lua_State* state)
     string stacktrace = string(lua_tostring(stack_state, -1));
     lua_pop(stack_state, 1);
     return stacktrace;
+}
+
+vector<std::tuple<Value, Value*>> Value::pairs()
+{
+    vector<std::tuple<Value, Value*>> result;
+    for (auto& pair : _ntable)
+    {
+        result.push_back(std::make_tuple(pair.first, &pair.second));
+    }
+    for (auto& pair : _stable)
+    {
+        result.push_back(std::make_tuple(pair.first, &pair.second));
+    }
+    return result;
 }
 
 int ValuePack::push(lua_State* lua) const

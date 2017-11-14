@@ -80,6 +80,7 @@ bool Config::load(const string& path, const string& name)
         }
         _data = tmpData;
         _cache = _data.serialize(true);
+        clear_n(_data);
     }
     else
     {
@@ -137,4 +138,17 @@ bool Config::save() const
 vector<string> Config::keys() const
 {
     return _data.keys();
+}
+
+void Config::clear_n(Value& t)
+{
+    if (t.type() == "table")
+    {
+        t.set("n", Value::nil);
+        auto pairs = t.pairs();
+        for (const auto& pair : pairs)
+        {
+            clear_n(*std::get<1>(pair));
+        }
+    }
 }
