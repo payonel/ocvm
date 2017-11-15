@@ -79,8 +79,8 @@ bool Config::load(const string& path, const string& name)
             return false;
         }
         _data = tmpData;
-        _cache = _data.serialize(true);
         clear_n(_data);
+        _cache = _data.serialize(true);
     }
     else
     {
