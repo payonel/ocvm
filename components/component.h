@@ -4,6 +4,7 @@
 #include <map>
 #include "model/value.h"
 #include "model/luaproxy.h"
+#include "model/log.h"
 
 class Component;
 typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);
@@ -43,6 +44,7 @@ protected:
     Client* client() const;
     const Value& config() const;
     void update(int key, const Value& value);
+    Logger& lout();
 private:
     string _address;
     int _slot;

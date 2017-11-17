@@ -243,7 +243,7 @@ bool Filesystem::onInitialize()
         _tmpfs = false;
         if (!fs_utils::exists(_src))
         {
-            lout << "loot disk not found: " << _src << endl;
+            lout() << "loot disk not found: " << _src << endl;
             return false;
         }
     }
@@ -308,11 +308,7 @@ string Filesystem::relative(const string& requested, const string& full)
     string clean_full = clean(full, true, false);
     if (clean_full.find(clean_requested) != 0)
     {
-        lout << "error in expected relative truncation, could not find root path [";
-        lout << clean_requested;
-        lout << "] in [";
-        lout << clean_full;
-        lout << "]\n";
+        // error in expected relative truncation, could not find root path
         return clean_full;
     }
     return clean_full.substr(clean_requested.size());
@@ -388,7 +384,7 @@ int Filesystem::open(lua_State* lua)
     
     if (uninitialized || (bRead && bWrite))
     {
-        lout << "bad file mode: " << mode_text << endl;
+        lout() << "bad file mode: " << mode_text << endl;
         return ValuePack::ret(lua, Value::nil, filepath);
     }
     else if (isReadOnly() && bWrite)

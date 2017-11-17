@@ -1,6 +1,5 @@
 #include "config.h"
-#include "log.h"
-
+#include "model/log.h"
 #include <lua.hpp>
 
 #include <iostream>
@@ -16,8 +15,6 @@ extern "C"
         string key = Value::checkArg<string>(lua, 2);
         Value value(lua, 3);
         pdata->set(key, value);
-
-        lout << "config loading [" << key << "]: " << value.serialize() << "\n";
         return 0;
     }
 }
@@ -37,7 +34,7 @@ bool Config::load(const string& path, const string& name)
     {
         if (!fs_utils::copy(fs_utils::make_proc_path("client.cfg"), savePath()))
         {
-            lout << "failed to copy new client.cfg\n";
+            *_pLout << "failed to copy new client.cfg\n";
             return false;
         }
     }
@@ -45,12 +42,12 @@ bool Config::load(const string& path, const string& name)
     string table;
     if (!fs_utils::read(savePath(), &table))
     {
-        lout << "config could not load: " << name << endl;
+        *_pLout << "config could not load: " << name << endl;
         return false;
     }
 
-    lout << "config [" << _name << "]: table: " << table;
-    lout << endl;
+    *_pLout << "config [" << _name << "]: table: " << table;
+    *_pLout << endl;
 
     if (table.empty())
     {
@@ -74,8 +71,8 @@ bool Config::load(const string& path, const string& name)
         int result_status = lua_pcall(lua, 0, LUA_MULTRET, 0);
         if (result_status != LUA_OK)
         {
-            lout << "Failed to digest the configuration\n";
-            lout << lua_tostring(lua, -1) << endl;
+            *_pLout << "Failed to digest the configuration\n";
+            *_pLout << lua_tostring(lua, -1) << endl;
             return false;
         }
         _data = tmpData;
@@ -84,8 +81,8 @@ bool Config::load(const string& path, const string& name)
     }
     else
     {
-        lout << "\nConfiguration could not load\n";
-        lout << lua_tostring(lua, -1) << endl;
+        *_pLout << "\nConfiguration could not load\n";
+        *_pLout << lua_tostring(lua, -1) << endl;
         return false;
     }
     lua_close(lua);
@@ -128,7 +125,7 @@ bool Config::save() const
         string updated_config = _data.serialize(true);
         if (updated_config != _cache)
         {
-            lout << "saving " << _name << ": config\n";
+            *_pLout << "saving " << _name << ": config\n";
             return fs_utils::write(updated_config, savePath());
         }
     }
@@ -151,4 +148,9 @@ void Config::clear_n(Value& t)
             clear_n(*std::get<1>(pair));
         }
     }
+}
+
+void Config::setLout(Logger* pLout)
+{
+    _pLout = pLout;
 }

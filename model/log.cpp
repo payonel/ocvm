@@ -1,4 +1,4 @@
-#include "log.h"
+#include "model/log.h"
 #include "io/frame.h"
 #include "drivers/fs_utils.h"
 
@@ -9,8 +9,6 @@ using std::cout;
 using std::function;
 using std::ofstream;
 using std::fstream;
-
-Logger lout(fs_utils::make_pwd_path("log"));
 
 Logger::Logger(string logPath) :
     _log_path(logPath)

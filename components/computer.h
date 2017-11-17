@@ -47,10 +47,10 @@ public:
 
     // non-spec methods (for vm debugging)
     int crash(lua_State* lua);
+    int print(lua_State* lua);
 protected:
     bool onInitialize() override;
     RunState resume(int nargs);
-    double trace(lua_State* coState = nullptr, bool bForce = false);
 
     int get_address(lua_State* lua);
     void mark_gc();

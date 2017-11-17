@@ -1,5 +1,6 @@
 #include "component.h"
 #include "model/log.h"
+#include "model/client.h"
 
 #include <random>
 
@@ -96,4 +97,9 @@ const Value& Component::config() const
 void Component::update(int key, const Value& value)
 {
     _config->set(key, value);
+}
+
+Logger& Component::lout()
+{
+    return client()->lout();
 }

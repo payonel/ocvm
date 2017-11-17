@@ -38,7 +38,7 @@ bool Keyboard::postInit()
         }
     }
 
-    lout << "warning: kb had no screen to join\n";
+    lout() << "warning: kb had no screen to join\n";
     return true;
 }
 
@@ -53,7 +53,7 @@ RunState Keyboard::update()
         }
         else if (ke.keycode == 1)
         {
-            lout << "shell abort";
+            lout() << "shell abort";
             return RunState::Halt;
         }
         else

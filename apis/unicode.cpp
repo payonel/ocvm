@@ -69,7 +69,6 @@ bool UnicodeApi::configure(const string& fonts_path)
 
         if (!file || delimiter != ':' || bmp.size() % 32 != 0)
         {
-            lout << "unicode font load finished\n";
             break;
         }
 

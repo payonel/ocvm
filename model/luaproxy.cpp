@@ -1,5 +1,4 @@
 #include "luaproxy.h"
-#include "log.h"
 #include "drivers/fs_utils.h"
 #include <iostream>
 
@@ -99,7 +98,6 @@ int LuaProxy::invoke(const string& methodName, lua_State* lua)
     const auto& mit = _methods.find(methodName);
     if (mit == _methods.end())
     {
-        lout << "no such method " << methodName << "\n";
         luaL_error(lua, "no such method: %s", methodName.c_str());
     }
 

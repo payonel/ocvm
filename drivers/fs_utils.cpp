@@ -72,7 +72,6 @@ bool fs_utils::run_safely(function<void()> func, function<void(const string&)> o
         exception_message = handle_exception(std::current_exception());
     }
 
-    lout << exception_message << std::endl;
     if (onError)
         onError(exception_message);
 

@@ -42,7 +42,6 @@ AnsiEscapeTerm::AnsiEscapeTerm()
 
     if (pthread_sigmask(SIG_BLOCK, &g_sigset, nullptr))
     {
-        lout << "failed to mask threads for winch - resize will be ignored\n";
         return;
     }
 }

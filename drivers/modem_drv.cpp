@@ -29,7 +29,7 @@ bool ModemDriver::readNextModemMessage(ModemEvent& mev)
     ssize_t end = header_size + packet_size;
     if (Connection::max_buffer_size < end)
     {
-        lout.write("modem likely bad packet, size reported: ", packet_size);
+        // modem likely bad packet, size reported: packet_size
         _connection->move(header_size);
         return false;
     }
@@ -39,7 +39,7 @@ bool ModemDriver::readNextModemMessage(ModemEvent& mev)
 
     _connection->move(end);
 
-    lout.write("modem packet completed: ", end, " bytes");
+    // modem packet completed: ${end} bytes
     return true;
 }
 
@@ -49,12 +49,12 @@ unique_ptr<FileLock> FileLock::create(const string& path)
     int server_pool_file = ::open(path.c_str(), O_CREAT | O_TRUNC);
     if (::flock(server_pool_file, LOCK_EX | LOCK_NB) == -1)
     {
-        lout << "flock denied\n";
+        // flock denied
         ::close(server_pool_file);
         return nullptr; //denied
     }
     
-    lout << "flock acquired\n";
+    // flock acquired
     return unique_ptr<FileLock>(new FileLock(path, server_pool_file));
 }
 
@@ -80,13 +80,11 @@ ServerPool::ServerPool(int id, unique_ptr<FileLock> lock) :
 
 ServerPool::~ServerPool()
 {
-    lout << "modem ServerPool shutdown\n";
     ::close(_id);
 }
 
 bool ServerPool::onStart()
 {
-    lout << "modem ServerPool starting\n";
     return true;
 }
 
@@ -96,7 +94,6 @@ bool ServerPool::remove(int id)
     if (conn_it == _connections.end())
         return false;
 
-    lout << "modem ServerPool removed client: " << id << endl;
     delete conn_it->second;
     _connections.erase(conn_it);
     return true;
@@ -116,7 +113,6 @@ bool ServerPool::runOnce()
         {
             if (errno != EAGAIN && errno != EWOULDBLOCK)
             {
-                lout << "server accept failed\n";
                 return false;
             }
             break;
@@ -126,7 +122,7 @@ bool ServerPool::runOnce()
 
         if (!set_nonblocking(client_socket))
         {
-            lout << "modem ServerPool accepted client socket but failed to set non blocking\n";
+            // modem ServerPool accepted client socket but failed to set non blocking
             ::close(client_socket);
         }
         else
@@ -215,7 +211,7 @@ unique_ptr<ServerPool> ServerPool::create(int system_port)
 
     if ((status = ::getaddrinfo(nullptr, port_text.c_str(), &hints, &server_info)) != 0)
     {
-        lout.write("modem failed: getaddrinfo error ", gai_strerror(status));
+        // modem failed: getaddrinfo error
         return nullptr;
     }
 
@@ -226,27 +222,27 @@ unique_ptr<ServerPool> ServerPool::create(int system_port)
         int yes = 1;
         if ((id = ::socket(pServer->ai_family, pServer->ai_socktype, pServer->ai_protocol)) == -1)
         {
-            lout << "modem failed: bad socket\n";
+            // modem failed: bad socket
         }
         else if (setsockopt(id, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes)) == -1)
         {
-            lout << "modem ServerPool socket created but failed to switch to reuse\n";
+            // modem ServerPool socket created but failed to switch to reuse
         }
         else if (::bind(id, pServer->ai_addr, pServer->ai_addrlen) == -1)
         {
-            if (errno != 98)
-            {
-                lout.write("modem ServerPool failed to bind: ", errno);
-            }
+            // if (errno != 98)
+            // {
+                // modem ServerPool failed to bind
+            // }
         }
         // bind succeeded, so listen better!
         else if (::listen(id, 20) == -1)
         {
-            lout << "modem was able to bind, but then failed to listen\n";
+            // modem was able to bind, but then failed to listen
         }
         else if (!set_nonblocking(id))
         {
-            lout << "modem was able to listen, but then failed to switch to nonblocking\n";
+            // modem was able to listen, but then failed to switch to nonblocking
         }
         else
         {
@@ -267,7 +263,7 @@ unique_ptr<ServerPool> ServerPool::create(int system_port)
     unique_ptr<ServerPool> server(new ServerPool(id, std::move(lock)));
     if (!server->start())
     {
-        lout << "server failed to start";
+        // server failed to start
         return nullptr;
     }
 
@@ -286,7 +282,7 @@ bool ModemDriver::send(const vector<char>& payload)
     auto lock = make_lock();
     if (!_connection || !_connection->can_write())
     {
-        lout << "modem::send failed: not connected\n";
+        // modem::send failed: not connected
         return false;
     }
 
@@ -348,5 +344,5 @@ void ModemDriver::onStop()
         _local_server->stop();
     }
     _local_server.reset(nullptr);
-    lout << "modem shutdown\n";
+    // modem shutdown
 }

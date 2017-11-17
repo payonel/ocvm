@@ -1,6 +1,7 @@
 #pragma once
 #include "value.h"
 #include "luaproxy.h"
+#include "model/log.h"
 
 #include <string>
 #include <vector>
@@ -31,6 +32,7 @@ public:
     bool remove_component(const string& address);
 
     void append_crash(const string& report);
+    Logger& lout();
 
     // global api that is actually computer specific
     // invoke by address
@@ -52,4 +54,5 @@ private:
     Host* _host;
     SandboxMethods* _globals;
     string _crash;
+    Logger _lout;
 };

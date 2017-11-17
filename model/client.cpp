@@ -4,12 +4,10 @@
 #include "components/computer.h"
 
 #include "config.h"
-#include "log.h"
 #include "drivers/fs_utils.h"
 #include <lua.hpp>
 
 #include "apis/os.h"
-#include "apis/global_methods.h"
 #include "apis/system.h"
 #include "apis/unicode.h"
 #include "apis/userdata.h"
@@ -23,7 +21,8 @@ Client::Client(Host* host, const string& env_path) :
     _computer(nullptr),
     _config(nullptr),
     _env_path(env_path),
-    _host(host)
+    _host(host),
+    _lout("")
 {
     add("list", &Client::component_list);
     add("invoke", &Client::component_invoke);
@@ -35,6 +34,7 @@ Client::Client(Host* host, const string& env_path) :
     // make the env path if it doesn't already exist
     _env_path = fs_utils::make_pwd_path(_env_path);
     fs_utils::mkdir(_env_path);
+    _lout.log_path(_env_path + "/log");
 }
 
 Client::~Client()
@@ -51,31 +51,32 @@ bool Client::load()
 {
     if (_config)
     {
-        lout << "Client is either already loaded or did not close properly";
+        lout() << "Client is either already loaded or did not close properly";
         return false;
     }
 
     _config = new Config();
+    _config->setLout(&(lout()));
 
     if (!_config->load(envPath(), "client"))
     {
-        lout << "failed to load client config\n";
+        lout() << "failed to load client config\n";
         return false;
     }
 
     if (!createComponents())
         return false;
-    lout << "components loaded: " << _components.size() << "\n";
+    lout() << "components loaded: " << _components.size() << "\n";
 
     if (!loadLuaComponentApi())
     {
-        lout << "failed to load lua component api\n";
+        lout() << "failed to load lua component api\n";
         return false;
     }
 
     if (!postInit())
         return false;
-    lout << "components post initialized\n";
+    lout() << "components post initialized\n";
 
     return true;
 }
@@ -95,17 +96,17 @@ bool Client::createComponents()
                     continue;
                 Value& component_config = section_data.get(index);
                 string key = component_config.get(1).toString();
-                lout << key << ": ";
+                lout() << key << ": ";
                 Component* pc = _host->create(key);
                 if (!(pc && pc->initialize(this, component_config)))
                 {
-                    lout << "failed! The host could not create: " << key << endl;
+                    lout() << "failed! The host could not create: " << key << endl;
                     return false;
                 }
                 else
                 {
                     _components.push_back(pc);
-                    lout << "ready\n";
+                    lout() << "ready\n";
                 }
             }
         }
@@ -124,7 +125,7 @@ bool Client::postInit()
     {
         if (!pc->postInit())
         {
-            lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+            lout() << pc->type() << "[" << pc->address() << "] failed to postInit\n";
             return false;
         }
         // the vm boot handles component_added for us
@@ -139,14 +140,13 @@ bool Client::loadLuaComponentApi()
     // computer required
     if (!_computer)
     {
-        lout << "emulation requires exactly one computer component\n";
+        lout() << "emulation requires exactly one computer component\n";
         return false;
     }
 
     _computer->stackLog(_host->stackLog());
     _computer->newlib(this);
     _computer->newlib(OSApi::get());
-    _computer->newlib(GlobalMethods::get());
     _computer->newlib(SystemApi::get());
     _computer->newlib(UnicodeApi::get());
     _computer->newlib(UserDataApi::get());
@@ -346,7 +346,7 @@ bool Client::add_component(Value& component_config)
 
     if (!pc->postInit())
     {
-        lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+        lout() << pc->type() << "[" << pc->address() << "] failed to postInit\n";
         return false;
     }
 
@@ -372,7 +372,12 @@ bool Client::remove_component(const string& address)
 
 void Client::append_crash(const string& report)
 {
-    lout << "crash: " << report << endl;
+    lout() << "crash: " << report << endl;
     _crash += report;
     _crash += "\n";
+}
+
+Logger& Client::lout()
+{
+    return _lout;
 }

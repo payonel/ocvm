@@ -31,7 +31,7 @@ bool Modem::onInitialize()
     _modem.reset(new ModemDriver(this, system_port));
     if (!_modem->start())
     {
-        lout << "modem driver failed to start\n";
+        lout() << "modem driver failed to start\n";
         return false;
     }
 

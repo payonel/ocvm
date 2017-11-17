@@ -45,6 +45,7 @@ Computer::Computer()
     add("isRunning", &Computer::isRunning);
 
     add("crash", &Computer::crash);
+    add("print", &Computer::print);
 }
 
 void Computer::stackLog(const string& stack_log)
@@ -150,7 +151,6 @@ bool Computer::onInitialize()
     _state = lua_newstate(&alloc_handler, this);
     luaL_openlibs(_state); // needed for common globals
     newlib(this);
-    injectCustomLua();
 
     return _state != nullptr;
 }
@@ -166,51 +166,14 @@ void Computer::pushSignal(const ValuePack& pack)
     _signals.push(pack);
 }
 
-double Computer::trace(lua_State* coState, bool bForce)
-{
-    double thenow = now();
-    // if (_nexttrace < thenow || bForce)
-    // {
-    //     _nexttrace = thenow + 1; // trace frequency
-    //     if (!coState)
-    //     {
-    //         lua_Debug ar;
-    //         lua_getstack(_state, 1, &ar);
-    //         for (int n = 1; n < 10 && !coState; n++)
-    //         {
-    //             const char* cstrVarName = lua_getlocal(_state, &ar, n);
-    //             if (!cstrVarName)
-    //             {
-    //                 break; // could not find coState
-    //             }
-    //             string varname = cstrVarName;
-    //             if (varname == "co")
-    //             {
-    //                 coState = lua_tothread(_state, -1);
-    //             }
-    //             lua_pop(_state, 1);
-    //         }
-    //     }
-    //     if (coState)
-    //     {
-    //         // int count = lua_gc(_state, LUA_GCCOUNT, 0) * 1024 + lua_gc(_state, LUA_GCCOUNTB, 0);
-    //         // lout << "mem: " << memory_used << " vs " << count << endl;
-
-    //         string stack = Value::stack(coState);
-    //         lout << "stack: " << stack << endl;
-    //     }
-    // }
-    return thenow;
-}
-
 int Computer::realTime(lua_State* lua)
 {
-    return ValuePack::ret(lua, trace(lua));
+    return ValuePack::ret(lua, now());
 }
 
 int Computer::uptime(lua_State* lua)
 {
-    return ValuePack::ret(lua, trace() - _start_time);
+    return ValuePack::ret(lua, now() - _start_time);
 }
 
 struct load_reader_data
@@ -326,12 +289,24 @@ static void inject_xp_load(lua_State* lua)
     lua_setglobal(lua, "load"); // pop function, -1
 }
 
+static void inject_print(lua_State* lua)
+{
+    lua_getglobal(lua, "computer"); // push computer, +1
+
+    lua_pushstring(lua, "print"); // +1
+    lua_gettable(lua, -2); // push print on stack, pop key name, +1-1
+
+    lua_setglobal(lua, "print"); // print = computer.print, -1
+    lua_pop(lua, 1); // pop computer, -1
+}
+
 void Computer::injectCustomLua()
 {
     inject_address(_state, address());
     inject_time(_state);
     inject_date(_state);
     inject_xp_load(_state);
+    inject_print(_state);
 }
 
 int Computer::setArchitecture(lua_State* lua)
@@ -358,7 +333,7 @@ int Computer::getArchitectures(lua_State* lua)
 
 int Computer::beep(lua_State* lua)
 {
-    lout << "\a" << "BEEP\n";
+    lout() << "\a" << "BEEP\n";
     return 0;
 }
 
@@ -416,6 +391,8 @@ bool Computer::postInit()
         return false;
     }
 
+    injectCustomLua();
+
     _machine = lua_newthread(_state);
     if (_machine == nullptr)
     {
@@ -423,7 +400,7 @@ bool Computer::postInit()
         return false;
     }
 
-    lout << "machine thread created\n";
+    lout() << "machine thread created\n";
 
     string machine_path = client()->host()->machinePath();
 
@@ -434,7 +411,7 @@ bool Computer::postInit()
         lua_pop(_state, 1);
         return false;
     }
-    lout << "machine function loaded\n";
+    lout() << "machine function loaded\n";
 
     return true;
 }
@@ -505,7 +482,6 @@ RunState Computer::update()
         }
         else if (_standby > now()) // return true without resume to return to the framer update
         {
-            trace();
             // std::this_thread::yield();
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
             return RunState::Continue;
@@ -518,14 +494,14 @@ RunState Computer::update()
         // we seem to allocate a bit more above real oc
         _baseline = memoryUsedRaw() + 91227;
         _baseline_initialized = true;
-        lout << "lua env baseline: " << _baseline << endl;
+        lout() << "lua env baseline: " << _baseline << endl;
     }
     return result;
 }
 
 RunState Computer::resume(int nargs)
 {
-    //lout << "lua env resume: " << nargs << endl;
+    //lout() << "lua env resume: " << nargs << endl;
     int status_id = lua_resume(_state, _machine, nargs);
     /*
         Types of results
@@ -556,7 +532,7 @@ RunState Computer::resume(int nargs)
         }
         if (thread_index == 0)
         {
-            lout << "kernal panic, failed to detect thread in stack\n";
+            lout() << "kernal panic, failed to detect thread in stack\n";
         }
         else
         {
@@ -568,7 +544,7 @@ RunState Computer::resume(int nargs)
             }
             else
             {
-                lout << "lua env SHUTDOWN\n";
+                lout() << "lua env SHUTDOWN\n";
             }
         }
 
@@ -576,7 +552,7 @@ RunState Computer::resume(int nargs)
     }
     else if (status_id == LUA_YIELD)
     {
-        //lout << "lua env yielded\n";
+        //lout() << "lua env yielded\n";
         int top = lua_gettop(_state);
         if (top > 0)
         {
@@ -607,7 +583,7 @@ RunState Computer::resume(int nargs)
                     // shutdown or reboot
                 break;
                 default:
-                    lout << "unsupported yield: " << lua_typename(_state, type_id) << endl;
+                    lout() << "unsupported yield: " << lua_typename(_state, type_id) << endl;
                     return RunState::Halt;
                 break;
             }
@@ -616,10 +592,10 @@ RunState Computer::resume(int nargs)
     }
     else
     {
-        lout << "vm crash: ";
-        lout << lua_tostring(_state, -1) << "\n";
-        lout << "machine stack: " << Value::stack(_machine) << endl;
-        lout << "machine status: " << Value(_machine).serialize() << endl;
+        lout() << "vm crash: ";
+        lout() << lua_tostring(_state, -1) << "\n";
+        lout() << "machine stack: " << Value::stack(_machine) << endl;
+        lout() << "machine status: " << Value(_machine).serialize() << endl;
         return RunState::Halt;
     }
 
@@ -632,12 +608,12 @@ void Computer::close()
     {
         lua_close(_state);
         _state = nullptr;
-        lout << "lua env closed\n";
+        lout() << "lua env closed\n";
     }
 
     _prof.flush();
 
-    lout << "computer peek memory: " << _peek_memory << endl;
+    lout() << "computer peek memory: " << _peek_memory << endl;
     _peek_memory = 0;
 }
 
@@ -762,4 +738,23 @@ int Computer::crash(lua_State* lua)
     }
     lua_pop(lua, 1);
     return lua_gettop(lua);
+}
+
+int Computer::print(lua_State* lua)
+{
+    bool bFirst = true;
+    int top = lua_gettop(lua);
+    string msg;
+    for (int i = 1; i <= top; i++)
+    {
+        string separator = bFirst ? "[--vm--] " : "\t";
+        msg += separator;
+        msg += Value(lua, i).toString();
+        bFirst = false;
+    }
+
+    msg += "\n";
+
+    lout() << msg;
+    return 0;
 }

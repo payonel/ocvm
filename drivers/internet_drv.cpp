@@ -281,7 +281,7 @@ HttpObject::HttpObject(Internet* inet, const HttpAddress& addr, const string& po
     if (addr.valid)
     {
         args.push_back(addr.raw);
-        lout.write("http request: ", addr.raw);
+        // http request: addr.raw
         _cmd.open("/usr/bin/wget", args);
     }
 }

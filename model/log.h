@@ -45,5 +45,3 @@ public:
 private:
     string _log_path;
 };
-
-extern Logger lout;

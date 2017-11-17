@@ -1,8 +1,7 @@
 #include "value.h"
-#include "log.h"
-
 #include <limits>
 #include <lua.hpp>
+#include <sstream>
 
 const Value Value::nil; // the nil
 
@@ -389,7 +388,7 @@ static string quote_string(const string& raw_string)
 
 string Value::serialize(bool pretty, int depth) const
 {
-    stringstream ss;
+    std::stringstream ss;
     if (_id == LUA_TSTRING)
     {
         ss << quote_string(string(_string.begin(), _string.end()));
@@ -430,7 +429,7 @@ string Value::serialize(bool pretty, int depth) const
             string key = "";
             if (skipped_index)
             {
-                stringstream number_ss;
+                std::stringstream number_ss;
                 number_ss << "[" << n << "]=";
                 key = number_ss.str();
             }
@@ -549,7 +548,7 @@ ValuePack::ValuePack(std::initializer_list<Value> values)
 ostream& operator << (ostream& os, const ValuePack& pack)
 {
     static const size_t length_limit = 120;
-    stringstream ss;
+    std::stringstream ss;
     ss << "{";
     for (const auto& arg : pack)
     {

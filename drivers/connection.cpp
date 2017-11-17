@@ -26,7 +26,6 @@ void Connection::async_open(Connection* pc)
 
     if ((status = ::getaddrinfo(pc->_host.c_str(), port_text.c_str(), &hints, &server_info)) != 0)
     {
-        lout << "modem failed: getaddrinfo error " << gai_strerror(status) << endl;
         pc->_state = ConnectionState::Failed;
         return;
     }
@@ -38,14 +37,14 @@ void Connection::async_open(Connection* pc)
     {
         if ((id = ::socket(pServer->ai_family, pServer->ai_socktype, pServer->ai_protocol)) == -1)
         {
-            lout << "modem failed: bad socket\n";
+            // modem failed: bad socket
         }
         else if (::connect(id, pServer->ai_addr, pServer->ai_addrlen) == -1)
         {
         }
         else if (!set_nonblocking(id))
         {
-            lout << "failed to switch socket to non blocking\n";
+            // failed to switch socket to non blocking
         }
         else
         {
@@ -154,7 +153,7 @@ bool Connection::preload(ssize_t bytes)
     {
         if (_buffer_size == Connection::max_buffer_size)
         {
-            lout.write(label(), " buffer overflow, cannot read more from socket");
+            // buffer overflow, cannot read more from socket
             _state = ConnectionState::Failed;
             return false;
         }
@@ -168,10 +167,10 @@ bool Connection::preload(ssize_t bytes)
         {
             if (bytes_received == 0 || (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR))
             {
-                if (errno == 11)
-                    lout.write(label(), " disconnected");
-                else
-                    lout.write(label(), " read failed: ", bytes_received, " errno:", errno);
+                // if (errno == 11)
+                    // disconnected
+                // else
+                    // read failed
 
                 _state = ConnectionState::Finished;
 
