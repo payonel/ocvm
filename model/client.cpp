@@ -21,8 +21,7 @@ Client::Client(Host* host, const string& env_path) :
     _computer(nullptr),
     _config(nullptr),
     _env_path(env_path),
-    _host(host),
-    _lout("")
+    _host(host)
 {
     add("list", &Client::component_list);
     add("invoke", &Client::component_invoke);

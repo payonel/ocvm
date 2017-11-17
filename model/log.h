@@ -9,7 +9,7 @@ using std::endl;
 class Logger
 {
 public:
-    Logger(string logPath);
+    Logger(const string& logPath = "");
     void log_path(const string& path);
     string log_path() const;
 

@@ -10,7 +10,7 @@ using std::function;
 using std::ofstream;
 using std::fstream;
 
-Logger::Logger(string logPath) :
+Logger::Logger(const string& logPath) :
     _log_path(logPath)
 {
 }
