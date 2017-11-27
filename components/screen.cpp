@@ -176,17 +176,10 @@ bool Screen::disconnectKeyboard(Keyboard* kb)
 
 void Screen::push(const KeyEvent& ke)
 {
-    if (_keyboards.size() == 0)
-        return;
-    else if (_keyboards.size() == 1)
-        _keyboards.at(0)->push(ke);
-    else
+    // kb events are duplicated to all kbs
+    for (auto* kb : _keyboards)
     {
-        // kb events are duplicated to all kbs
-        for (auto* kb : _keyboards)
-        {
-            kb->push(ke);
-        }
+        kb->push(ke);
     }
 }
 

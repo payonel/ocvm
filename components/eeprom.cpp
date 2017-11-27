@@ -10,6 +10,7 @@
 
 Eeprom::Eeprom()
 {
+    add("set", &Eeprom::set);
     add("get", &Eeprom::get);
     add("getData", &Eeprom::getData);
     add("setData", &Eeprom::setData);
@@ -39,6 +40,17 @@ bool Eeprom::onInitialize()
 int Eeprom::get(lua_State* lua)
 {
     return ValuePack::ret(lua, this->load(biosPath()));
+}
+
+int Eeprom::set(lua_State* lua)
+{
+    static const vector<char> default_value {};
+    vector<char> value = Value::checkArg<vector<char>>(lua, 1, &default_value);
+    size_t len = value.size();
+    if (len > static_cast<size_t>(_bios_size_limit))
+        return ValuePack::ret(lua, Value::nil, "bios size exceeded");
+
+    return ValuePack::ret(lua, fs_utils::write(value, biosPath()));
 }
 
 bool Eeprom::postInit()

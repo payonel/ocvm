@@ -15,6 +15,7 @@ public:
     };
 
     int get(lua_State* lua);
+    int set(lua_State* lua);
     int getData(lua_State* lua);
     int setData(lua_State* lua);
     int getSize(lua_State* lua);
