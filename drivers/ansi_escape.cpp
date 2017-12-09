@@ -150,5 +150,5 @@ void AnsiEscapeTerm::onWrite(int x, int y, const Cell& cell)
 
 void AnsiEscapeTerm::onClear()
 {
-    cout << Ansi::clear_term << Ansi::set_pos(1, 1) << flush;
+    cout << Ansi::save_pos << Ansi::color_reset << Ansi::clear_term << Ansi::restore_pos << Ansi::set_pos(1, 1) << flush;
 }
