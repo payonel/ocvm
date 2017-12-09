@@ -49,7 +49,7 @@ AnsiEscapeTerm::AnsiEscapeTerm()
 AnsiEscapeTerm::~AnsiEscapeTerm()
 {
     pthread_sigmask(SIG_UNBLOCK, &g_sigset, nullptr);
-    cout << Ansi::clear_term << Ansi::set_pos(1, 1) << flush;
+    cout << Ansi::color_reset << Ansi::clear_term << Ansi::set_pos(1, 1) << flush;
 }
 
 void AnsiEscapeTerm::onUpdate()
