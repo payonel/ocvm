@@ -22,7 +22,8 @@ public:
     {
         SystemPort = Component::ConfigIndex::Next,
         MaxPacketSize,
-        MaxArguments
+        MaxArguments,
+        HostAddress // defaults to 127.0.0.1
     };
 
     int setWakeMessage(lua_State*);

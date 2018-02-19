@@ -44,7 +44,7 @@ private:
 class ModemDriver : public Worker
 {
 public:
-    ModemDriver(EventSource<ModemEvent>* source, int system_port);
+    ModemDriver(EventSource<ModemEvent>* source, int system_port, const std::string& system_address);
     bool send(const vector<char>& payload);
 protected:
     bool onStart() override;
@@ -56,6 +56,7 @@ private:
     // ctor assigned
     EventSource<ModemEvent>* _source;
     int _system_port;
+    std::string _system_address;
 
     // default values
     unique_ptr<ServerPool> _local_server;

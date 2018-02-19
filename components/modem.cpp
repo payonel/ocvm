@@ -28,7 +28,8 @@ Modem::~Modem()
 bool Modem::onInitialize()
 {
     int system_port = config().get(ConfigIndex::SystemPort).Or(56000).toNumber();
-    _modem.reset(new ModemDriver(this, system_port));
+    string hostAddress = config().get(ConfigIndex::HostAddress).Or("127.0.0.1").toString();
+    _modem.reset(new ModemDriver(this, system_port, hostAddress));
     if (!_modem->start())
     {
         lout() << "modem driver failed to start\n";

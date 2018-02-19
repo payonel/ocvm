@@ -270,9 +270,10 @@ unique_ptr<ServerPool> ServerPool::create(int system_port)
     return server;
 }
 
-ModemDriver::ModemDriver(EventSource<ModemEvent>* source, int system_port) :
+ModemDriver::ModemDriver(EventSource<ModemEvent>* source, int system_port, const std::string& system_address) :
     _source(source),
-    _system_port(system_port)
+    _system_port(system_port),
+    _system_address(system_address)
 {
 }
 
@@ -302,7 +303,7 @@ bool ModemDriver::runOnce()
     NiceWork work;
     if (!_connection)
     {
-        _connection.reset(new Connection("127.0.0.1", _system_port));
+        _connection.reset(new Connection(_system_address, _system_port));
     }
     switch (_connection->state())
     {
