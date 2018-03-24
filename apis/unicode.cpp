@@ -199,6 +199,10 @@ vector<char> UnicodeApi::tochar(const uint32_t codepoint32)
     // even though utf8 would support this, i'll truncate here
     uint32_t codepoint = codepoint32 & 0xFFFF;
 
+    if (font_width.find(codepoint) == font_width.end()) {
+        codepoint = 0x25A1;
+    }
+
     if (codepoint < end_1_byte)
     {
         buffer.push_back(codepoint);
