@@ -7,40 +7,50 @@
 #include <unistd.h>
 #include <netdb.h>
 
-bool ModemDriver::readNextModemMessage(ModemEvent& mev)
+bool readyNextPacket(Connection* conn, vector<char>* buffer, bool keepPacketSize)
 {
-    if (!_connection)
+    if (!conn)
         return false;
 
-    vector<char> buffer;
+    buffer->clear();
 
     // read next packet from server
     constexpr ssize_t header_size = sizeof(int32_t);
-    if (!_connection->copy(&buffer, 0, header_size))
+    if (!conn->copy(buffer, 0, header_size))
         return false;
 
     int32_t packet_size = 0;
     char* p = reinterpret_cast<char*>(&packet_size);
-    p[0] = buffer[0];
-    p[1] = buffer[1];
-    p[2] = buffer[2];
-    p[3] = buffer[3];
+    p[0] = buffer->at(0);
+    p[1] = buffer->at(1);
+    p[2] = buffer->at(2);
+    p[3] = buffer->at(3);
 
     ssize_t end = header_size + packet_size;
     if (Connection::max_buffer_size < end)
     {
         // modem likely bad packet, size reported: packet_size
-        _connection->move(header_size);
+        conn->move(header_size);
         return false;
     }
 
-    if (!_connection->copy(&mev.payload, header_size, packet_size))
+    if (!keepPacketSize)
+    {
+        buffer->clear();
+    }
+
+    if (!conn->copy(buffer, header_size, packet_size))
         return false;
 
-    _connection->move(end);
+    conn->move(end);
 
     // modem packet completed: ${end} bytes
     return true;
+}
+
+bool ModemDriver::readNextModemMessage(ModemEvent& mev)
+{
+    return readyNextPacket(_connection.get(), &mev.payload, false);
 }
 
 unique_ptr<FileLock> FileLock::create(const string& path)
@@ -154,20 +164,15 @@ bool ServerPool::runOnce()
         Connection* conn = _connections.at(id);
 
         vector<char> buffer;
-        conn->preload(Connection::max_buffer_size);
-        auto bytes = conn->bytes_available();
+        if (!readyNextPacket(conn, &buffer, true))
+            continue;
 
-        if (bytes && conn->copy(&buffer, 0, bytes))
+        work.set();
+        // rebroadcast
+        for (auto other_id : ids)
         {
-            work.set();
-            // rebroadcast
-            for (auto other_id : ids)
-            {
-                Connection* sib = _connections.at(other_id);
-                sib->write(buffer);
-            }
-
-            conn->move(bytes);
+            Connection* sib = _connections.at(other_id);
+            sib->write(buffer);
         }
     }
 
