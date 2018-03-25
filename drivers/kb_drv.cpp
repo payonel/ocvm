@@ -531,7 +531,7 @@ vector<KeyEvent> KeyboardPtyDriver::parse(TermBuffer* buffer)
                 ke.insert.push_back(buffer->get());
             events.push_back(ke);
         }
-        return {};
+        return events;
     }
 
     if (mod != _modifier_state)
