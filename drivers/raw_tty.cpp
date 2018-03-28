@@ -45,15 +45,8 @@ static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
 void TtyReader::start(AnsiEscapeTerm* pTerm)
 {
     _pTerm = pTerm;
+    _kb_drv = std::move(KeyboardTerminalDriver::create(hasMasterTty()));
 
-    if (hasMasterTty())
-    {
-        _kb_drv.reset(new KeyboardLocalRawTtyDriver);
-    }
-    else
-    {
-        _kb_drv.reset(new KeyboardPtyDriver);
-    }
     if (hasTerminalOut())
     {
         cout << Ansi::mouse_prd_on << flush;
