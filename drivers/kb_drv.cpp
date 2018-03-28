@@ -1,11 +1,10 @@
 #include "kb_drv.h"
-#include "ansi.h"
-#include "model/log.h"
 #include "term_buffer.h"
 #include "drivers/kb_data.h"
 
 #include <bitset>
-#include <list>
+#include <set>
+#include <chrono>
 
 static KBData kb_data;
 
@@ -138,6 +137,14 @@ public:
 
 class KeyboardPtyDriver : public KeyboardTerminalDriverCommon
 {
+    inline void wakeup(bool activity)
+    {
+        if (activity)
+        {
+            _last_idle = std::chrono::system_clock::now();
+        }
+    }
+
 public:
     vector<KeyEvent> parse(TermBuffer* buffer) override
     {
@@ -157,6 +164,7 @@ public:
                     ke.insert.push_back(buffer->get());
                 events.push_back(ke);
             }
+            wakeup(!events.empty());
             return events;
         }
 
@@ -180,37 +188,51 @@ public:
         }
 
         // keep history of last N pressed keys
-        const auto& existing_iterator = _pressedCodesCache.find(code);
-        if (existing_iterator != _pressedCodesCache.end())
+        if (_pressedCodesCache.find(code) == _pressedCodesCache.end())
         {
-            _lastUsedCodes.erase(existing_iterator->second);
-        }
-
-        _lastUsedCodes.push_front(code);
-        _pressedCodesCache[code] = _lastUsedCodes.begin();
-
-        // N+1 key in history is released
-        if (_lastUsedCodes.size() > cache_size)
-        {
-            auto old_code = _lastUsedCodes.back();
-            _pressedCodesCache.erase(old_code);
-            _lastUsedCodes.pop_back();
-            mark(false, old_code, &events);
+            _pressedCodesCache.insert(code);
         }
 
         mark(true, code, &events);
+        wakeup(!events.empty());
         return events;
     }
 
     vector<KeyEvent> idle() override
     {
-        return {};
+        if (_pressedCodesCache.empty()) return {};
+
+        constexpr std::chrono::milliseconds idle_timeout { 500 };
+        std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+        auto time_elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - _last_idle);
+
+        vector<KeyEvent> events;
+        if (time_elapsed > idle_timeout)
+        {
+            // send key release
+            // ~new (0101) & old (1001) = 0001
+            _Mod released = ~0 & _modifier_state;
+            auto codes = kb_data.getModCodes(released);
+            for (auto modCode : codes)
+                mark(false, modCode, &events);
+
+            _modifier_state = 0;
+
+            // mark all keys as released
+            for (const auto& code : _pressedCodesCache)
+            {
+                mark(false, code, &events);
+            }
+            _pressedCodesCache.clear();
+        }
+
+        return events;
     }
 
 private:
-    std::list<_Code> _lastUsedCodes;
-    unordered_map<_Code, std::list<_Code>::iterator> _pressedCodesCache;
+    std::set<_Code> _pressedCodesCache;
     const size_t cache_size = 3;
+    std::chrono::system_clock::time_point _last_idle = std::chrono::system_clock::now();
 };
 
 // static

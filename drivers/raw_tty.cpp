@@ -184,6 +184,15 @@ bool TtyReader::runOnce()
             _buffer.get(); // pop one off
         }
     }
+    else
+    {
+        if (_kb_drv && _pTerm)
+        {
+            auto vke = _kb_drv->idle();
+            for (const auto& ke : vke)
+                _pTerm->keyEvent(ke);
+        }
+    }
 
     return true;
 }
