@@ -27,7 +27,7 @@ char TermBuffer::peek(size_t offset) const
 
 bool TermBuffer::hasMouseCode() const
 {
-    if (peek(0) == Ansi::ESC && peek(1) == '[' && peek(2) == 'M')
+    if (size() > 3 && peek(0) == Ansi::ESC && peek(1) == '[' && peek(2) == 'M')
     {
         return true;
     }

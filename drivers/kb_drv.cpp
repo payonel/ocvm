@@ -480,7 +480,7 @@ void KeyboardTerminalDriver::update_modifier(bool bPressed, _Code keycode)
 
 vector<KeyEvent> KeyboardLocalRawTtyDriver::parse(TermBuffer* buffer)
 {
-    if (buffer->hasMouseCode())
+    if (buffer->size() == 0 || buffer->hasMouseCode())
         return {};
 
     bool released;
@@ -515,7 +515,7 @@ vector<KeyEvent> KeyboardLocalRawTtyDriver::parse(TermBuffer* buffer)
 
 vector<KeyEvent> KeyboardPtyDriver::parse(TermBuffer* buffer)
 {
-    if (buffer->hasMouseCode())
+    if (buffer->size() == 0 || buffer->hasMouseCode())
         return {};
 
     vector<KeyEvent> events;
