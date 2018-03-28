@@ -231,7 +231,6 @@ public:
 
 private:
     std::set<_Code> _pressedCodesCache;
-    const size_t cache_size = 3;
     std::chrono::system_clock::time_point _last_idle = std::chrono::system_clock::now();
 };
 
