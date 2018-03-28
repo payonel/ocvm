@@ -27,7 +27,7 @@ public:
     ConnectionState state() const;
     ssize_t bytes_available() const;
     bool preload(ssize_t bytes);
-    bool copy(vector<char>* pOut, ssize_t offset, ssize_t bytes);
+    bool back_insert(vector<char>* pOut, ssize_t offset, ssize_t bytes);
     bool move(ssize_t bytes);
     bool can_read() const;
     bool can_write() const;

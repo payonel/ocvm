@@ -210,13 +210,13 @@ int InternetConnection::read(lua_State* lua)
     if (!connection()->can_read())
         return ValuePack::ret(lua, Value::nil, "not connected");
 
-    vector<char> buffer;
     LUA_NUMBER default_n = INT_MAX;
     ssize_t n = static_cast<ssize_t>(Value::checkArg<LUA_NUMBER>(lua, 1, &default_n));
 
     connection()->preload(n);
     n = std::min(n, connection()->bytes_available());
-    connection()->copy(&buffer, 0, n);
+    vector<char> buffer;
+    connection()->back_insert(&buffer, 0, n);
     connection()->move(buffer.size());
 
     if (buffer.size() == 0 && connection()->state() == ConnectionState::Finished)
@@ -316,7 +316,7 @@ bool HttpObject::update()
             _response_ready = response_finished && prev_buffer_size == buffer_size;
 
             vector<char> buffer;
-            resp->copy(&buffer, 0, buffer_size);
+            resp->back_insert(&buffer, 0, buffer_size);
             size_t from = 0;
 
             while (from < buffer.size())

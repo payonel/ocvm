@@ -16,7 +16,7 @@ bool readyNextPacket(Connection* conn, vector<char>* buffer, bool keepPacketSize
 
     // read next packet from server
     constexpr ssize_t header_size = sizeof(int32_t);
-    if (!conn->copy(buffer, 0, header_size))
+    if (!conn->back_insert(buffer, 0, header_size))
         return false;
 
     int32_t packet_size = 0;
@@ -39,7 +39,7 @@ bool readyNextPacket(Connection* conn, vector<char>* buffer, bool keepPacketSize
         buffer->clear();
     }
 
-    if (!conn->copy(buffer, header_size, packet_size))
+    if (!conn->back_insert(buffer, header_size, packet_size))
         return false;
 
     conn->move(end);
@@ -295,7 +295,9 @@ bool ModemDriver::send(const vector<char>& payload)
     int32_t data_size = static_cast<int32_t>(payload.size());
     char* p = reinterpret_cast<char*>(&data_size);
     vector<char> header { p[0], p[1], p[2], p[3] };
-    return _connection->write(header) && _connection->write(payload);
+    if (!_connection->write(header))
+        return false;
+    return _connection->write(payload);
 }
 
 bool ModemDriver::onStart()

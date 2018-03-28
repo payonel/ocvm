@@ -226,25 +226,38 @@ int Modem::open(lua_State* lua)
 }
 
 template<typename T>
-T read(const char** pInput)
+bool read_next(const char** pInput, const char* const end, T* pOut)
 {
-    const char*& input = *pInput;
-    T result {};
-    char* p = reinterpret_cast<char*>(&result);
-    for (size_t i = 0; i < sizeof(T); i++)
+    if (pOut && *pInput + sizeof(T) <= end)
     {
-        *p++ = *input++;
+        const char*& input = *pInput;
+        char* p = reinterpret_cast<char*>(pOut);
+        for (size_t i = 0; i < sizeof(T); i++)
+        {
+            *p++ = *input++;
+        }
+        return true;
     }
-    return result;
+    return false;
 }
 
-vector<char> read_vector(const char** pInput)
+bool read_vector(const char** pInput, const char* const end, vector<char>* pOut)
 {
-    int size = read<int32_t>(pInput);
-    vector<char> result;
-    std::copy(*pInput, *pInput + size, std::back_inserter(result));
+    if (pOut == nullptr)
+        return false;
+    pOut->clear();
+
+    int size;
+    if (!read_next<int32_t>(pInput, end, &size))
+        return false;
+
+    if (*pInput + size > end)
+        return false;
+
+    std::copy(*pInput, *pInput + size, std::back_inserter(*pOut));
     *pInput += size;
-    return result;
+
+    return true;
 }
 
 RunState Modem::update()
@@ -255,14 +268,34 @@ RunState Modem::update()
         // broadcast packets have no target
         // {sender, has_target(1 or 0)[, target], port, num_args, arg_type_id_1, arg_value_1, ..., arg_type_id_n, arg_value_n)
         const char* input = me.payload.data();
-        vector<char> send_address = read_vector(&input);
-        bool has_target = read<bool>(&input);
+        const char* const end = input + me.payload.size();
+        vector<char> send_address;
+        if (!read_vector(&input, end, &send_address))
+        {
+            lout() << "Malformed modem packet. Could not read send_address\n";
+            continue;
+        }
+        bool has_target;
+        if (!read_next<bool>(&input, end, &has_target))
+        {
+            lout() << "Malformed modem packet. Could not read has_target\n";
+            continue;
+        }
         vector<char> recv_address;
         if (has_target)
         {
-            recv_address = read_vector(&input);
+            if (!read_vector(&input, end, &recv_address))
+            {
+                lout() << "Malformed modem packet. Could not read recv_address\n";
+                continue;
+            }
         }
-        int port = read<int32_t>(&input);
+        int port;
+        if (!read_next<int32_t>(&input, end, &port))
+        {
+            lout() << "Malformed modem packet. Could not read port\n";
+            continue;
+        }
 
         if (!isApplicable(port, has_target ? &recv_address : nullptr))
         {
@@ -272,25 +305,57 @@ RunState Modem::update()
         int distance = 0; // always zero in simulation
         ValuePack pack {"modem_message", address(), send_address, port, distance};
 
-        int num_args = read<int32_t>(&input);
+        int num_args;
+        if (!read_next<int32_t>(&input, end, &num_args))
+        {
+            lout() << "Malformed modem packet. Could not read num_args\n";
+            continue;
+        }
         for (int n = 0; n < num_args; n++)
         {
-            int type_id = read<int32_t>(&input);
+            int type_id;
+            if (!read_next<int32_t>(&input, end, &type_id))
+            {
+                lout() << "Malformed modem packet. Could not read type_id\n";
+                continue;
+            }
+            // switch variables
+            vector<char> string_arg;
+            bool bool_arg;
+            LUA_NUMBER number_arg;
+            Value v;
+
             switch (type_id)
             {
                 case LUA_TSTRING:
-                    pack.push_back(read_vector(&input));
+                    if (!read_vector(&input, end, &string_arg))
+                    {
+                        lout() << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
+                        continue;
+                    }
+                    v = string_arg;
                 break;
                 case LUA_TBOOLEAN:
-                    pack.push_back(read<bool>(&input));
+                    if (!read_next<bool>(&input, end, &bool_arg))
+                    {
+                        lout() << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
+                        continue;
+                    }
+                    v = bool_arg;
                 break;
                 case LUA_TNUMBER:
-                    pack.push_back(read<LUA_NUMBER>(&input));
+                    if (!read_next<LUA_NUMBER>(&input, end, &number_arg))
+                    {
+                        lout() << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
+                        continue;
+                    }
+                    v = number_arg;
                 break;
                 case LUA_TNIL:
-                    pack.push_back(Value::nil);
+                    v = Value::nil;
                 break;
             }
+            pack.emplace_back(v);
         }
 
         client()->pushSignal(pack);
