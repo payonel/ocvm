@@ -334,9 +334,13 @@ bool ModemDriver::runOnce()
         return true;
     }
 
-    ModemEvent me;
-    while (readNextModemMessage(me))
+    // current read next message is clearing the payload, so we're safe to reuse the ModemEvent here
+    // but, I would like the code to be more obviously correct
+    while (true)
     {
+        ModemEvent me;
+        if (!readNextModemMessage(me))
+            break;
         work.set();
         _source->push(me);
     }
