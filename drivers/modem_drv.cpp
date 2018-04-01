@@ -56,7 +56,7 @@ bool ModemDriver::readNextModemMessage(ModemEvent& mev)
 unique_ptr<FileLock> FileLock::create(const string& path)
 {
     // we can only attempt to create the server if we only the file lock
-    int server_pool_file = ::open(path.c_str(), O_CREAT | O_TRUNC);
+    int server_pool_file = ::open(path.c_str(), O_CREAT | O_TRUNC, 0600);
     if (::flock(server_pool_file, LOCK_EX | LOCK_NB) == -1)
     {
         // flock denied
