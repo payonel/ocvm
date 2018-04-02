@@ -142,7 +142,7 @@ private:
 
     inline static int push_ret(lua_State* lua, const string& arg)
     {
-        lua_pushstring(lua, arg.c_str());
+        lua_pushlstring(lua, arg.c_str(), arg.length());
         return 1;
     }
 

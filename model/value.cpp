@@ -37,7 +37,10 @@ string Value::checkArg<string>(lua_State* lua, int index, const string* pDefault
     if (!has_type)
         return *pDefault;
 
-    return string(lua_tostring(lua, index));
+    size_t len;
+    const char* str = lua_tolstring(lua, index, &len);
+
+    return string(str, len);
 }
 
 template <>
