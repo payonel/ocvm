@@ -12,7 +12,7 @@ public:
     ~Host();
 
     Frame* createFrame() const;
-    Component* create(const string& type) const;
+    std::unique_ptr<Component> create(const string& type) const;
     void close();
 
     string stackLog() const;

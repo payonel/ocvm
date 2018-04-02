@@ -47,9 +47,9 @@ protected:
     bool postInit();
     bool loadLuaComponentApi();
 private:
-    vector<Component*> _components;
+    vector<std::unique_ptr<Component>> _components;
     Computer* _computer;
-    Config* _config;
+    std::unique_ptr<Config> _config;
     string _env_path;
     Host* _host;
     SandboxMethods* _globals;

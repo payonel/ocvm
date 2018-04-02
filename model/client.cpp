@@ -54,7 +54,7 @@ bool Client::load()
         return false;
     }
 
-    _config = new Config();
+    _config.reset(new Config());
     _config->setLout(&(lout()));
 
     if (!_config->load(envPath(), "client"))
@@ -96,7 +96,7 @@ bool Client::createComponents()
                 Value& component_config = section_data.get(index);
                 string key = component_config.get(1).toString();
                 lout() << key << ": ";
-                Component* pc = _host->create(key);
+                auto pc = _host->create(key);
                 if (!(pc && pc->initialize(this, component_config)))
                 {
                     lout() << "failed! The host could not create: " << key << endl;
@@ -104,7 +104,7 @@ bool Client::createComponents()
                 }
                 else
                 {
-                    _components.push_back(pc);
+                    _components.push_back(std::move(pc));
                     lout() << "ready\n";
                 }
             }
@@ -157,17 +157,16 @@ void Client::close()
     if (_config)
     {
         _config->save();
-        delete _config;
-        _config = nullptr;
+        _config.reset();
     }
 
     // some components detach from each other during dtor
     // and to find each other, they may use component.list
     // but there is no need to when dtoring the client (this)
-    vector<Component*> comp_copy = _components;
+    vector<std::unique_ptr<Component>> comp_copy;
+    for (auto& pc : _components)
+        comp_copy.push_back(std::move(pc));
     _components.clear();
-    for (auto pc : comp_copy)
-        delete pc;
 
     // now the screen should be closed, we can report crash info
     std::cerr << _crash;
@@ -177,14 +176,14 @@ vector<Component*> Client::components(string filter, bool exact) const
 {
     vector<Component*> result;
 
-    for (auto* pc : _components)
+    for (auto& pc : _components)
     {
         string type = pc->type();
         if (type.find(filter) == 0)
         {
             if (!exact || type == filter)
             {
-                result.push_back(pc);
+                result.push_back(pc.get());
             }
         }
     }
@@ -194,11 +193,11 @@ vector<Component*> Client::components(string filter, bool exact) const
 
 Component* Client::component(const string& address) const
 {
-    for (auto* pc : _components)
+    for (auto& pc : _components)
     {
         if (pc->address() == address)
         {
-            return pc;
+            return pc.get();
         }
     }
     return nullptr;
@@ -334,13 +333,13 @@ bool Client::add_component(Value& component_config)
 
     string type = component_config.get(1).toString();
 
-    Component* pc = _host->create(type);
+    auto pc = _host->create(type);
     if (!pc || !pc->initialize(this, component_config))
     {
         return false;
     }
 
-    _components.push_back(pc);
+    _components.push_back(std::move(pc));
     _computer->pushSignal(ValuePack({"component_added", pc->address(), pc->type()}));
 
     if (!pc->postInit())
@@ -356,12 +355,11 @@ bool Client::remove_component(const string& address)
 {
     for (auto it = _components.begin(); it != _components.end(); it++)
     {
-        Component* pc = *it;
+        auto& pc = *it;
         if (pc->address() == address)
         {
             _computer->pushSignal(ValuePack({"component_removed", pc->address(), pc->type()}));
             _components.erase(it);
-            delete pc;
             return true;
         }
     }

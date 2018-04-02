@@ -22,46 +22,47 @@ Host::~Host()
     close();
 }
 
-Component* Host::create(const string& type) const
+std::unique_ptr<Component> Host::create(const string& type) const
 {
+    std::unique_ptr<Component> result;
     if (type == "screen")
     {
-        return new Screen;
+        result.reset(new Screen);
     }
     else if (type == "gpu")
     {
-        return new Gpu;
+        result.reset(new Gpu);
     }
     else if (type == "eeprom")
     {
-        return new Eeprom;
+        result.reset(new Eeprom);
     }
     else if (type == "computer")
     {
-        return new Computer;
+        result.reset(new Computer);
     }
     else if (type == "filesystem")
     {
-        return new Filesystem;
+        result.reset(new Filesystem);
     }
     else if (type == "keyboard")
     {
-        return new Keyboard;
+        result.reset(new Keyboard);
     }
     else if (type == "internet")
     {
-        return new Internet;
+        result.reset(new Internet);
     }
     else if (type == "sandbox")
     {
-        return new Sandbox;
+        result.reset(new Sandbox);
     }
     else if (type == "modem")
     {
-        return new Modem;
+        result.reset(new Modem);
     }
 
-    return nullptr;
+    return result;
 }
 
 Frame* Host::createFrame() const
