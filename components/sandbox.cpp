@@ -7,6 +7,14 @@ Sandbox::Sandbox()
 {
     add("add_component", &Sandbox::add_component);
     add("remove_component", &Sandbox::remove_component);
+    add("log", &Sandbox::log);
+}
+
+int Sandbox::log(lua_State* lua) {
+    auto msg = Value::checkArg<string>(lua, 1);
+
+    lout() << "lua: " << msg << endl;
+    return 0;
 }
 
 int Sandbox::add_component(lua_State* lua)
