@@ -10,6 +10,7 @@ public:
 
     int add_component(lua_State* lua);
     int remove_component(lua_State* lua);
+    int log(lua_State* lua);
 protected:
     bool onInitialize() override;
     

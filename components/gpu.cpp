@@ -55,7 +55,8 @@ int Gpu::bind(lua_State* lua)
 {
     string address = Value::checkArg<string>(lua, 1);
     if (_screen && _screen->address() == address)
-        return 0; // already set
+        return ValuePack::ret(lua, true); // already set
+    
 
     Component* pc = client()->component(address);
     if (!pc)
@@ -78,7 +79,7 @@ int Gpu::bind(lua_State* lua)
     tuple<int, int> max = _screen->frame()->size();
     setResolution(std::get<0>(max), std::get<1>(max));
 
-    return 0;
+    return ValuePack::ret(lua, true); 
 }
 
 int Gpu::maxDepth(lua_State* lua)
