@@ -2,6 +2,7 @@
 #include "model/log.h"
 #include "model/client.h"
 #include "model/host.h"
+#include "components/computer.h"
 
 Sandbox::Sandbox()
 {
@@ -10,11 +11,9 @@ Sandbox::Sandbox()
     add("log", &Sandbox::log);
 }
 
-int Sandbox::log(lua_State* lua) {
-    auto msg = Value::checkArg<string>(lua, 1);
-
-    lout() << "lua: " << msg << endl;
-    return 0;
+int Sandbox::log(lua_State* lua)
+{
+    return client()->computer()->print(lua);
 }
 
 int Sandbox::add_component(lua_State* lua)

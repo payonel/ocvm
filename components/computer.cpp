@@ -756,5 +756,5 @@ int Computer::print(lua_State* lua)
     msg += "\n";
 
     lout() << msg;
-    return 0;
+    return ValuePack::ret(lua, true);
 }

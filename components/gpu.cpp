@@ -56,7 +56,6 @@ int Gpu::bind(lua_State* lua)
     string address = Value::checkArg<string>(lua, 1);
     if (_screen && _screen->address() == address)
         return ValuePack::ret(lua, true); // already set
-    
 
     Component* pc = client()->component(address);
     if (!pc)
@@ -143,8 +142,7 @@ int Gpu::get(lua_State* lua)
     const Cell* pc = get(x, y);
     if (!pc)
     {
-        luaL_error(lua, "index out of bounds");
-        return 0;
+        return luaL_error(lua, "index out of bounds");
     }
 
     // palette colors are nil unless set as palette colors
