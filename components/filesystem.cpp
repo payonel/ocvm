@@ -473,6 +473,10 @@ int Filesystem::list(lua_State* lua)
     for (const auto& item : listing)
     {
         string relative_item = clean(relative(request_path, item), false, true);
+        if (fs_utils::isDirectory(item)) {
+            relative_item += "/";
+        }
+
         t.insert(relative_item);
     }
 
