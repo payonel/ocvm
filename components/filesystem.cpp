@@ -583,7 +583,7 @@ int Filesystem::spaceUsed(lua_State* lua)
 
 int Filesystem::spaceTotal(lua_State* lua)
 {
-    return ValuePack::ret(lua, numeric_limits<double>::max());
+    return ValuePack::ret(lua, numeric_limits<double>::infinity());
 }
 
 int Filesystem::remove(lua_State* lua)
