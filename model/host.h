@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "config.h"
+#include <memory>
 
 class Component;
 class Frame;
@@ -8,29 +8,29 @@ class Frame;
 class Host
 {
 public:
-    Host(string frameType);
+    Host(std::string frameType);
     ~Host();
 
     Frame* createFrame() const;
-    std::unique_ptr<Component> create(const string& type) const;
+    std::unique_ptr<Component> create(const std::string& type) const;
     void close();
 
-    string stackLog() const;
-    void stackLog(const string& stack_log);
+    std::string stackLog() const;
+    void stackLog(const std::string& stack_log);
 
-    string biosPath() const;
-    void biosPath(const string& bios_path);
+    std::string biosPath() const;
+    void biosPath(const std::string& bios_path);
 
-    string fontsPath() const;
-    void fontsPath(const string& fonts_path);
+    std::string fontsPath() const;
+    void fontsPath(const std::string& fonts_path);
 
-    string machinePath() const;
-    void machinePath(const string& machine_path);
+    std::string machinePath() const;
+    void machinePath(const std::string& machine_path);
 
 private:
-    string _frameType;
-    string _stack_log;
-    string _bios_path;
-    string _fonts_path;
-    string _machine_path;
+    std::string _frameType;
+    std::string _stack_log;
+    std::string _bios_path;
+    std::string _fonts_path;
+    std::string _machine_path;
 };
