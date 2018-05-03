@@ -58,8 +58,8 @@ protected:
     bool onInitialize() override;
     void check(lua_State* lua) const; // throws if no screen
 
-    int setColorContext(lua_State* lua, bool bBack);
-    int getColorContext(lua_State* lua, bool bBack);
+    int setColorContext(lua_State* lua, bool bBack); // returns color, index (or nil)
+    int getColorAssignment(lua_State* lua, bool bBack); // returns color, boolean
     tuple<int, Value> makeColorContext(const Color& color);
 
     void resizeBuffer(int width, int height);

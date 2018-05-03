@@ -170,7 +170,7 @@ int Gpu::setBackground(lua_State* lua)
 
 int Gpu::getBackground(lua_State* lua)
 {
-    return getColorContext(lua, true);
+    return getColorAssignment(lua, true);
 }
 
 int Gpu::setForeground(lua_State* lua)
@@ -180,7 +180,7 @@ int Gpu::setForeground(lua_State* lua)
 
 int Gpu::getForeground(lua_State* lua)
 {
-    return getColorContext(lua, false);
+    return getColorAssignment(lua, false);
 }
 
 int Gpu::fill(lua_State* lua)
@@ -370,19 +370,14 @@ int Gpu::setColorContext(lua_State* lua, bool bBack)
         }
     }
 
-    Color color {rgb, p};
+    auto& ref = bBack ? _bg : _fg;
+    auto ctx = makeColorContext(ref);
+    ref = {rgb, p};
 
-    int stack = getColorContext(lua, bBack);
-
-    if (bBack)
-        _bg = color;
-    else
-        _fg = color;
-
-    return stack;
+    return ValuePack::ret(lua, std::get<0>(ctx), std::get<1>(ctx));
 }
 
-int Gpu::getColorContext(lua_State* lua, bool bBack)
+int Gpu::getColorAssignment(lua_State* lua, bool bBack)
 {
     check(lua);
     const Color& color = bBack ? _bg : _fg;
@@ -391,6 +386,12 @@ int Gpu::getColorContext(lua_State* lua, bool bBack)
 
 tuple<int, Value> Gpu::makeColorContext(const Color& color)
 {
+    /*
+        get-ground:         return color, boolean
+            -> getColorAssignment
+        get and set-ground: return color, index or nil
+            -> makeColorContext
+    */
     int value = color.rgb;
     if (!color.paletted || _color_state.depth != EDepthType::_8)
     {
