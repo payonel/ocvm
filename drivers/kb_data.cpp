@@ -37,12 +37,11 @@ void KBData::add_sequence(_Code code, ModBit mod, KeySymDataLinks& links, const 
 
     if (seq_index + 1 == seq.size()) // last
     {
-        if (pData->code != 0)
+        if (pData->code == 0)
         {
-            cout << "bad sequence\r\n";
+            pData->code = code;
+            pData->mod = mod;
         }
-        pData->code = code;
-        pData->mod = mod;
     }
     else
     {
