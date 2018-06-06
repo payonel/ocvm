@@ -15,6 +15,7 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <sstream>
 
 Client::Client(Host* host, const string& env_path) : 
     LuaProxy("component"),
@@ -97,9 +98,16 @@ bool Client::createComponents()
                 string key = component_config.get(1).toString();
                 lout() << key << ": ";
                 auto pc = _host->create(key);
-                if (!(pc && pc->initialize(this, component_config)))
+                if (!pc)
                 {
-                    lout() << "failed! The host could not create: " << key << endl;
+                    lout() << "skipping component [" << key << "] no driver found\n";
+                }
+                else if (!pc->initialize(this, component_config))
+                {
+                    stringstream ss;
+                    ss << "failed to initialize: " << key << endl;
+                    lout() << ss.str();
+                    std::cerr << ss.str();
                     return false;
                 }
                 else

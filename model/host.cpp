@@ -1,5 +1,7 @@
+#include "apis/unicode.h"
 #include "model/host.h"
 #include "drivers/fs_utils.h"
+
 #include "components/component.h"
 #include "components/screen.h"
 #include "components/gpu.h"
@@ -10,7 +12,6 @@
 #include "components/internet.h"
 #include "components/sandbox.h"
 #include "components/modem.h"
-#include "apis/unicode.h"
 
 Host::Host(string frameType) :
     _frameType(frameType)
@@ -52,10 +53,6 @@ std::unique_ptr<Component> Host::create(const string& type) const
     else if (type == "internet")
     {
         result.reset(new Internet);
-    }
-    else if (type == "sandbox")
-    {
-        result.reset(new Sandbox);
     }
     else if (type == "modem")
     {
