@@ -134,6 +134,19 @@ bool TtyReader::onStart()
     return true;
 }
 
+// void log_codes(TermBuffer* buffer)
+// {
+//     auto size = buffer->size();
+//     std::cerr << "{";
+//     for (decltype(buffer->size()) i = 0; i < size; i++)
+//     {
+//         std::cerr << static_cast<int>(buffer->peek(i));
+//         if (i < size - 1)
+//             std::cerr << ",";
+//     }
+//     std::cerr << "}\n";
+// }
+
 bool TtyReader::runOnce()
 {
     while (true)
@@ -158,6 +171,7 @@ bool TtyReader::runOnce()
     auto old_size = _buffer.size();
     if (old_size > 0)
     {
+        // log_codes(&_buffer);
         if (_mouse_drv && _pTerm)
         {
             auto vme = _mouse_drv->parse(&_buffer);
