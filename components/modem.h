@@ -35,6 +35,7 @@ public:
     int broadcast(lua_State*);
     int send(lua_State*);
     int open(lua_State*);
+    int setStrength(lua_State*);
 protected:
     bool onInitialize() override;
     RunState update() override;

@@ -18,6 +18,7 @@ Modem::Modem()
     add("broadcast", &Modem::broadcast);
     add("send", &Modem::send);
     add("open", &Modem::open);
+    add("setStrength", &Modem::setStrength);
 }
 
 Modem::~Modem()
@@ -385,5 +386,10 @@ bool Modem::isApplicable(int port, vector<char>* target)
     }
 
     return true;
+}
+
+int Modem::setStrength(lua_State* lua)
+{
+    return ValuePack::ret(lua, Value::nil, "not implemented");
 }
 
