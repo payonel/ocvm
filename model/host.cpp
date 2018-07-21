@@ -1,5 +1,5 @@
 #include "apis/unicode.h"
-#include "model/host.h"
+#include "host.h"
 #include "drivers/fs_utils.h"
 
 #include "components/component.h"
@@ -10,11 +10,13 @@
 #include "components/filesystem.h"
 #include "components/keyboard.h"
 #include "components/internet.h"
-#include "components/sandbox.h"
 #include "components/modem.h"
 
+#include "dyndrv.h"
+
 Host::Host(string frameType) :
-    _frameType(frameType)
+    _frameType(frameType),
+    _driverFactory(new DynamicDriverFactory)
 {
 }
 
@@ -57,6 +59,10 @@ std::unique_ptr<Component> Host::create(const string& type) const
     else if (type == "modem")
     {
         result.reset(new Modem);
+    }
+    else
+    {
+        result = _driverFactory->create(type); // returns null if type isn't found
     }
 
     return result;

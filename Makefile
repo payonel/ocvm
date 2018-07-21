@@ -1,5 +1,5 @@
-MAKEFLAGS+="-j 4"
-flags=-g --std=c++14 -Wall
+MAKEFLAGS+="-j 2"
+flags=-g --std=c++14 -Wall -fPIC
 
 ifeq ($(lua),)
 lua=5.2
@@ -10,20 +10,20 @@ libs=$(shell pkg-config lua$(lua) --libs 2>/dev/null || echo -llua5.2)
 includes=$(shell pkg-config lua$(lua) --cflags)
 else
 $(info profile build)
-libs=-L../gperftools-2.5/.libs/ -ldl -lprofiler ../lua-5.3.4/src/liblua.a
+libs=-L../gperftools-2.5/.libs/ -lprofiler ../lua-5.3.4/src/liblua.a
 includes=-I../lua-5.3.4/src
 bin=-profiled
 flags+=-Wl,--no-as-needed
 endif
 
 ifeq ($(lua),local)
-libs=-ldl ../lua-5.3.4/src/liblua.a
+libs=../lua-5.3.4/src/liblua.a
 includes=-I../lua-5.3.4/src
 flags+=-Wl,--no-as-needed
 endif
 
 includes+=-I.
-libs+=-lstdc++ -lstdc++fs -pthread
+libs+=-lstdc++ -lstdc++fs -pthread -ldl
 
 files=$(wildcard *.cpp)
 files+=$(wildcard apis/*.cpp)

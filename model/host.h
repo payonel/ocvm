@@ -4,6 +4,7 @@
 
 class Component;
 class Frame;
+class DynamicDriverFactory;
 
 class Host
 {
@@ -33,4 +34,6 @@ private:
     std::string _bios_path;
     std::string _fonts_path;
     std::string _machine_path;
+
+    std::unique_ptr<DynamicDriverFactory> _driverFactory;
 };
