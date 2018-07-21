@@ -1,5 +1,5 @@
 MAKEFLAGS+="-j 2"
-flags=-g --std=c++14 -Wall -fPIC
+flags=-g --std=c++14 -fPIC -Wall
 
 ifeq ($(lua),)
 lua=5.2
@@ -35,9 +35,20 @@ files+=$(wildcard model/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 
-ocvm$(bin): $(objs) system
+plugins = $(wildcard plugins/*.cpp)
+shared  = $(plugins:%.cpp=bin/%$(bin).so)
+shared_deps=bin/components/component.o bin/model/luaproxy.o
+
+deps+= $(shared:%.so=%.d)
+
+ocvm$(bin): system $(objs) $(shared)
 	$(CXX) $(flags) $(objs) $(libs) -o ocvm$(bin)
 	@echo done
+
+-include $(deps)
+bin/%$(bin).so: bin/%.o $(shared_deps)
+	@mkdir -p $@D
+	$(CXX) -shared $^ -o $@
 
 -include $(deps)
 bin/%$(bin).o : %.cpp

@@ -1,5 +1,6 @@
-#include "apis/unicode.h"
 #include "host.h"
+
+#include "apis/unicode.h"
 #include "drivers/fs_utils.h"
 
 #include "components/component.h"
@@ -12,12 +13,54 @@
 #include "components/internet.h"
 #include "components/modem.h"
 
-#include "dyndrv.h"
+#include <dlfcn.h>
+
+typedef std::string get_name_t();
 
 Host::Host(string frameType) :
-    _frameType(frameType),
-    _driverFactory(new DynamicDriverFactory)
+    _frameType(frameType)
 {
+    load_all();
+}
+
+void Host::load_all()
+{
+    auto exec_path = fs_utils::make_proc_path("bin/components/");
+    auto files = fs_utils::list(exec_path);
+    const std::string so_ext = ".so";
+    for (const auto& file : files)
+    {
+        if (file.find(so_ext) + so_ext.size() == file.length())
+        {
+            char* error;
+            void* handle = dlopen(file.c_str(), RTLD_LAZY);
+            if ((error = dlerror()) != nullptr)
+            {
+                fprintf(stderr, "dlopen failed: %s\n", error);
+                continue;
+            }
+
+            get_name_t* get_name = (get_name_t*)dlsym(handle, "name");
+            if ((error = dlerror()) != nullptr)
+            {
+                fprintf(stderr, "bad so, does not declare name: %s\n", error);
+                dlclose(handle);
+                continue;
+            }
+
+            std::string name = get_name();
+
+            create_object_t* creator = (create_object_t*)dlsym(handle, "create_object");
+            if ((error = dlerror()) != nullptr)
+            {
+                fprintf(stderr, "bad so, does not declare create_object: %s\n", error);
+                dlclose(handle);
+                continue;
+            }
+
+            _creators[name] = creator;
+        }
+    }
 }
 
 Host::~Host()
@@ -60,9 +103,13 @@ std::unique_ptr<Component> Host::create(const string& type) const
     {
         result.reset(new Modem);
     }
-    else
+    else if (_creators.find(type) != _creators.end())
     {
-        result = _driverFactory->create(type); // returns null if type isn't found
+        const auto creator_iterator = _creators.find(type);
+        if (creator_iterator != _creators.end())
+        {
+            result = creator_iterator->second();
+        }
     }
 
     return result;

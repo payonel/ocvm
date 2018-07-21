@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <map>
 
 class Component;
 class Frame;
-class DynamicDriverFactory;
 
 class Host
 {
@@ -35,5 +35,7 @@ private:
     std::string _fonts_path;
     std::string _machine_path;
 
-    std::unique_ptr<DynamicDriverFactory> _driverFactory;
+    void load_all();
+    typedef std::unique_ptr<Component> create_object_t();
+    std::map<std::string, create_object_t*> _creators;
 };
