@@ -12,6 +12,7 @@
 #include "components/keyboard.h"
 #include "components/internet.h"
 #include "components/modem.h"
+#include "components/sandbox.h"
 
 #include <dlfcn.h>
 
@@ -102,6 +103,10 @@ std::unique_ptr<Component> Host::create(const string& type) const
     else if (type == "modem")
     {
         result.reset(new Modem);
+    }
+    else if (type == "sandbox")
+    {
+        result.reset(new Sandbox);
     }
     else if (_creators.find(type) != _creators.end())
     {
