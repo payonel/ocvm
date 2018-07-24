@@ -1,5 +1,5 @@
 MAKEFLAGS+="-j 2"
-flags=-g --std=c++14 -fPIC -Wall
+flags=-g --std=c++14 -Wall
 
 ifeq ($(lua),)
 lua=5.2
@@ -23,7 +23,7 @@ flags+=-Wl,--no-as-needed
 endif
 
 includes+=-I.
-libs+=-lstdc++ -lstdc++fs -pthread -ldl
+libs+=-lstdc++ -lstdc++fs -pthread
 
 files=$(wildcard *.cpp)
 files+=$(wildcard apis/*.cpp)
@@ -35,20 +35,9 @@ files+=$(wildcard model/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 
-plugins = $(wildcard plugins/*.cpp)
-shared  = $(plugins:%.cpp=bin/%$(bin).so)
-shared_deps=bin/components/component.o bin/model/luaproxy.o
-
-deps+= $(shared:%.so=%.d)
-
-ocvm$(bin): system $(objs) $(shared)
+ocvm$(bin): system $(objs)
 	$(CXX) $(flags) $(objs) $(libs) -o ocvm$(bin)
 	@echo done
-
--include $(deps)
-bin/%$(bin).so: bin/%.o $(shared_deps)
-	@mkdir -p $@D
-	$(CXX) -shared $^ -o $@
 
 -include $(deps)
 bin/%$(bin).o : %.cpp

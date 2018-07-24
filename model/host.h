@@ -34,8 +34,4 @@ private:
     std::string _bios_path;
     std::string _fonts_path;
     std::string _machine_path;
-
-    void load_all();
-    typedef std::unique_ptr<Component> create_object_t();
-    std::map<std::string, create_object_t*> _creators;
 };
