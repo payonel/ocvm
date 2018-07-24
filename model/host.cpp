@@ -25,7 +25,7 @@ Host::Host(string frameType) :
 
 void Host::load_all()
 {
-    auto exec_path = fs_utils::make_proc_path("bin/components/");
+    auto exec_path = fs_utils::make_proc_path("bin/plugins/");
     auto files = fs_utils::list(exec_path);
     const std::string so_ext = ".so";
     for (const auto& file : files)

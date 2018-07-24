@@ -183,7 +183,24 @@ void Screen::push(const KeyEvent& ke)
     }
 }
 
+void Screen::push(const MouseEvent& me)
+{
+    EventSource<MouseEvent>::push(me);
+}
+
 Frame* Screen::frame() const
 {
     return _frame.get();
+}
+
+// IScreen passthroughs to GPU
+bool Screen::setResolution(int width, int height)
+{
+    return _gpu && _gpu->setResolution(width, height);
+}
+
+void Screen::invalidate()
+{
+    if (_gpu)
+        _gpu->invalidate();
 }

@@ -1,13 +1,11 @@
 #include "frame.h"
-#include "components/screen.h"
-#include "components/gpu.h"
 
 Frame::~Frame()
 {
     _screen = nullptr;
 }
 
-void Frame::open(Screen* screen)
+void Frame::open(IScreen* screen)
 {
     _screen = screen;
     _isOn = true;
@@ -52,8 +50,8 @@ void Frame::winched(int width, int height)
 {
     _width = width;
     _height = height;
-    if (_screen && _screen->gpu())
-        _screen->gpu()->setResolution(width, height);
+    if (_screen)
+        _screen->setResolution(width, height);
 }
 
 void Frame::mouseEvent(const MouseEvent& me)
@@ -81,7 +79,7 @@ bool Frame::on(bool bOn)
     {
         if (bOn)
         {
-            _screen->gpu()->invalidate();
+            _screen->invalidate();
         }
         else
         {

@@ -1,8 +1,8 @@
 #include "sandbox.h"
+#include "computer.h"
 #include "model/log.h"
 #include "model/client.h"
 #include "model/host.h"
-#include "components/computer.h"
 
 Sandbox::Sandbox()
 {

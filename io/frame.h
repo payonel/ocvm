@@ -23,7 +23,14 @@ struct Cell
     int width;
 };
 
-class Screen;
+class IScreen
+{
+public:
+    virtual bool setResolution(int width, int height) = 0;
+    virtual void push(const MouseEvent& me) = 0;
+    virtual void push(const KeyEvent& me) = 0;
+    virtual void invalidate() = 0;
+};
 
 class Frame
 {
@@ -72,7 +79,7 @@ public:
     virtual ~Frame();
 
     // called by Screen when initializing
-    void open(Screen* screen);
+    void open(IScreen* screen);
 
     // called by Screen during vm loop
     bool update();
@@ -88,7 +95,7 @@ public:
     bool on() const;
     bool on(bool bOn);
 private:
-    Screen* _screen = nullptr;
+    IScreen* _screen = nullptr;
 
     int _width;
     int _height;

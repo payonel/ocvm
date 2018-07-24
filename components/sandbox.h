@@ -1,5 +1,5 @@
 #pragma once
-#include "components/component.h"
+#include "component.h"
 
 class Client;
 

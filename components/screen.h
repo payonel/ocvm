@@ -7,7 +7,7 @@
 class Keyboard;
 class Gpu;
 
-class Screen : public Component, public EventSource<MouseEvent>
+class Screen : public Component, public IScreen, private EventSource<MouseEvent>
 {
 public:
     Screen();
@@ -29,8 +29,10 @@ public:
     bool disconnectKeyboard(Keyboard* kb);
     vector<string> keyboards() const;
 
-    void push(const KeyEvent& ke);
-    using EventSource<MouseEvent>::push;
+    void push(const KeyEvent& ke) override;
+    void push(const MouseEvent& ke) override;
+    bool setResolution(int width, int height) override;
+    void invalidate() override;
 
     void gpu(Gpu* gpu);
     Gpu* gpu() const;
