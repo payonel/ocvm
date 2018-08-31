@@ -8,6 +8,8 @@
 #include "apis/system.h"
 #include "model/host.h"
 
+bool Eeprom::s_registered = Host::registerComponentType<Eeprom>("eeprom");
+
 Eeprom::Eeprom()
 {
     add("set", &Eeprom::set);

@@ -13,6 +13,7 @@ public:
     int log(lua_State* lua);
 protected:
     bool onInitialize() override;
-    
+
 private:
+    static bool s_registered;
 };

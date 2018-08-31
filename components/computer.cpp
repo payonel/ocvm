@@ -16,6 +16,8 @@ using std::chrono::system_clock;
 
 const float memory_scale = 1;
 
+bool Computer::s_registered = Host::registerComponentType<Computer>("computer");
+
 inline double now()
 {
     return duration_cast<duration<double>>(system_clock::now().time_since_epoch()).count();

@@ -33,4 +33,6 @@ private:
 
     int _bios_size_limit = 1024 * 4; // also read from configuration
     int _data_size_limit = 256;
+
+    static bool s_registered;
 };

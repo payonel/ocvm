@@ -23,4 +23,6 @@ protected:
     Screen* screen() const;
 private:
     string _preferredScreen;
+
+    static bool s_registered;
 };

@@ -1,3 +1,4 @@
+#include "model/host.h"
 #include "modem.h"
 #include "drivers/modem_drv.h"
 #include "model/client.h"
@@ -6,6 +7,8 @@
 #include <sstream>
 #include <iterator>
 using std::stringstream;
+
+bool Modem::s_registered = Host::registerComponentType<Modem>("modem");
 
 Modem::Modem()
 {

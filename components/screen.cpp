@@ -12,6 +12,8 @@
 
 #include "apis/unicode.h"
 
+bool Screen::s_registered = Host::registerComponentType<Screen>("screen");
+
 Screen::Screen()
 {
     add("isOn", &Screen::isOn);

@@ -57,4 +57,6 @@ private:
     set<FileHandle*> _handles;
     string _src;
     bool _tmpfs;
+
+    static bool s_registered;
 };

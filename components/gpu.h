@@ -79,4 +79,6 @@ private:
     Color _bg;
     Color _fg;
     ColorState _color_state;
+
+    static bool s_registered;
 };

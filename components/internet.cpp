@@ -1,11 +1,14 @@
 #include "internet.h"
 #include "model/client.h"
 #include "apis/system.h"
+#include "model/host.h"
 
 #include "drivers/internet_drv.h"
 
 #include <sstream>
 using std::stringstream;
+
+bool Internet::s_registered = Host::registerComponentType<Internet>("internet");
 
 Internet::Internet()
 {

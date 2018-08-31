@@ -38,4 +38,6 @@ private:
     bool _http;
 
     set<InternetConnection*> _connections;
+
+    static bool s_registered;
 };

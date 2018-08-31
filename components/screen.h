@@ -43,4 +43,6 @@ private:
     vector<Keyboard*> _keyboards;
     unique_ptr<Frame> _frame;
     Gpu* _gpu = nullptr;
+
+    static bool s_registered;
 };

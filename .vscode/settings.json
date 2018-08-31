@@ -31,7 +31,21 @@
         "bitset": "cpp",
         "*.tcc": "cpp",
         "istream": "cpp",
-        "cerrno": "cpp"
+        "cerrno": "cpp",
+        "cmath": "cpp",
+        "codecvt": "cpp",
+        "cstring": "cpp",
+        "deque": "cpp",
+        "vector": "cpp",
+        "string_view": "cpp",
+        "iosfwd": "cpp",
+        "limits": "cpp",
+        "memory": "cpp",
+        "numeric": "cpp",
+        "ratio": "cpp",
+        "sstream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp"
     },
     "files.exclude": {
         "**/.git": true,

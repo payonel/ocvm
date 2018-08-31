@@ -47,4 +47,6 @@ protected:
     int _maxArguments;
 
     set<int> _ports;
+
+    static bool s_registered;
 };

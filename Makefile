@@ -1,5 +1,5 @@
 MAKEFLAGS+="-j 2"
-flags=-g --std=c++14 -Wall
+flags=-g --std=c++17 -Wall
 
 ifeq ($(lua),)
 lua=5.2

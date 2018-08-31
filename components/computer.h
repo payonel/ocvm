@@ -76,4 +76,6 @@ private:
 
     size_t _gc_ticks = 0;
     ProfLog _prof;
+
+    static bool s_registered;
 };

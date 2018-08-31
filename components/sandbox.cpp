@@ -4,6 +4,8 @@
 #include "model/client.h"
 #include "model/host.h"
 
+bool Sandbox::s_registered = Host::registerComponentType<Sandbox>("sandbox");
+
 Sandbox::Sandbox()
 {
     add("add_component", &Sandbox::add_component);

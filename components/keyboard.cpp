@@ -2,6 +2,9 @@
 #include "screen.h"
 #include "model/client.h"
 #include "model/log.h"
+#include "model/host.h"
+
+bool Keyboard::s_registered = Host::registerComponentType<Keyboard>("keyboard");
 
 Keyboard::Keyboard()
 {

@@ -1,10 +1,13 @@
 #include "gpu.h"
 #include "model/log.h"
 #include "model/client.h"
+#include "model/host.h"
 #include "screen.h"
 #include "apis/unicode.h"
 #include "color/color_map.h"
 #include <iostream>
+
+bool Gpu::s_registered = Host::registerComponentType<Gpu>("gpu");
 
 Gpu::Gpu()
 {

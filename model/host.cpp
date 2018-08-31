@@ -4,15 +4,7 @@
 #include "drivers/fs_utils.h"
 
 #include "components/component.h"
-#include "components/screen.h"
-#include "components/gpu.h"
-#include "components/eeprom.h"
-#include "components/computer.h"
-#include "components/filesystem.h"
-#include "components/keyboard.h"
-#include "components/internet.h"
-#include "components/modem.h"
-#include "components/sandbox.h"
+#include "io/frame.h"
 
 Host::Host(string frameType) :
     _frameType(frameType)
@@ -24,47 +16,33 @@ Host::~Host()
     close();
 }
 
+/*static*/
+bool Host::registerComponentType(const std::string& type, Host::GeneratorCallback generator)
+{
+    auto& gens = Host::generators();
+    if (gens.find(type) != gens.end())
+        return false;
+
+    gens[type] = generator;
+    return true;
+}
+
+/*static*/
+std::map<std::string, Host::GeneratorCallback>& Host::generators()
+{
+    static std::map<std::string, Host::GeneratorCallback> _generators;
+    return _generators;
+}
+
 std::unique_ptr<Component> Host::create(const string& type) const
 {
-    std::unique_ptr<Component> result;
-    if (type == "screen")
+    const auto& gens = Host::generators();
+    const auto& genit = gens.find(type);
+    if (genit == gens.end())
     {
-        result.reset(new Screen);
+        return nullptr;
     }
-    else if (type == "gpu")
-    {
-        result.reset(new Gpu);
-    }
-    else if (type == "eeprom")
-    {
-        result.reset(new Eeprom);
-    }
-    else if (type == "computer")
-    {
-        result.reset(new Computer);
-    }
-    else if (type == "filesystem")
-    {
-        result.reset(new Filesystem);
-    }
-    else if (type == "keyboard")
-    {
-        result.reset(new Keyboard);
-    }
-    else if (type == "internet")
-    {
-        result.reset(new Internet);
-    }
-    else if (type == "modem")
-    {
-        result.reset(new Modem);
-    }
-    else if (type == "sandbox")
-    {
-        result.reset(new Sandbox);
-    }
-
-    return result;
+    return genit->second();
 }
 
 Frame* Host::createFrame() const

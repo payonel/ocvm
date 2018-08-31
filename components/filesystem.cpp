@@ -1,5 +1,6 @@
 #include "filesystem.h"
 #include "model/client.h"
+#include "model/host.h"
 #include "model/log.h"
 #include "drivers/fs_utils.h"
 #include "apis/userdata.h"
@@ -8,6 +9,8 @@
 #include <limits>
 using std::ifstream;
 using std::numeric_limits;
+
+bool Filesystem::s_registered = Host::registerComponentType<Filesystem>("filesystem");
 
 constexpr inline int32_t truncate_double(const double& value)
 {
@@ -38,7 +41,7 @@ public:
 
     virtual bool isOpen() const
     {
-        if (this == nullptr || _fs == nullptr)
+        if (_fs == nullptr)
             return false;
 
         return _isOpen;
