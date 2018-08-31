@@ -1,5 +1,4 @@
 #include "internet_drv.h"
-#include "components/internet.h"
 
 #include <algorithm>
 #include <sstream>
@@ -144,8 +143,7 @@ static string escape(const string& text)
     return "'" + result + "'";
 }
 
-InternetConnection::InternetConnection(Internet* inet) :
-    _inet(inet),
+InternetConnection::InternetConnection() :
     _needs_connection(false),
     _needs_data(false)
 {
@@ -154,10 +152,16 @@ InternetConnection::InternetConnection(Internet* inet) :
     add("close", &InternetConnection::close);
 }
 
+void InternetConnection::setOnClose(InternetConnectionEventSet::OnClosedCallback cb)
+{
+    handler.onClosed = cb;
+}
+
 void InternetConnection::dispose()
 {
     _close();
-    _inet->release(this);
+    if (handler.onClosed)
+        handler.onClosed(this);
 }
 
 int InternetConnection::finishConnect(lua_State* lua)
@@ -230,8 +234,7 @@ int InternetConnection::read(lua_State* lua)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-TcpObject::TcpObject(Internet* inet, const string& addr, int port) :
-    InternetConnection(inet)
+TcpObject::TcpObject(const string& addr, int port)
 {
     add("write", &TcpObject::write);
     this->name("TcpObject");
@@ -256,8 +259,7 @@ Connection* TcpObject::connection() const
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-HttpObject::HttpObject(Internet* inet, const HttpAddress& addr, const string& post, const map<string, string>& header) :
-    InternetConnection(inet),//, addr.hostname, addr.port),
+HttpObject::HttpObject(const HttpAddress& addr, const string& post, const map<string, string>& header) :
     _response_ready(false)
 {
     add("response", &HttpObject::response);

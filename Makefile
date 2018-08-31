@@ -23,7 +23,7 @@ flags+=-Wl,--no-as-needed
 endif
 
 includes+=-I.
-libs+=-lstdc++ -lstdc++fs -pthread
+libs+=-lstdc++ -lstdc++fs -pthread -ldl
 
 files=$(wildcard *.cpp)
 files+=$(wildcard apis/*.cpp)
@@ -34,6 +34,13 @@ files+=$(wildcard color/*.cpp)
 files+=$(wildcard model/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
+
+#ifeq (, $(shell command -v curl-config))
+#$(warning "internet component requires libcurl, consider apt-get install libcurl4-openssl-dev")
+#files := $(filter-out components/internet.cpp,$(files))
+#files := $(filter-out drivers/internet_drv.cpp,$(files))
+#else
+#endif
 
 ocvm$(bin): system $(objs)
 	$(CXX) $(flags) $(objs) $(libs) -o ocvm$(bin)

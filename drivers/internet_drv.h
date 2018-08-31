@@ -4,6 +4,7 @@
 #include "connection.h"
 #include "io/event.h"
 #include <memory>
+#include <functional>
 using std::unique_ptr;
 
 struct HttpAddress
@@ -20,11 +21,17 @@ public:
     int port;
 };
 
-class Internet;
+class InternetConnection;
+struct InternetConnectionEventSet
+{
+    using OnClosedCallback = std::function<void(InternetConnection*)>;
+    OnClosedCallback onClosed = nullptr;
+};
+
 class InternetConnection : public UserData
 {
 public:
-    InternetConnection(Internet* inet);
+    InternetConnection();
 
     void dispose() override;
 
@@ -34,11 +41,13 @@ public:
 
     virtual bool update();
 
+    void setOnClose(InternetConnectionEventSet::OnClosedCallback cb);
+
 protected:
     void open(const string& addr, int port);
     virtual Connection* connection() const = 0;
 
-    Internet* _inet;
+    InternetConnectionEventSet handler;
     bool _needs_connection;
     bool _needs_data;
     
@@ -48,7 +57,7 @@ protected:
 class TcpObject : public InternetConnection
 {
 public:
-    TcpObject(Internet* inet, const string& addr, int port);
+    TcpObject(const string& addr, int port);
     int write(lua_State* lua);
 protected:
     Connection* connection() const override;
@@ -77,7 +86,7 @@ private:
 class HttpObject : public InternetConnection
 {
 public:
-    HttpObject(Internet* inet, const HttpAddress& addr, const string& post, const map<string, string>& header);
+    HttpObject(const HttpAddress& addr, const string& post, const map<string, string>& header);
     int read(lua_State* lua);
     int response(lua_State* lua);
 protected:

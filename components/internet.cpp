@@ -68,7 +68,10 @@ int Internet::connect(lua_State* lua)
 
     lua_settop(lua, 0);
     void* pAlloc = lua_newuserdata(lua, sizeof(TcpObject));
-    TcpObject* pConn = new(pAlloc) TcpObject(this, addr, port);
+    TcpObject* pConn = new(pAlloc) TcpObject(addr, port);
+    pConn->setOnClose([this](InternetConnection* _pc){
+        this->release(_pc);
+    });
     _connections.insert(pConn);
 
     return 1;
@@ -98,7 +101,10 @@ int Internet::request(lua_State* lua)
 
     lua_settop(lua, 0);
     void* pAlloc = lua_newuserdata(lua, sizeof(HttpObject));
-    HttpObject* pConn = new(pAlloc) HttpObject(this, httpAddr, post, header);
+    HttpObject* pConn = new(pAlloc) HttpObject(httpAddr, post, header);
+    pConn->setOnClose([this](InternetConnection* _pc){
+        this->release(_pc);
+    });
     _connections.insert(pConn);
 
     return 1;
