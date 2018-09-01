@@ -67,11 +67,7 @@ int Internet::connect(lua_State* lua)
     }
 
     lua_settop(lua, 0);
-    void* pAlloc = lua_newuserdata(lua, sizeof(TcpObject));
-    TcpObject* pConn = new(pAlloc) TcpObject(addr, port);
-    pConn->setOnClose([this](InternetConnection* _pc){
-        this->release(_pc);
-    });
+    auto pConn = InternetConnection::openTcp(UserDataAllocator(lua), {{[this](InternetConnection* pc){this->release(pc);}}}, {addr, port});
     _connections.insert(pConn);
 
     return 1;
@@ -100,11 +96,11 @@ int Internet::request(lua_State* lua)
     }
 
     lua_settop(lua, 0);
-    void* pAlloc = lua_newuserdata(lua, sizeof(HttpObject));
-    HttpObject* pConn = new(pAlloc) HttpObject(httpAddr, post, header);
-    pConn->setOnClose([this](InternetConnection* _pc){
-        this->release(_pc);
-    });
+    auto pConn = InternetConnection::openHttp(UserDataAllocator(lua), {{[this](InternetConnection* pc){this->release(pc);}}}, {httpAddr, post, header});
+    if (!pConn)
+    {
+        return ValuePack::ret(lua, Value::nil, "http requests require libcurl, consider apt-get install libcurl4-openssl-dev");
+    }
     _connections.insert(pConn);
 
     return 1;

@@ -35,12 +35,12 @@ files+=$(wildcard model/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 
-#ifeq (, $(shell command -v curl-config))
-#$(warning "internet component requires libcurl, consider apt-get install libcurl4-openssl-dev")
-#files := $(filter-out components/internet.cpp,$(files))
-#files := $(filter-out drivers/internet_drv.cpp,$(files))
-#else
-#endif
+ifeq (, $(shell which curl-config))
+files := $(filter-out drivers/internet_http.cpp,$(files))
+else
+includes+=$(shell curl-config --cflags)
+libs+=$(shell curl-config --libs)
+endif
 
 ocvm$(bin): system $(objs)
 	$(CXX) $(flags) $(objs) $(libs) -o ocvm$(bin)

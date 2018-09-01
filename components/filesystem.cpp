@@ -674,12 +674,12 @@ FileHandle* Filesystem::create(lua_State* lua, const string& filepath, fstream::
     
     if ((mode & fstream::in) == fstream::in)
     {
-        void* pAlloc = lua_newuserdata(lua, sizeof(FileHandleReader));
+        auto pAlloc = UserDataAllocator(lua)(sizeof(FileHandleReader));
         pfh = new(pAlloc) FileHandleReader(this, fullpath, mode);
     }
     else
     {
-        void* pAlloc = lua_newuserdata(lua, sizeof(FileHandleWriter));
+        auto pAlloc = UserDataAllocator(lua)(sizeof(FileHandleWriter));
         pfh = new(pAlloc) FileHandleWriter(this, fullpath, mode);
     }
 

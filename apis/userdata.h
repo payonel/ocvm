@@ -1,6 +1,7 @@
 #pragma once
 
 #include "model/luaproxy.h"
+#include <functional>
 
 class UserData : public LuaProxy
 {
@@ -25,4 +26,18 @@ public:
     static int doc(lua_State* lua);
 private:
     UserDataApi();
+};
+
+class UserDataAllocator
+{
+public:
+    UserDataAllocator(lua_State* lua) : _lua(lua) {}
+
+    UserData* operator() (size_t n) const
+    {
+        return reinterpret_cast<UserData*>(lua_newuserdata(_lua, n));
+    }
+
+private:
+    lua_State* _lua;
 };

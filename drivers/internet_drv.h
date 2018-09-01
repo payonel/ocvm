@@ -10,7 +10,7 @@ using std::unique_ptr;
 struct HttpAddress
 {
 public:
-    HttpAddress(string url);
+    explicit HttpAddress(string url);
 
     string raw;
     bool valid;
@@ -28,6 +28,19 @@ struct InternetConnectionEventSet
     OnClosedCallback onClosed = nullptr;
 };
 
+struct TcpConstructionParameters
+{
+    string addr;
+    int port;
+};
+
+struct HttpConstructionParameters
+{
+    HttpAddress addr;
+    string post;
+    map<string, string> header;
+};
+
 class InternetConnection : public UserData
 {
 public:
@@ -43,6 +56,12 @@ public:
 
     void setOnClose(InternetConnectionEventSet::OnClosedCallback cb);
 
+    using HttpGenRegistry = std::function<InternetConnection*(UserDataAllocator allocator, const HttpConstructionParameters&)>;
+
+    static HttpGenRegistry& http_gen();
+
+    static InternetConnection* openTcp(UserDataAllocator allocator, const InternetConnectionEventSet& eventSet, const TcpConstructionParameters& args);
+    static InternetConnection* openHttp(UserDataAllocator allocator, const InternetConnectionEventSet& eventSet, const HttpConstructionParameters& args);
 protected:
     void open(const string& addr, int port);
     virtual Connection* connection() const = 0;
@@ -54,46 +73,4 @@ protected:
     virtual void _close();
 };
 
-class TcpObject : public InternetConnection
-{
-public:
-    TcpObject(const string& addr, int port);
-    int write(lua_State* lua);
-protected:
-    Connection* connection() const override;
-private:
-    unique_ptr<Connection> _connection;
-};
 
-class PipedCommand
-{
-public:
-    PipedCommand();
-    virtual ~PipedCommand();
-    bool open(const string& command, const vector<string>& args);
-    Connection* stdin() const;
-    Connection* stdout() const;
-    Connection* stderr() const;
-    int id() const;
-    void close();
-private:
-    unique_ptr<Connection> _stdin;
-    unique_ptr<Connection> _stdout;
-    unique_ptr<Connection> _stderr;
-    pid_t _child_id;
-};
-
-class HttpObject : public InternetConnection
-{
-public:
-    HttpObject(const HttpAddress& addr, const string& post, const map<string, string>& header);
-    int read(lua_State* lua);
-    int response(lua_State* lua);
-protected:
-    bool update() override;
-    Connection* connection() const override;
-private:
-    bool _response_ready;
-    ValuePack _response;
-    PipedCommand _cmd;
-};
