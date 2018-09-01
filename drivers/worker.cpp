@@ -73,5 +73,5 @@ void Worker::proc()
 
 unique_lock<mutex> Worker::make_lock()
 {
-    return std::move(unique_lock<mutex> (_m));
+    return unique_lock<mutex>(_m);
 }

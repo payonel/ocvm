@@ -4,7 +4,7 @@
 #include <vector>
 using std::string;
 
-class Color;
+struct Color;
 
 namespace Ansi
 {

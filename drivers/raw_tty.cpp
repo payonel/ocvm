@@ -26,7 +26,10 @@ using std::cout;
 using std::cerr;
 using std::flush;
 
+#ifdef __linux__
 static unsigned long _original_kb_mode = 0;
+#endif
+
 static struct sigaction sig_action_data;
 
 static inline void exit_function()
@@ -45,7 +48,7 @@ static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
 void TtyReader::start(AnsiEscapeTerm* pTerm)
 {
     _pTerm = pTerm;
-    _kb_drv = std::move(KeyboardTerminalDriver::create(hasMasterTty()));
+    _kb_drv = KeyboardTerminalDriver::create(hasMasterTty());
 
     if (hasTerminalOut())
     {

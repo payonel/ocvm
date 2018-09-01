@@ -54,6 +54,7 @@ AnsiEscapeTerm::~AnsiEscapeTerm()
 
 void AnsiEscapeTerm::onUpdate()
 {
+#ifdef __APPLE__
     timespec timeout { 0, 0 }; // poll, do not block
     if (sigtimedwait(&g_sigset, nullptr, &timeout) == SIGWINCH) // winched
     {
@@ -64,6 +65,7 @@ void AnsiEscapeTerm::onUpdate()
         winched(width, height);
     }
     cout << flush;
+#endif
 }
 
 tuple<int, int> AnsiEscapeTerm::onOpen()

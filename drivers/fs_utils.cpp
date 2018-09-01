@@ -106,7 +106,7 @@ bool fs_utils::read(const string& path, string* pOutData)
     // read without p is just open test
     if (pOutData)
     {
-        *pOutData = std::move(static_cast<stringstream const&>(stringstream() << file.rdbuf()).str());
+        *pOutData = static_cast<stringstream const&>(stringstream() << file.rdbuf()).str();
     }
 
     file.close();

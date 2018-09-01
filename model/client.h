@@ -52,7 +52,6 @@ private:
     std::unique_ptr<Config> _config;
     string _env_path;
     Host* _host;
-    SandboxMethods* _globals;
     string _crash;
     Logger _lout;
 };

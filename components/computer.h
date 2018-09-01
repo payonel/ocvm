@@ -65,7 +65,6 @@ private:
     lua_State* _state = nullptr;
     lua_State* _machine = nullptr;
     double _standby = 0;
-    double _nexttrace = 0;
 
     size_t _peek_memory = 0; // for debugging purposes
     size_t _total_memory = 0;

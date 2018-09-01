@@ -9,7 +9,7 @@ using std::stringstream;
 
 ofstream open_file(const string& filename, bool append)
 {
-    return std::move(ofstream(filename, append ? fstream::app : fstream::out));
+    return ofstream(filename, append ? fstream::app : fstream::out);
 }
 
 bool ProfLog::open(const string& dump_file)

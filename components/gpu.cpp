@@ -544,7 +544,7 @@ void Gpu::resizeBuffer(int width, int height)
                 }
                 else
                 {
-                    it->value = {" "};
+                    it->value = " ";
                     it->fg = {};
                     it->bg = {};
                     it->locked = false;
