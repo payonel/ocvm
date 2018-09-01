@@ -1,25 +1,32 @@
-MAKEFLAGS+="-j 2"
+
+ifneq ($(j),0)
+	ifeq ($(j),)
+		j=2
+	endif
+	MAKEFLAGS+="-j $(j)"
+endif
+
 flags=-g --std=c++17 -Wall
 
 ifeq ($(lua),)
-lua=5.2
+	lua=5.2
 endif
 
 ifeq ($(prof),)
-libs=$(shell pkg-config lua$(lua) --libs 2>/dev/null || echo -llua5.2)
-includes=$(shell pkg-config lua$(lua) --cflags)
+	libs=$(shell pkg-config lua$(lua) --libs 2>/dev/null || echo -llua5.2)
+	includes=$(shell pkg-config lua$(lua) --cflags)
 else
-$(info profile build)
-libs=-L../gperftools-2.5/.libs/ -lprofiler ../lua-5.3.4/src/liblua.a
-includes=-I../lua-5.3.4/src
-bin=-profiled
-flags+=-Wl,--no-as-needed
+	$(info profile build)
+	libs=-L../gperftools-2.5/.libs/ -lprofiler ../lua-5.3.4/src/liblua.a
+	includes=-I../lua-5.3.4/src
+	bin=-profiled
+	flags+=-Wl,--no-as-needed
 endif
 
 ifeq ($(lua),local)
-libs=../lua-5.3.4/src/liblua.a
-includes=-I../lua-5.3.4/src
-flags+=-Wl,--no-as-needed
+	libs=../lua-5.3.4/src/liblua.a
+	includes=-I../lua-5.3.4/src
+	flags+=-Wl,--no-as-needed
 endif
 
 includes+=-I.
@@ -37,7 +44,7 @@ deps = $(objs:%.o=%.d)
 
 #ifeq (, $(shell which curl-config))
 ifeq (, $(shell which wget))
-files := $(filter-out drivers/internet_http.cpp,$(files))
+	files := $(filter-out drivers/internet_http.cpp,$(files))
 else
 #includes+=$(shell curl-config --cflags)
 #libs+=$(shell curl-config --libs)
