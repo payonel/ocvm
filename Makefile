@@ -35,11 +35,12 @@ files+=$(wildcard model/*.cpp)
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 
-ifeq (, $(shell which curl-config))
+#ifeq (, $(shell which curl-config))
+ifeq (, $(shell which wget))
 files := $(filter-out drivers/internet_http.cpp,$(files))
 else
-includes+=$(shell curl-config --cflags)
-libs+=$(shell curl-config --libs)
+#includes+=$(shell curl-config --cflags)
+#libs+=$(shell curl-config --libs)
 endif
 
 ocvm$(bin): system $(objs)
