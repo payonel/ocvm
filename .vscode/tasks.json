@@ -5,13 +5,13 @@
             "label": "sync",
             "type": "shell",
             "command": "~/code/stage/sync.lua",
-            "args": ["local", "-y"]
+            "args": ["ocvm", "-y"]
         },
         {
             "label": "build",
             "type": "shell",
             "command": "~/code/stage/build.lua",
-            "args": ["local", "-y"],
+            "args": ["ocvm", "-y"],
             "dependsOn": ["sync"],
             "group": {
                 "kind": "build",
