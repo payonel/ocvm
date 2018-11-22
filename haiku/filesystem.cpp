@@ -95,7 +95,8 @@ namespace haiku
                 {
                     std::string from_file = ensure_slash(from) + ele.path();
                     std::string to_file_target = ensure_slash(to_target) + ele.path();
-                    if (!copy_file(from_file, to_file_target, ec))
+                    haiku::filesystem::copy(from_file, to_file_target, options, ec);
+                    if (ec.value() != 0)
                         return;
                 }
             }
