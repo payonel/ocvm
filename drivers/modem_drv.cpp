@@ -7,6 +7,10 @@
 #include <unistd.h>
 #include <netdb.h>
 
+// explicitly needed for include on Haiku OS
+#include <sys/stat.h>
+#include <fcntl.h>
+
 bool readyNextPacket(Connection* conn, vector<char>* buffer, bool keepPacketSize)
 {
     if (!conn)

@@ -13,12 +13,20 @@ using std::error_code;
 #endif
 
 #include <unistd.h>
-
 #include <sys/stat.h>
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <string.h>
 
-#include <wordexp.h>
+#ifndef __HAIKU__
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+    #include <wordexp.h>
+#else
+    #include "haiku/filesystem.h"
+    namespace fs = haiku::filesystem;
+    #include "haiku/wordexp.h"
+#endif
+
+static std::string g_prog_name;
 
 static string handle_exception(std::exception& exp)
 {
@@ -233,13 +241,18 @@ bool fs_utils::rename(const string& from, const string& to)
     return ec.value() == 0;
 }
 
+void fs_utils::set_prog_name(const string& prog_name)
+{
+    g_prog_name = prog_name;
+}
+
 string proc_root()
 {
     static string path;
     if (path.empty())
     {
         constexpr ssize_t size = 1024;
-        char buf[size];
+        char buf[size] {0};
 
 #ifdef __APPLE__
         uint32_t len = size;
@@ -247,6 +260,25 @@ string proc_root()
             cerr << "proc path too long\n";
             ::exit(1);
         }
+#elif __HAIKU__
+        path = g_prog_name;
+        if (g_prog_name.size() > 0)
+        {
+            if (g_prog_name.at(0) != '/')
+            {
+                std::error_code ec;
+                auto pwd = fs::current_path(ec);
+                size_t last_index = static_cast<size_t>(pwd.size() - 1);
+                if (pwd.size() > 0 && pwd.at(last_index) != '/')
+                {
+                    pwd += "/";
+                }
+                path = pwd + path;
+            }
+        }
+        auto len = path.size();
+        auto reduced = len < size ? len : size;
+        ::memcpy(buf, path.data(), reduced);
 #else
         ssize_t len = ::readlink("/proc/self/exe", buf, size);
         if (len >= size) // yikes, abort
@@ -263,7 +295,7 @@ string proc_root()
         size_t last_slash = path.find_last_of("/");
         if (last_slash == string::npos)
         {
-            cerr << "proc path had no dir slash, unexpected\n";
+            cerr << "proc path [" << path << "] had no dir slash, unexpected\n";
             ::exit(1);
         }
         path = path.substr(0, last_slash + 1);

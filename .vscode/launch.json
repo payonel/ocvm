@@ -2,28 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "cppdbg",
-            "request": "attach",
-            "name": "Attach to PID",
-            "processId": "${command:pickProcess}",
-            "program": "${workspaceRoot}/ocvm",
-            "linux": {
-                "MIMode": "gdb",
-                "setupCommands": [
-                    {
-                        "description": "Enable pretty-printing for gdb",
-                        "text": "-enable-pretty-printing",
-                        "ignoreFailures": true
-                    }
-                ]
-            }
-        },
-        {
             "name": "C++ Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/ocvm",
-            "args": ["~/tmp/oc/testing"],
+            "args": ["~/tmp/oc/openos"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],

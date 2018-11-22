@@ -133,6 +133,9 @@ bool valid_arg_index(size_t size)
 Args load_args(int argc, char** argv)
 {
     Args args;
+    if (argc >= 1)
+        fs_utils::set_prog_name(argv[0]);
+
     // start from 1, argv[0] is the prog name
     for (int i = 1; i < argc; i++)
     {

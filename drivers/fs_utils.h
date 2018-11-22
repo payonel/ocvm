@@ -31,5 +31,6 @@ namespace fs_utils
 
     string make_proc_path(const string& given_path);
     string make_pwd_path(const string& given_path);
+    void set_prog_name(const string& prog_name);
 };
 

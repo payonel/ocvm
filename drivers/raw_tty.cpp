@@ -9,9 +9,20 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 
-#ifdef __linux__
-#include <linux/kd.h>
-#include <sys/select.h>
+#ifndef __APPLE__
+    #ifdef __linux__
+        #include <linux/kd.h>
+    #endif
+    #include <sys/select.h>
+
+    // explicitly needed for include on Haiku OS
+    #include <sys/time.h>
+    #include <sys/types.h>
+#endif
+
+#ifdef __HAIKU__
+#define KDGKBMODE	0x4B44	/* gets current keyboard mode */
+#define KDSKBMODE	0x4B45	/* sets current keyboard mode */
 #endif
 
 #include <time.h>
@@ -26,8 +37,8 @@ using std::cout;
 using std::cerr;
 using std::flush;
 
-#ifdef __linux__
-static unsigned long _original_kb_mode = 0;
+#ifndef __APPLE__
+    static unsigned long _original_kb_mode = 0;
 #endif
 
 static struct sigaction sig_action_data;
@@ -90,7 +101,7 @@ TtyReader::TtyReader()
     _master_tty = false;
     _terminal_out = false;
 
-#ifdef __linux__
+#ifndef __APPLE__
     int ec = 0;
     ec = ioctl(0, KDGKBMODE, &_original_kb_mode);
     if (ec == 0) // success

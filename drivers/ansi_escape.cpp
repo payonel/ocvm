@@ -54,7 +54,7 @@ AnsiEscapeTerm::~AnsiEscapeTerm()
 
 void AnsiEscapeTerm::onUpdate()
 {
-#ifdef __linux__
+#ifndef __APPLE__
     timespec timeout { 0, 0 }; // poll, do not block
     if (sigtimedwait(&g_sigset, nullptr, &timeout) == SIGWINCH) // winched
     {

@@ -30,7 +30,13 @@ ifeq ($(lua),local)
 endif
 
 includes+=-I.
-libs+=-lstdc++ -lstdc++fs -pthread -ldl
+
+libs+=-lstdc++
+ifeq ($(shell uname -s 2>/dev/null),Haiku)
+	libs+=-lnetwork
+else
+	libs+=-lstdc++fs -pthread -ldl
+endif
 
 files=$(wildcard *.cpp)
 files+=$(wildcard apis/*.cpp)
@@ -39,6 +45,9 @@ files+=$(wildcard io/*.cpp)
 files+=$(wildcard drivers/*.cpp)
 files+=$(wildcard color/*.cpp)
 files+=$(wildcard model/*.cpp)
+ifeq ($(shell uname -s 2>/dev/null),Haiku)
+	files+=$(wildcard haiku/*.cpp)
+endif
 objs = $(files:%.cpp=bin/%$(bin).o)
 deps = $(objs:%.o=%.d)
 

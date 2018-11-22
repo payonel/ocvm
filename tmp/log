@@ -1,0 +1,65 @@
+config [client]: table: -- This lua table configuration generally should not be modified
+-- This configuration is a template, copied to each new instance you create with ocvm
+{
+    components =
+    {
+        -- all componets first have
+        -- "type": component type name
+        -- "address": optional guid address. If nil a random address is generated
+        {"screen", "67c66973-51ff-4aec-29cd-baabf2fbe346"},
+        -- palette, monochrome color
+        {"gpu", nil, 0x00af00},
+        -- bios size, data size, label
+        {"eeprom", nil, 4096, 256, "EEPROM"},
+        -- total memory (in bytes)
+        -- T1  :  196608
+        -- T1.5:  262144
+        -- T2  :  393216
+        -- T2.5:  524288
+        -- T3  :  786432
+        -- T3.5: 1048576
+        {"computer", nil, 1048576},
+        -- filesystem
+        -- 1. source: uri for readonly loot, nil/false for hdd, and true for tmpfs
+        -- 2. label
+        {"filesystem", nil, "system/loot/openos", "OpenOS"},
+        {"filesystem", nil, true, "tmpfs"},
+        {"filesystem"},
+        -- attached screen address
+        {"keyboard", nil, "67c66973-51ff-4aec-29cd-baabf2fbe346"},
+        -- system port: all modems on the same system port will act as if on the same network (port 56k in honor of 56k modems)
+        -- max packet size, if nil defaults to 8192
+        -- max arguments, if nil defaults to 8
+        {"modem", nil, 56000, 8192, 8},
+        -- tcp enabled: default true
+        -- http enabled: default true
+        {"internet",nil,true,true},
+        {"sandbox"},
+    },
+    system =
+    {
+        timeout = math.huge, -- defaults to 5
+        allowGC = false, -- defaults to false
+        allowBytecode = false, -- defaults to false
+        maxTcpConnections = 4, --defaults to 4
+    }
+}
+
+screen: ready
+gpu: ready
+eeprom: ready
+computer: ready
+filesystem: ready
+filesystem: ready
+filesystem: ready
+keyboard: ready
+modem: ready
+internet: ready
+sandbox: ready
+components loaded: 11
+no computer eeprom found, copying from system
+machine thread created
+machine function loaded
+components post initialized
+lua env baseline: 356506
+BEEP

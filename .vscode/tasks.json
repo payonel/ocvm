@@ -1,21 +1,25 @@
 {
     "version": "2.0.0",
     "tasks": [
-        {
-            "label": "compile",
+        {   
+            "label": "sync",
             "type": "shell",
-            "command": "make",
-            "args": [
-                "lua=local"
-            ],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
+            "command": "~/code/stage/sync.lua",
+            "args": ["local", "-y"]
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "~/code/stage/build.lua",
+            "args": ["local", "-y"],
+            "dependsOn": ["sync"],
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
         }
     ]
 }
