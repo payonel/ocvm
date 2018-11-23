@@ -21,11 +21,11 @@ public:
     Value(bool b);
     Value(double d);
     Value(const void* p, bool bLight);
-    Value(int n) : Value(double(n)) {}
+    Value(int n) : Value(size_t(n)) {}
     Value(const char* cstr) : Value(string(cstr)) {}
-    Value(int64_t n) : Value(double(n)) {}
-    Value(unsigned int n) : Value(double(n)) {}
-    Value(size_t n) : Value(double(n)) {}
+    Value(int64_t n) : Value(size_t(n)) {}
+    Value(unsigned int n) : Value(size_t(n)) {}
+    Value(size_t n);
     Value(lua_State*);
     Value(lua_State*, int);
     Value();
@@ -75,6 +75,7 @@ private:
     vector<char> _string;
     bool _bool = false;
     double _number = 0;
+    bool _isInteger = false;
     void* _pointer = nullptr;
     lua_State* _thread = nullptr;
     int _thread_status = 0;
@@ -106,25 +107,25 @@ private:
 
     inline static int push_ret(lua_State* lua, int32_t arg)
     {
-        lua_pushnumber(lua, arg);
+        lua_pushinteger(lua, arg);
         return 1;
     }
 
     inline static int push_ret(lua_State* lua, uint32_t arg)
     {
-        lua_pushnumber(lua, arg);
+        lua_pushinteger(lua, arg);
         return 1;
     }
 
     inline static int push_ret(lua_State* lua, int64_t arg)
     {
-        lua_pushnumber(lua, arg);
+        lua_pushinteger(lua, arg);
         return 1;
     }
 
     inline static int push_ret(lua_State* lua, uint64_t arg)
     {
-        lua_pushnumber(lua, arg);
+        lua_pushinteger(lua, arg);
         return 1;
     }
 

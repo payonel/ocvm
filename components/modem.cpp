@@ -359,7 +359,7 @@ RunState Modem::update()
                     v = Value::nil;
                 break;
             }
-            pack.emplace_back(v);
+            pack.push_back(v);
         }
 
         client()->pushSignal(pack);

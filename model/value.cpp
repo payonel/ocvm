@@ -159,6 +159,14 @@ Value::Value(bool b)
     _bool = b;
 }
 
+Value::Value(size_t n)
+{
+    _id = LUA_TNUMBER;
+    _type = "number";
+    _isInteger = true;
+    _number = n;
+}
+
 Value::Value(double d)
 {
     _id = LUA_TNUMBER;
@@ -200,6 +208,9 @@ Value::Value(lua_State* lua, int index)
         break;
         case LUA_TNUMBER:
             _number = lua_tonumber(lua, -1);
+            #if LUA_VERSION_NUM > 502
+                _isInteger = lua_isinteger(lua, -1);
+            #endif
         break;
         case LUA_TNIL:
         break;
@@ -405,8 +416,10 @@ string Value::serialize(bool pretty, int depth) const
         bool neg = _number < 0;
         if ((neg ? -_number : _number) >= std::numeric_limits<double>::max())
             ss << (neg ? "-" : "") << "math.huge";
+        else if (_isInteger)
+            ss << static_cast<lua_Integer>(_number);
         else
-            ss << _number;
+            ss << static_cast<lua_Number>(_number);
     }
     else if (_id == LUA_TNIL)
     {
@@ -511,7 +524,10 @@ void Value::push(lua_State* lua) const
             lua_pushboolean(lua, _bool);
         break;
         case LUA_TNUMBER:
-            lua_pushnumber(lua, _number);
+            if (_isInteger)
+                lua_pushinteger(lua, _number);
+            else
+                lua_pushnumber(lua, _number);
         break;
         case LUA_TLIGHTUSERDATA:
             lua_pushlightuserdata(lua, _pointer);
