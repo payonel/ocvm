@@ -1,9 +1,8 @@
 #pragma once
 
-#include "io/event.h"
-#include "worker.h"
-
 #include <thread>
+#include <string>
+#include <vector>
 
 enum class ConnectionState
 {
@@ -18,16 +17,17 @@ class Connection
 {
 public:
     Connection(int id);
-    Connection(const string& host, int system_port);
+    Connection(const std::string& host, int system_port);
     virtual ~Connection();
 
-    bool write(const vector<char>& vec);
+    bool readyNextPacket(std::vector<char>* buffer, bool keepPacketSize);
+    bool write(const std::vector<char>& vec);
 
-    string label() const;
+    std::string label() const;
     ConnectionState state() const;
     ssize_t bytes_available() const;
     bool preload(ssize_t bytes);
-    bool back_insert(vector<char>* pOut, ssize_t offset, ssize_t bytes);
+    bool back_insert(std::vector<char>* pOut, ssize_t offset, ssize_t bytes);
     bool move(ssize_t bytes);
     bool can_read() const;
     bool can_write() const;
@@ -40,11 +40,11 @@ protected:
 
 private:
     int _id = -1;
-    string _host;
+    std::string _host;
     int _port;
 
     ConnectionState _state;
-    thread _connection_thread;
+    std::thread _connection_thread;
 
     bool _client_side = false;
     char _internal_buffer[max_buffer_size];

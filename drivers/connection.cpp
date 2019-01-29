@@ -1,5 +1,4 @@
 #include "connection.h"
-#include "model/log.h"
 
 // c includes for sockets
 #include <sys/socket.h>
@@ -7,6 +6,12 @@
 #include <netdb.h>
 #include <string.h>
 #include <fcntl.h>
+
+#include <sstream>
+
+using std::vector;
+using std::string;
+using std::stringstream;
 
 void Connection::async_open(Connection* pc)
 {
@@ -104,7 +109,7 @@ bool Connection::write(const vector<char>& vec)
     if (state() != ConnectionState::Ready)
         return false;
 
-    return ::write(_id, vec.data(), vec.size()) != -1;
+    return ::send(_id, vec.data(), vec.size(), MSG_NOSIGNAL) != -1;
 }
 
 string Connection::label() const
@@ -216,3 +221,40 @@ bool Connection::can_write() const
     return _state == ConnectionState::Ready;
 }
 
+bool Connection::readyNextPacket(std::vector<char>* buffer, bool keepPacketSize)
+{
+    buffer->clear();
+
+    // read next packet from server
+    constexpr ssize_t header_size = sizeof(int32_t);
+    if (!back_insert(buffer, 0, header_size))
+        return false;
+
+    int32_t packet_size = 0;
+    char* p = reinterpret_cast<char*>(&packet_size);
+    p[0] = buffer->at(0);
+    p[1] = buffer->at(1);
+    p[2] = buffer->at(2);
+    p[3] = buffer->at(3);
+
+    ssize_t end = header_size + packet_size;
+    if (Connection::max_buffer_size < end)
+    {
+        // modem likely bad packet, size reported: packet_size
+        move(header_size);
+        return false;
+    }
+
+    if (!keepPacketSize)
+    {
+        buffer->clear();
+    }
+
+    if (!back_insert(buffer, header_size, packet_size))
+        return false;
+
+    move(end);
+
+    // modem packet completed: ${end} bytes
+    return true;
+}
