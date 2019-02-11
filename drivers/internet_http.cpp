@@ -4,6 +4,7 @@
 #include <fcntl.h>
 
 #include <sstream>
+#include <algorithm>
 using std::stringstream;
 
 static bool SetHttpGenerator()
