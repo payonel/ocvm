@@ -106,16 +106,19 @@ bool fs_utils::read(const string& path, vector<char>& outData)
 
 bool fs_utils::read(const string& path, string* pOutData)
 {
+    auto resolved = resolve(path);
+    // read without p is just open test
+    if (!pOutData)
+    {
+        return fs::exists(resolved);
+    }
+
     ifstream file;
-    file.open(resolve(path));
+    file.open(resolved);
     if (!file)
         return false;
 
-    // read without p is just open test
-    if (pOutData)
-    {
-        *pOutData = static_cast<stringstream const&>(stringstream() << file.rdbuf()).str();
-    }
+    *pOutData = static_cast<stringstream const&>(stringstream() << file.rdbuf()).str();
 
     file.close();
     return true;

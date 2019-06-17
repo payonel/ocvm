@@ -376,21 +376,13 @@ int Computer::pushSignal(lua_State* lua)
 
 bool Computer::postInit()
 {
-    bool tmpfsIsSet = false;
     for (auto* pc : client()->components("filesystem", true))
     {
         auto pfs = dynamic_cast<Filesystem*>(pc);
         if (pfs && pfs->isTmpfs())
         {
             setTmpAddress(pc->address());
-            tmpfsIsSet = true;
         }
-    }
-
-    if (!tmpfsIsSet)
-    {
-        client()->append_crash("missing tmpfs");
-        return false;
     }
 
     injectCustomLua();
@@ -435,6 +427,8 @@ int Computer::isRobot(lua_State* lua)
 
 int Computer::tmpAddress(lua_State* lua)
 {
+    if (_tmp_address.empty())
+        return ValuePack::ret(lua, false, "no tmpfs");
     return ValuePack::ret(lua, _tmp_address);
 }
 
