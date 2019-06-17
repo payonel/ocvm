@@ -4,6 +4,7 @@
 #include "model/host.h"
 #include "filesystem.h"
 #include "apis/system.h"
+#include "drivers/fs_utils.h"
 
 #include <lua.hpp>
 #include <iostream>
@@ -398,7 +399,13 @@ bool Computer::postInit()
 
     string machine_path = client()->host()->machinePath();
 
-    if (luaL_loadfile(_state, machine_path.c_str()))
+    std::string data;
+    if (!fs_utils::read(machine_path, &data))
+    {
+        client()->append_crash("failed to read machine file [" + machine_path + "]");
+        return false;
+    }
+    if (luaL_loadbuffer(_state, data.c_str(), data.size(), "machine.lua"))
     {
         client()->append_crash("failed to load machine [" + machine_path + "]");
         client()->append_crash(lua_tostring(_state, -1));
