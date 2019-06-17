@@ -1,18 +1,11 @@
 {
     "version": "2.0.0",
     "tasks": [
-        {   
-            "label": "sync",
-            "type": "shell",
-            "command": "~/code/stage/sync.lua",
-            "args": ["ocvm", "-y"]
-        },
         {
             "label": "build",
             "type": "shell",
-            "command": "~/code/stage/build.lua",
-            "args": ["ocvm", "-y"],
-            "dependsOn": ["sync"],
+            "command": "make",
+            "args": ["lua=local"],
             "group": {
                 "kind": "build",
                 "isDefault": true
