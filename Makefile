@@ -45,6 +45,7 @@ files+=$(wildcard io/*.cpp)
 files+=$(wildcard drivers/*.cpp)
 files+=$(wildcard color/*.cpp)
 files+=$(wildcard model/*.cpp)
+files+=$(wildcard util/*.cpp)
 ifeq ($(shell uname -s 2>/dev/null),Haiku)
 	files+=$(wildcard haiku/*.cpp)
 endif
