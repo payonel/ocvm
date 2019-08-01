@@ -19,6 +19,7 @@ public:
 
     // Tier 1
     int crc32(lua_State* lua);
+    int md5(lua_State* lua);
 
 protected:
     bool onInitialize() override;
