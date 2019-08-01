@@ -347,14 +347,15 @@ bool Client::add_component(Value& component_config)
         return false;
     }
 
-    _components.push_back(std::move(pc));
-    _computer->pushSignal(ValuePack({"component_added", pc->address(), pc->type()}));
-
+    auto addr = pc->address();
     if (!pc->postInit())
     {
         lout() << pc->type() << "[" << pc->address() << "] failed to postInit\n";
         return false;
     }
+    
+    _components.push_back(std::move(pc));
+    _computer->pushSignal(ValuePack({"component_added", addr, type}));
 
     return true;
 }
