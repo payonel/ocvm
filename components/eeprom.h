@@ -2,7 +2,8 @@
 #include "component.h"
 #include "model/value.h"
 
-class Eeprom : public Component {
+class Eeprom : public Component
+{
   public:
     Eeprom();
 

@@ -6,14 +6,13 @@
 using std::tuple;
 using std::vector;
 
-class DataCard : public Component 
+class DataCard : public Component
 {
-public:
+  public:
     DataCard();
     ~DataCard();
 
-    enum ConfigIndex 
-    {
+    enum ConfigIndex {
         Tier = Component::ConfigIndex::Next,
     };
 
@@ -21,11 +20,11 @@ public:
     int crc32(lua_State* lua);
     int md5(lua_State* lua);
 
-protected:
+  protected:
     bool onInitialize() override;
 
     int _tier = 1;
 
-private:
+  private:
     static bool s_registered;
 };
