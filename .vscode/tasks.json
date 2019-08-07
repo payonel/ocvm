@@ -5,7 +5,7 @@
             "label": "build",
             "type": "shell",
             "command": "make",
-            "args": ["lua=local"],
+            "args": ["luapath=../lua-5.3.4-notail/", "-j"],
             "group": {
                 "kind": "build",
                 "isDefault": true

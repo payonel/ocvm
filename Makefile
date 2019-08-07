@@ -1,49 +1,40 @@
-
-ifneq ($(j),0)
-	ifeq ($(j),)
-		j=2
-	endif
-	MAKEFLAGS+="-j $(j)"
-endif
-
-flags=-g --std=c++17 -Wall
+CPPFLAGS=-g --std=c++17 -Wall
 
 ifeq ($(lua),)
 	lua=5.2
 endif
 
 ifeq ($(prof),)
-	libs=$(shell pkg-config lua$(lua) --libs 2>/dev/null || echo -llua5.2)
+	LIBS=$(shell pkg-config lua$(lua) --libs 2>/dev/null || echo -llua5.2)
 	includes=$(shell pkg-config lua$(lua) --cflags)
 else
 	$(info profile build)
-	libs=-L../gperftools-2.5/.libs/ -lprofiler ../lua-5.3.4/src/liblua.a
-	includes=-I../lua-5.3.4/src
+	LIBS=-L../gperftools-2.5/.libs/ -lprofiler ${luapath}/src/liblua.a
 	bin=-profiled
-	flags+=-Wl,--no-as-needed
+	CPPFLAGS+=-Wl,--no-as-needed
 endif
 
-ifeq ($(lua),local)
-	libs=../lua-5.3.4/src/liblua.a
-	includes=-I../lua-5.3.4/src
-	flags+=-Wl,--no-as-needed
+ifneq ($(luapath),)
+	LIBS=${luapath}/src/liblua.a
+	includes=-I${luapath}/src
+	CPPFLAGS+=-Wl,--no-as-needed
 endif
 
 includes+=-I.
 
-libs+=-lstdc++
+LIBS+=-lstdc++
 ifeq ($(shell uname -s 2>/dev/null),Haiku)
-	libs+=-lnetwork
+	LIBS+=-lnetwork
 else
-	libs+=-lstdc++fs -pthread -ldl
+	LIBS+=-lstdc++fs -pthread -ldl
 endif
 
 files=$(wildcard *.cpp)
 files+=$(wildcard apis/*.cpp)
-files+=$(wildcard components/*.cpp)
-files+=$(wildcard io/*.cpp)
-files+=$(wildcard drivers/*.cpp)
 files+=$(wildcard color/*.cpp)
+files+=$(wildcard components/*.cpp)
+files+=$(wildcard drivers/*.cpp)
+files+=$(wildcard io/*.cpp)
 files+=$(wildcard model/*.cpp)
 ifeq ($(shell uname -s 2>/dev/null),Haiku)
 	files+=$(wildcard haiku/*.cpp)
@@ -56,17 +47,17 @@ ifeq (, $(shell which wget))
 	files := $(filter-out drivers/internet_http.cpp,$(files))
 else
 #includes+=$(shell curl-config --cflags)
-#libs+=$(shell curl-config --libs)
+#LIBS+=$(shell curl-config --libs)
 endif
 
 ocvm$(bin): system $(objs)
-	$(CXX) $(flags) $(objs) $(libs) -o ocvm$(bin)
+	$(CXX) $(CPPFLAGS) $(objs) $(LIBS) -o ocvm$(bin)
 	@echo done
 
 -include $(deps)
 bin/%$(bin).o : %.cpp
 	@mkdir -p $@D
-	$(CXX) $(flags) $(includes) -MMD -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(includes) -MMD -c $< -o $@
 
 system:
 	@echo downloading OpenComputers system files
