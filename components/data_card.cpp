@@ -14,7 +14,9 @@ DataCard::DataCard()
     add("md5", &DataCard::md5);
 }
 
-DataCard::~DataCard(){};
+DataCard::~DataCard()
+{
+}
 
 bool DataCard::onInitialize()
 {

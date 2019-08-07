@@ -3,14 +3,12 @@
 #include "model/value.h"
 #include <tuple>
 #include <vector>
-using std::tuple;
-using std::vector;
 
 class DataCard : public Component
 {
   public:
     DataCard();
-    ~DataCard();
+    ~DataCard() override;
 
     enum ConfigIndex {
         Tier = Component::ConfigIndex::Next,

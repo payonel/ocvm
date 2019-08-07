@@ -29,18 +29,18 @@ bool Config::load(const string& path, const string& name)
     _path = path;
     _name = name;
 
+    string table;
+
     // if save path has no client.cfg, copy it from proc_root
     if (!fs_utils::exists(savePath()))
     {
-        if (!fs_utils::copy(fs_utils::make_proc_path("client.cfg"), savePath()))
+        if (!fs_utils::read(fs_utils::make_proc_path("client.cfg"), &table))
         {
-            *_pLout << "failed to copy new client.cfg\n";
+            *_pLout << "failed to read default client.cfg" << endl;
             return false;
         }
     }
-
-    string table;
-    if (!fs_utils::read(savePath(), &table))
+    else if (!fs_utils::read(savePath(), &table))
     {
         *_pLout << "config could not load: " << name << endl;
         return false;

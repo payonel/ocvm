@@ -1,9 +1,7 @@
 #pragma once
-#include <cstdint>
 #include <vector>
-using std::vector;
 
 namespace util
 {
-vector<char> md5(vector<char> input);
+  std::vector<char> md5(std::vector<char> input);
 };

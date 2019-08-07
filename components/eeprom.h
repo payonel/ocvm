@@ -7,7 +7,8 @@ class Eeprom : public Component
   public:
     Eeprom();
 
-    enum ConfigIndex {
+    enum ConfigIndex
+    {
         BiosSize = Component::ConfigIndex::Next,
         DataSize,
         Label

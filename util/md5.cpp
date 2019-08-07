@@ -1,13 +1,19 @@
 #include "md5.h"
 
-static uint32_t s[64] = {
+#include <cstdint>
+
+using std::vector;
+
+static uint32_t s[64] =
+{
     7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
     5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20, 5, 9,  14, 20,
     4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
     6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21,
 };
 
-static uint32_t K[64] = {
+static uint32_t K[64] =
+{
     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a,
     0xa8304613, 0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
     0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821, 0xf61e2562, 0xc040b340,
@@ -26,7 +32,8 @@ vector<char> util::md5(vector<char> message)
     auto originalLength = (message.size() * 8) % 0x8000000000000000;
 
     message.push_back(0x80);
-    while (message.size() % 64 != 56) {
+    while (message.size() % 64 != 56)
+    {
         message.push_back(0x00);
     }
 
@@ -44,12 +51,12 @@ vector<char> util::md5(vector<char> message)
     uint32_t c0 = 0x98badcfe;
     uint32_t d0 = 0x10325476;
 
-    for (uint32_t i = 0; i < message.size(); i += 64) {
+    for (uint32_t i = 0; i < message.size(); i += 64)
+    {
         vector<uint32_t> words{};
-        for (uint32_t j = i; j < i + 64; j += 4) {
-            words.push_back(((message[j] << 24) & (message[j + 1] << 16) &
-                             (message[j + 2] << 8) & message[j + 3]) %
-                            0x80000000);
+        for (uint32_t j = i; j < i + 64; j += 4)
+        {
+            words.push_back(((message[j] << 24) & (message[j + 1] << 16) & (message[j + 2] << 8) & message[j + 3]) % 0x80000000);
         }
 
         uint32_t A = a0;
@@ -57,19 +64,27 @@ vector<char> util::md5(vector<char> message)
         uint32_t C = c0;
         uint32_t D = d0;
 
-        for (uint32_t j = 0; j < 64; j++) {
+        for (uint32_t j = 0; j < 64; j++)
+        {
             uint32_t F, g;
 
-            if (j < 15) {
+            if (j < 15)
+            {
                 F = (B & C) | ((~B) & D);
                 g = j;
-            } else if (j < 32) {
+            }
+            else if (j < 32)
+            {
                 F = (D & B) | ((~D) & C);
                 g = (5 * j + 1) % 16;
-            } else if (j < 48) {
+            }
+            else if (j < 48)
+            {
                 F = B ^ C ^ D;
                 g = (3 * j + 5) % 16;
-            } else {
+            }
+            else
+            {
                 F = C ^ (B | (~D));
                 g = (7 * j) % 16;
             }
@@ -87,7 +102,8 @@ vector<char> util::md5(vector<char> message)
         d0 = (d0 + D) % 0x80000000;
     }
 
-    return vector<char>{
+    return vector<char>
+    {
         (char)(a0),
         (char)((a0 >> 8) & 0xFF),
         (char)((a0 >> 16) & 0xFF),
