@@ -120,7 +120,7 @@ bool PipedCommand::open(const string& command, const vector<string>& args)
     }
     vargs[args.size() + 1] = nullptr;
 
-    ::execv(command.data(), const_cast<char*const*>(vargs));
+    ::execvp(command.data(), const_cast<char*const*>(vargs));
     delete [] vargs;
     ::_exit(EXIT_FAILURE);
     return false;
@@ -178,7 +178,7 @@ HttpObject::HttpObject(const HttpAddress& addr, const string& post, const map<st
     {
         args.push_back(addr.raw);
         // http request: addr.raw
-        _cmd.open("/usr/bin/wget", args);
+        _cmd.open("wget", args);
     }
 }
 
