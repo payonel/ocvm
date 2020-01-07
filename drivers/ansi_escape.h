@@ -21,8 +21,8 @@ protected:
 private:
     string scrub(const string& value) const;
 
-    int _x = 0;
-    int _y = 0;
+    int _x = 1;
+    int _y = 1;
     int _fg_rgb = 0;
     int _bg_rgb = 0;
 };
