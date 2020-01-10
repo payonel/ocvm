@@ -1,26 +1,21 @@
 {
     "version": "0.2.0",
     "configurations": [
-      {
-        "name": "C++ Launch",
-        "type": "cppdbg",
-        "request": "launch",
-        "program": "${workspaceRoot}/ocvm",
-        "args": [],
-        "stopAtEntry": false,
-        "cwd": "${workspaceRoot}",
-        "environment": [],
-        "externalConsole": true,
-        "linux": {
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
+        {
+            "name": "gdb"
+            ,"type": "cppdbg"
+            ,"request": "launch"
+            ,"MIMode": "gdb"
+            ,"program": "${workspaceRoot}/ocvm"
+            ,"args": [ ]
+            ,"cwd": "${workspaceRoot}"
+            ,"externalConsole": true
+            ,"setupCommands": [
+                {"text": "set print array on"},
+                {"text": "set print pretty on"},
+                {"text": "set print elements 0"},
+                {"text": "-enable-pretty-printing"}
             ]
         }
-    }
-  ]
-  }
+    ]
+}
