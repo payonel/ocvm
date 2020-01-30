@@ -9,6 +9,12 @@ struct Color
     unsigned code;
 };
 
+namespace Colors
+{
+    const Color Black { 0x000000 };
+    const Color White { 0xffffff };
+};
+
 enum class EDepthType
 {
     _1 = 1,

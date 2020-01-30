@@ -76,8 +76,8 @@ private:
     int _height = 0;
 
     Cell* _cells = nullptr;
-    Color _bg;
-    Color _fg;
+    Color _bg = Colors::Black;
+    Color _fg = Colors::White;
     ColorState _color_state;
 
     static bool s_registered;
