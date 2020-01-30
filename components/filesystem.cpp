@@ -9,6 +9,7 @@
 #include <limits>
 using std::ifstream;
 using std::numeric_limits;
+using Logging::lout;
 
 bool Filesystem::s_registered = Host::registerComponentType<Filesystem>("filesystem");
 
@@ -246,7 +247,7 @@ bool Filesystem::onInitialize()
         _tmpfs = false;
         if (!fs_utils::exists(_src))
         {
-            lout() << "loot disk not found: " << _src << endl;
+            lout << "loot disk not found: " << _src << endl;
             return false;
         }
     }
@@ -387,7 +388,7 @@ int Filesystem::open(lua_State* lua)
     
     if (uninitialized || (bRead && bWrite))
     {
-        lout() << "bad file mode: " << mode_text << endl;
+        lout << "bad file mode: " << mode_text << endl;
         return ValuePack::ret(lua, Value::nil, filepath);
     }
     else if (isReadOnly() && bWrite)

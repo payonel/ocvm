@@ -28,7 +28,7 @@ else
 endif
 
 SRC_DIRS ?= ./
-SRCS=$(wildcard $(SRC_DIRS)/*.cpp)
+SRCS=$(wildcard $(SRC_DIRS)*.cpp)
 SRCS+=$(wildcard $(SRC_DIRS)apis/*.cpp)
 SRCS+=$(wildcard $(SRC_DIRS)color/*.cpp)
 SRCS+=$(wildcard $(SRC_DIRS)components/*.cpp)

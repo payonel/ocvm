@@ -16,7 +16,7 @@
             "group": {"kind": "build", "isDefault": true},
             "problemMatcher": {
                 "base": "$gcc",
-                "fileLocation": "absolute"
+                "fileLocation": "relative"
             }
         }
     ]

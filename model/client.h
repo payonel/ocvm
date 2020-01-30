@@ -32,7 +32,6 @@ public:
     bool remove_component(const string& address);
 
     void append_crash(const string& report);
-    Logger& lout();
 
     // global api that is actually computer specific
     // invoke by address
@@ -53,5 +52,4 @@ private:
     string _env_path;
     Host* _host;
     string _crash;
-    Logger _lout;
 };

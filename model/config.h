@@ -17,8 +17,6 @@ public:
     bool save() const;
     string name() const;
     vector<string> keys() const;
-
-    void setLout(Logger* pLout);
 private:
     string savePath() const;
     void clear_n(Value& t);
@@ -26,6 +24,4 @@ private:
     string _path;
     string _name;
     string _cache;
-
-    Logger* _pLout;
 };

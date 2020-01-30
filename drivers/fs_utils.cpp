@@ -157,10 +157,11 @@ bool fs_utils::write(const string& data, const string& dst)
     return fs_utils::write(buffer, dst);
 }
 
-void fs_utils::mkdir(const string& path)
+bool fs_utils::mkdir(const string& path)
 {
     error_code ec;
     fs::create_directories(path, ec);
+    return ec.value() == 0;
 }
 
 bool fs_utils::exists(const string& path)

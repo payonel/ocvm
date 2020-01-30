@@ -15,7 +15,7 @@ namespace fs_utils
     bool write(const string& data, const string& dst);
     bool write(const vector<char>& data, const string& dst);
 
-    void mkdir(const string& path);
+    bool mkdir(const string& path);
     bool exists(const string& path);
 
     vector<string> list(const string& path);

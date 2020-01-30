@@ -6,12 +6,17 @@ using std::stringstream;
 using std::string;
 using std::endl;
 
+struct LoggerContext
+{
+    std::string path;
+};
+
 class Logger
 {
 public:
-    Logger(const string& logPath = "");
-    void log_path(const string& path);
-    string log_path() const;
+    static void context(LoggerContext ctx);
+    static LoggerContext context();
+    static Logger& getSingleLogger();
 
     Logger& operator<< (const string& text);
     Logger& operator<< (std::ostream& (*)(std::ostream&));
@@ -42,6 +47,15 @@ public:
         stringstream ss;
         return *this << serialize(ss, args...);
     }
+    static Logger& lout;
 private:
-    string _log_path;
+    Logger() {} // cannot create mulitple loggers
+    Logger(Logger&) = delete; // no copies
+
+    static LoggerContext s_context;
+};
+
+namespace Logging
+{
+    extern Logger& lout;
 };

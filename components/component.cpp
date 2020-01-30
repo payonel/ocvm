@@ -98,8 +98,3 @@ void Component::update(int key, const Value& value)
 {
     _config->set(key, value);
 }
-
-Logger& Component::lout()
-{
-    return client()->lout();
-}

@@ -3,6 +3,7 @@
 #include "model/client.h"
 #include "model/log.h"
 #include "model/host.h"
+using Logging::lout;
 
 bool Keyboard::s_registered = Host::registerComponentType<Keyboard>("keyboard");
 
@@ -41,7 +42,7 @@ bool Keyboard::postInit()
         }
     }
 
-    lout() << "warning: kb had no screen to join\n";
+    lout << "warning: kb had no screen to join\n";
     return true;
 }
 
@@ -56,7 +57,7 @@ RunState Keyboard::update()
         }
         else if (ke.keycode == 1)
         {
-            lout() << "shell abort";
+            lout << "shell abort";
             return RunState::Halt;
         }
         else

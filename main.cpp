@@ -179,10 +179,23 @@ Args load_args(int argc, char** argv)
     return args;
 }
 
+void prepareMachineDirectory(string path)
+{
+    string client_env_path = fs_utils::make_pwd_path(path);
+    // make the env path if it doesn't already exist
+    if (!fs_utils::mkdir(client_env_path))
+    {
+        std::cerr << "could not create virtual machine path: " << client_env_path << std::endl;
+        ::exit(1);
+    }
+
+    Logger::context({ client_env_path });
+}
+
 int main(int argc, char** argv)
 {
     auto args = load_args(argc, argv);
-    string client_env_path = fs_utils::make_pwd_path(args.client_env_path());
+    prepareMachineDirectory(args.client_env_path());
 
     // init host config
     // // prepares component factories such as screen, keyboard, and filesystem
@@ -197,7 +210,7 @@ int main(int argc, char** argv)
     do
     {
         // init client config
-        Client client(&host, client_env_path);
+        Client client(&host, Logger::context().path);
         // init lua environment
         // // creates instances of host components
         if (!client.load())

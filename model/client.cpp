@@ -17,6 +17,8 @@
 #include <iostream>
 #include <sstream>
 
+using Logging::lout;
+
 Client::Client(Host* host, const string& env_path) : 
     LuaProxy("component"),
     _computer(nullptr),
@@ -30,11 +32,6 @@ Client::Client(Host* host, const string& env_path) :
     add("type", &Client::component_type);
     add("slot", &Client::component_slot);
     add("doc", &Client::component_doc);
-
-    // make the env path if it doesn't already exist
-    _env_path = fs_utils::make_pwd_path(_env_path);
-    fs_utils::mkdir(_env_path);
-    _lout.log_path(_env_path + "/log");
 }
 
 Client::~Client()
@@ -51,32 +48,31 @@ bool Client::load()
 {
     if (_config)
     {
-        lout() << "Client is either already loaded or did not close properly";
+        lout << "Client is either already loaded or did not close properly";
         return false;
     }
 
     _config.reset(new Config());
-    _config->setLout(&(lout()));
 
     if (!_config->load(envPath(), "client"))
     {
-        lout() << "failed to load client config\n";
+        lout << "failed to load client config\n";
         return false;
     }
 
     if (!createComponents())
         return false;
-    lout() << "components loaded: " << _components.size() << "\n";
+    lout << "components loaded: " << _components.size() << "\n";
 
     if (!loadLuaComponentApi())
     {
-        lout() << "failed to load lua component api\n";
+        lout << "failed to load lua component api\n";
         return false;
     }
 
     if (!postInit())
         return false;
-    lout() << "components post initialized\n";
+    lout << "components post initialized\n";
 
     return true;
 }
@@ -96,24 +92,24 @@ bool Client::createComponents()
                     continue;
                 Value& component_config = section_data.get(index);
                 string key = component_config.get(1).toString();
-                lout() << key << ": ";
+                lout << key << ": ";
                 auto pc = _host->create(key);
                 if (!pc)
                 {
-                    lout() << "skipping component [" << key << "] no driver found\n";
+                    lout << "skipping component [" << key << "] no driver found\n";
                 }
                 else if (!pc->initialize(this, component_config))
                 {
                     stringstream ss;
                     ss << "failed to initialize: " << key << endl;
-                    lout() << ss.str();
+                    lout << ss.str();
                     std::cerr << ss.str();
                     return false;
                 }
                 else
                 {
                     _components.push_back(std::move(pc));
-                    lout() << "ready\n";
+                    lout << "ready\n";
                 }
             }
         }
@@ -132,7 +128,7 @@ bool Client::postInit()
     {
         if (!pc->postInit())
         {
-            lout() << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+            lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
             return false;
         }
         // the vm boot handles component_added for us
@@ -147,7 +143,7 @@ bool Client::loadLuaComponentApi()
     // computer required
     if (!_computer)
     {
-        lout() << "emulation requires exactly one computer component\n";
+        lout << "emulation requires exactly one computer component\n";
         return false;
     }
 
@@ -349,7 +345,7 @@ bool Client::add_component(Value& component_config)
 
     if (!pc->postInit())
     {
-        lout() << pc->type() << "[" << pc->address() << "] failed to postInit\n";
+        lout << pc->type() << "[" << pc->address() << "] failed to postInit\n";
         return false;
     }
     
@@ -378,12 +374,7 @@ bool Client::remove_component(const string& address)
 
 void Client::append_crash(const string& report)
 {
-    lout() << "crash: " << report << endl;
+    lout << "crash: " << report << endl;
     _crash += report;
     _crash += "\n";
-}
-
-Logger& Client::lout()
-{
-    return _lout;
 }

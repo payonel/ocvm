@@ -10,26 +10,47 @@ using std::function;
 using std::ofstream;
 using std::fstream;
 
-Logger::Logger(const string& logPath) :
-    _log_path(logPath)
+LoggerContext Logger::s_context { "" };
+Logger& Logging::lout = Logger::getSingleLogger();
+
+const std::string log_file_name = "log";
+
+void Logger::context(LoggerContext ctx)
 {
+    s_context = ctx;
 }
 
-void Logger::log_path(const string& path)
+LoggerContext Logger::context()
 {
-    _log_path = path;
+    return s_context;
 }
 
-string Logger::log_path() const
+Logger& Logger::getSingleLogger()
 {
-    return _log_path;
+    static Logger the_one;
+    return the_one;
 }
 
 Logger& Logger::operator<< (const string& text)
 {
-    ofstream flog(_log_path, fstream::app);
-    flog << text;
-    flog.close();
+    ofstream flog;
+    if (s_context.path.empty())
+    {
+        std::cerr << "[no log ctx]" << text;
+    }
+    else
+    {
+        flog.open(s_context.path + "/" + log_file_name, fstream::app);
+        if (flog)
+        {
+            flog << text;
+            flog.close();
+        }
+        else
+        {
+            std::cerr << "[log write failure]" << text;
+        }
+    }
     return *this;
 }
 

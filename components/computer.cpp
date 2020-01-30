@@ -14,6 +14,7 @@
 using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::system_clock;
+using Logging::lout;
 
 const float memory_scale = 1;
 
@@ -336,7 +337,7 @@ int Computer::getArchitectures(lua_State* lua)
 
 int Computer::beep(lua_State* lua)
 {
-    lout() << "\a" << "BEEP\n";
+    lout << "\a" << "BEEP\n";
     return 0;
 }
 
@@ -395,7 +396,7 @@ bool Computer::postInit()
         return false;
     }
 
-    lout() << "machine thread created\n";
+    lout << "machine thread created\n";
 
     string machine_path = client()->host()->machinePath();
 
@@ -412,7 +413,7 @@ bool Computer::postInit()
         lua_pop(_state, 1);
         return false;
     }
-    lout() << "machine function loaded\n";
+    lout << "machine function loaded\n";
 
     return true;
 }
@@ -497,14 +498,14 @@ RunState Computer::update()
         // we seem to allocate a bit more above real oc
         _baseline = memoryUsedRaw() + 91227;
         _baseline_initialized = true;
-        lout() << "lua env baseline: " << _baseline << endl;
+        lout << "lua env baseline: " << _baseline << endl;
     }
     return result;
 }
 
 RunState Computer::resume(int nargs)
 {
-    //lout() << "lua env resume: " << nargs << endl;
+    //lout << "lua env resume: " << nargs << endl;
     int status_id = lua_resume(_state, _machine, nargs);
     /*
         Types of results
@@ -535,7 +536,7 @@ RunState Computer::resume(int nargs)
         }
         if (thread_index == 0)
         {
-            lout() << "kernal panic, failed to detect thread in stack\n";
+            lout << "kernal panic, failed to detect thread in stack\n";
         }
         else
         {
@@ -547,7 +548,7 @@ RunState Computer::resume(int nargs)
             }
             else
             {
-                lout() << "lua env SHUTDOWN\n";
+                lout << "lua env SHUTDOWN\n";
             }
         }
 
@@ -555,7 +556,7 @@ RunState Computer::resume(int nargs)
     }
     else if (status_id == LUA_YIELD)
     {
-        //lout() << "lua env yielded\n";
+        //lout << "lua env yielded\n";
         int top = lua_gettop(_state);
         if (top > 0)
         {
@@ -586,7 +587,7 @@ RunState Computer::resume(int nargs)
                     // shutdown or reboot
                 break;
                 default:
-                    lout() << "unsupported yield: " << lua_typename(_state, type_id) << endl;
+                    lout << "unsupported yield: " << lua_typename(_state, type_id) << endl;
                     return RunState::Halt;
                 break;
             }
@@ -595,10 +596,10 @@ RunState Computer::resume(int nargs)
     }
     else
     {
-        lout() << "vm crash: ";
-        lout() << lua_tostring(_state, -1) << "\n";
-        lout() << "machine stack: " << Value::stack(_machine) << endl;
-        lout() << "machine status: " << Value(_machine).serialize() << endl;
+        lout << "vm crash: ";
+        lout << lua_tostring(_state, -1) << "\n";
+        lout << "machine stack: " << Value::stack(_machine) << endl;
+        lout << "machine status: " << Value(_machine).serialize() << endl;
         return RunState::Halt;
     }
 
@@ -611,12 +612,12 @@ void Computer::close()
     {
         lua_close(_state);
         _state = nullptr;
-        lout() << "lua env closed\n";
+        lout << "lua env closed\n";
     }
 
     _prof.flush();
 
-    lout() << "computer peek memory: " << _peek_memory << endl;
+    lout << "computer peek memory: " << _peek_memory << endl;
     _peek_memory = 0;
 }
 
@@ -758,6 +759,6 @@ int Computer::print(lua_State* lua)
 
     msg += "\n";
 
-    lout() << msg;
+    lout << msg;
     return ValuePack::ret(lua, true);
 }

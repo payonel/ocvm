@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+using Logging::lout;
+
 bool Eeprom::s_registered = Host::registerComponentType<Eeprom>("eeprom");
 
 Eeprom::Eeprom()
@@ -34,7 +36,7 @@ bool Eeprom::onInitialize()
 
     if (client()->envPath().empty())
     {
-        lout() << "bug, eeprom env dir path empty\n";
+        lout << "bug, eeprom env dir path empty\n";
         return false;
     }
 
@@ -70,10 +72,10 @@ bool Eeprom::postInit()
     if (!fs_utils::read(biosPath()))
     {
         string originalBiosPath = client()->host()->biosPath();
-        lout() << "no computer eeprom found, copying from system\n";
+        lout << "no computer eeprom found, copying from system\n";
         if (!fs_utils::copy(originalBiosPath, biosPath()))
         {
-            lout() << "Could not create an initial bios from: " << originalBiosPath << endl;
+            lout << "Could not create an initial bios from: " << originalBiosPath << endl;
             return false;
         }
     }

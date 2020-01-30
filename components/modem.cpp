@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iterator>
 using std::stringstream;
+using Logging::lout;
 
 bool Modem::s_registered = Host::registerComponentType<Modem>("modem");
 
@@ -36,7 +37,7 @@ bool Modem::onInitialize()
     _modem.reset(new ModemDriver(this, system_port, hostAddress));
     if (!_modem->start())
     {
-        lout() << "modem driver failed to start\n";
+        lout << "modem driver failed to start\n";
         return false;
     }
 
@@ -276,13 +277,13 @@ RunState Modem::update()
         vector<char> send_address;
         if (!read_vector(&input, end, &send_address))
         {
-            lout() << "Malformed modem packet. Could not read send_address\n";
+            lout << "Malformed modem packet. Could not read send_address\n";
             continue;
         }
         bool has_target;
         if (!read_next<bool>(&input, end, &has_target))
         {
-            lout() << "Malformed modem packet. Could not read has_target\n";
+            lout << "Malformed modem packet. Could not read has_target\n";
             continue;
         }
         vector<char> recv_address;
@@ -290,14 +291,14 @@ RunState Modem::update()
         {
             if (!read_vector(&input, end, &recv_address))
             {
-                lout() << "Malformed modem packet. Could not read recv_address\n";
+                lout << "Malformed modem packet. Could not read recv_address\n";
                 continue;
             }
         }
         int port;
         if (!read_next<int32_t>(&input, end, &port))
         {
-            lout() << "Malformed modem packet. Could not read port\n";
+            lout << "Malformed modem packet. Could not read port\n";
             continue;
         }
 
@@ -312,7 +313,7 @@ RunState Modem::update()
         int num_args;
         if (!read_next<int32_t>(&input, end, &num_args))
         {
-            lout() << "Malformed modem packet. Could not read num_args\n";
+            lout << "Malformed modem packet. Could not read num_args\n";
             continue;
         }
         for (int n = 0; n < num_args; n++)
@@ -320,7 +321,7 @@ RunState Modem::update()
             int type_id;
             if (!read_next<int32_t>(&input, end, &type_id))
             {
-                lout() << "Malformed modem packet. Could not read type_id\n";
+                lout << "Malformed modem packet. Could not read type_id\n";
                 continue;
             }
             // switch variables
@@ -334,7 +335,7 @@ RunState Modem::update()
                 case LUA_TSTRING:
                     if (!read_vector(&input, end, &string_arg))
                     {
-                        lout() << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
+                        lout << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
                         continue;
                     }
                     v = string_arg;
@@ -342,7 +343,7 @@ RunState Modem::update()
                 case LUA_TBOOLEAN:
                     if (!read_next<bool>(&input, end, &bool_arg))
                     {
-                        lout() << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
+                        lout << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
                         continue;
                     }
                     v = bool_arg;
@@ -350,7 +351,7 @@ RunState Modem::update()
                 case LUA_TNUMBER:
                     if (!read_next<LUA_NUMBER>(&input, end, &number_arg))
                     {
-                        lout() << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
+                        lout << "Malformed modem packet. Could not read argument [" << pack.size() << "]\n";
                         continue;
                     }
                     v = number_arg;
