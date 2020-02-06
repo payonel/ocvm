@@ -31,7 +31,8 @@ public:
     bool add_component(Value& component_config);
     bool remove_component(const string& address);
 
-    void append_crash(const string& report);
+    void appendCrashText(const string& report);
+    string getAllCrashText() const;
 
     // global api that is actually computer specific
     // invoke by address

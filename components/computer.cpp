@@ -392,7 +392,7 @@ bool Computer::postInit()
     _machine = lua_newthread(_state);
     if (_machine == nullptr)
     {
-        client()->append_crash("failed to create machine state");
+        client()->appendCrashText("failed to create machine state");
         return false;
     }
 
@@ -403,13 +403,13 @@ bool Computer::postInit()
     std::string data;
     if (!fs_utils::read(machine_path, &data))
     {
-        client()->append_crash("failed to read machine file [" + machine_path + "]");
+        client()->appendCrashText("failed to read machine file [" + machine_path + "]");
         return false;
     }
     if (luaL_loadbuffer(_state, data.c_str(), data.size(), "machine.lua"))
     {
-        client()->append_crash("failed to load machine [" + machine_path + "]");
-        client()->append_crash(lua_tostring(_state, -1));
+        client()->appendCrashText("failed to load machine [" + machine_path + "]");
+        client()->appendCrashText(lua_tostring(_state, -1));
         lua_pop(_state, 1);
         return false;
     }
@@ -544,7 +544,7 @@ RunState Computer::resume(int nargs)
             if (!yield_value)
             {
                 string report = thread.get(thread.len()).toString();
-                client()->append_crash("kernel panic: " + report);
+                client()->appendCrashText("kernel panic: " + report);
             }
             else
             {
@@ -734,11 +734,11 @@ size_t Computer::freeMemory()
 
 int Computer::crash(lua_State* lua)
 {
-    client()->append_crash(lua_tostring(lua, -1));
+    client()->appendCrashText(lua_tostring(lua, -1));
     luaL_traceback(lua, lua, nullptr, 1);
     if (lua_type(lua, -1) == LUA_TSTRING)
     {
-        client()->append_crash(lua_tostring(lua, -1));
+        client()->appendCrashText(lua_tostring(lua, -1));
     }
     lua_pop(lua, 1);
     return lua_gettop(lua);

@@ -192,9 +192,10 @@ void prepareMachineDirectory(string path)
     Logger::context({ client_env_path });
 }
 
-int main(int argc, char** argv)
+string runVirtualMachine(const Args& args)
 {
-    auto args = load_args(argc, argv);
+    string clientShutdownMessage;
+
     prepareMachineDirectory(args.client_env_path());
 
     // init host config
@@ -221,8 +222,20 @@ int main(int argc, char** argv)
             run = client.run();
         }
         while (run == RunState::Continue);
+
+        clientShutdownMessage = client.getAllCrashText();
     }
     while (run == RunState::Reboot);
 
-    return 0;
+    return clientShutdownMessage;
+}
+
+int main(int argc, char** argv)
+{
+    auto args = load_args(argc, argv);
+
+    string result = runVirtualMachine(args);
+    std::cout << result;
+
+    return !result.empty();
 }
