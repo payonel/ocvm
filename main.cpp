@@ -1,5 +1,6 @@
 #include <string>
 #include <memory>
+#include <thread>
 #include "model/host.h"
 #include "model/client.h"
 #include "io/frame.h"
@@ -220,6 +221,7 @@ string runVirtualMachine(const Args& args)
         do
         {
             run = client.run();
+	    std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
         while (run == RunState::Continue);
 
