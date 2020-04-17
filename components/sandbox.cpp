@@ -3,6 +3,7 @@
 #include "model/log.h"
 #include "model/client.h"
 #include "model/host.h"
+#include "drivers/fs_utils.h"
 
 bool Sandbox::s_registered = Host::registerComponentType<Sandbox>("sandbox");
 
@@ -11,12 +12,20 @@ Sandbox::Sandbox()
     add("add_component", &Sandbox::add_component);
     add("remove_component", &Sandbox::remove_component);
     add("log", &Sandbox::log);
+    add("state_name", &Sandbox::state_name);
 }
 
 int Sandbox::log(lua_State* lua)
 {
     return client()->computer()->print(lua);
 }
+
+int Sandbox::state_name(lua_State* lua)
+{
+  string stateName = fs_utils::filename(client()->envPath());
+  return ValuePack::ret(lua, stateName);
+}
+  
 
 int Sandbox::add_component(lua_State* lua)
 {
