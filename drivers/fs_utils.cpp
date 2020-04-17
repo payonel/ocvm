@@ -333,3 +333,8 @@ string fs_utils::make_pwd_path(const string& given_path)
     }
     return given_path;
 }
+
+string fs_utils::filename(const string& path)
+{
+    return fs::canonical(path).filename();
+}
