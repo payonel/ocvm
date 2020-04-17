@@ -4,6 +4,16 @@
 #include "model/client.h"
 #include "model/host.h"
 
+
+
+#ifndef __HAIKU__
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#else
+    #include "haiku/filesystem.h"
+    namespace fs = haiku::filesystem;
+#endif
+
 bool Sandbox::s_registered = Host::registerComponentType<Sandbox>("sandbox");
 
 Sandbox::Sandbox()
@@ -11,12 +21,27 @@ Sandbox::Sandbox()
     add("add_component", &Sandbox::add_component);
     add("remove_component", &Sandbox::remove_component);
     add("log", &Sandbox::log);
+    add("state_name", &Sandbox::state_name);
 }
 
 int Sandbox::log(lua_State* lua)
 {
     return client()->computer()->print(lua);
 }
+
+int Sandbox::state_name(lua_State* lua)
+{
+  fs::path p(client()->envPath());
+  
+  // If the user passes a traling '/' to ocvm, this will  be mostly useless.
+  if(p.filename() == ".") {
+    p = p.parent_path();
+  }
+  
+  string stateName = p.filename();
+  return ValuePack::ret(lua, stateName);
+}
+  
 
 int Sandbox::add_component(lua_State* lua)
 {
