@@ -1,6 +1,7 @@
 #include "luaproxy.h"
 #include "drivers/fs_utils.h"
 #include <iostream>
+#include <sstream>
 
 LuaProxy::LuaProxy(const string& name) :
     _name(name)
@@ -98,7 +99,9 @@ int LuaProxy::invoke(const string& methodName, lua_State* lua)
     const auto& mit = _methods.find(methodName);
     if (mit == _methods.end())
     {
-        luaL_error(lua, "no such method: %s", methodName.c_str());
+        std::stringstream ss;
+        ss << "no such method: " << methodName;
+        luaL_error(lua, ss.str().c_str());
     }
 
     ProxyMethod pmethod = mit->second;
