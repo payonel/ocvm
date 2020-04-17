@@ -8,8 +8,9 @@ class TermBuffer;
 class MouseTerminalDriver
 {
 public:
-    vector<MouseEvent> parse(TermBuffer* buffer);
+  vector<MouseEvent> parse(TermBuffer* buffer);
+
 private:
-    int _pressed = 0x3;
-    bool _dragging = false;
+  int _pressed = 0x3;
+  bool _dragging = false;
 };

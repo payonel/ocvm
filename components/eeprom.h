@@ -4,39 +4,40 @@
 
 class Eeprom : public Component
 {
-  public:
-    Eeprom();
+public:
+  Eeprom();
 
-    enum ConfigIndex
-    {
-        BiosSize = Component::ConfigIndex::Next,
-        DataSize,
-        Label
-    };
+  enum ConfigIndex
+  {
+    BiosSize = Component::ConfigIndex::Next,
+    DataSize,
+    Label
+  };
 
-    int get(lua_State* lua);
-    int set(lua_State* lua);
-    int getData(lua_State* lua);
-    int setData(lua_State* lua);
-    int getSize(lua_State* lua);
-    int getDataSize(lua_State* lua);
-    int getLabel(lua_State* lua);
-    int setLabel(lua_State* lua);
-    int getChecksum(lua_State* lua);
+  int get(lua_State* lua);
+  int set(lua_State* lua);
+  int getData(lua_State* lua);
+  int setData(lua_State* lua);
+  int getSize(lua_State* lua);
+  int getDataSize(lua_State* lua);
+  int getLabel(lua_State* lua);
+  int setLabel(lua_State* lua);
+  int getChecksum(lua_State* lua);
 
-  protected:
-    bool onInitialize() override;
-    string biosPath() const;
-    string dataPath() const;
-    vector<char> load(const string& path) const;
-    bool postInit() override;
+protected:
+  bool onInitialize() override;
+  string biosPath() const;
+  string dataPath() const;
+  vector<char> load(const string& path) const;
+  bool postInit() override;
 
-    Value getDeviceInfo() const override;
-  private:
-    string _dir; // real on disk storage location
+  Value getDeviceInfo() const override;
 
-    int _bios_size_limit = 1024 * 4; // also read from configuration
-    int _data_size_limit = 256;
+private:
+  string _dir; // real on disk storage location
 
-    static bool s_registered;
+  int _bios_size_limit = 1024 * 4; // also read from configuration
+  int _data_size_limit = 256;
+
+  static bool s_registered;
 };

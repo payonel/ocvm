@@ -1,13 +1,14 @@
 #include "ansi.h"
 #include "color/color_types.h"
-#include <sstream>
-#include <vector>
 #include <algorithm>
 #include <map>
+#include <sstream>
+#include <vector>
 using std::stringstream;
 
 #include <iostream>
 
+// clang-format off
 static const unsigned char oc_to_ansi[256] =
 {
     234,235,236,238,239,240,241,242,244,245,246,247,249,250,251,253, // grays
@@ -29,25 +30,26 @@ static const unsigned char oc_to_ansi[256] =
       1,197,198,199,201, 196,197,198,199,201, 202,203,204,205,207, 202,203,204,205,207,
     208,209,210,211,213, 214,215,216,217,219, 220,221,222,223,225, 226,227,228,229,255,
 };
+// clang-format on
 
 string to_ansi(unsigned char deflated_rgb, bool foreground)
 {
-    stringstream ss;
-    ss << (foreground ? "3" : "4") << "8;5;" << (int)oc_to_ansi[deflated_rgb];
-    return ss.str();
+  stringstream ss;
+  ss << (foreground ? "3" : "4") << "8;5;" << (int)oc_to_ansi[deflated_rgb];
+  return ss.str();
 }
 
 string Ansi::set_color(const Color& fg, const Color& bg)
 {
-    string fg_txt = to_ansi(fg.code, true);
-    string bg_txt = to_ansi(bg.code, false);
+  string fg_txt = to_ansi(fg.code, true);
+  string bg_txt = to_ansi(bg.code, false);
 
-    return esc + fg_txt + ";" + bg_txt + "m";
+  return esc + fg_txt + ";" + bg_txt + "m";
 }
 
 string Ansi::set_pos(int x, int y)
 {
-    stringstream ss;
-    ss << esc << y << ";" << x << "f";
-    return ss.str();
+  stringstream ss;
+  ss << esc << y << ";" << x << "f";
+  return ss.str();
 }

@@ -4,7 +4,8 @@
 class OSApi : public LuaProxy
 {
 public:
-    static OSApi* get();
+  static OSApi* get();
+
 private:
-    OSApi();
+  OSApi();
 };
