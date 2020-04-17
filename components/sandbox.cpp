@@ -25,7 +25,6 @@ int Sandbox::state_name(lua_State* lua)
   string stateName = fs_utils::filename(client()->envPath());
   return ValuePack::ret(lua, stateName);
 }
-  
 
 int Sandbox::add_component(lua_State* lua)
 {

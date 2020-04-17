@@ -1,6 +1,5 @@
 #include "model/log.h"
 #include "io/frame.h"
-#include "drivers/fs_utils.h"
 
 #include <iostream>
 #include <fstream>
