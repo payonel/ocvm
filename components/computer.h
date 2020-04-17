@@ -57,6 +57,7 @@ protected:
     size_t memoryUsedRaw();
     size_t memoryUsedVM();
     size_t freeMemory();
+    Value getDeviceInfo() const override;
 private:
     void injectCustomLua();
 

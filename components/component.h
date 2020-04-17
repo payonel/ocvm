@@ -39,6 +39,7 @@ public:
     virtual RunState update() { return RunState::Continue; }
 
     static string make_address();
+    virtual Value getDeviceInfo() const;
 protected:
     virtual bool onInitialize() = 0;
     Client* client() const;

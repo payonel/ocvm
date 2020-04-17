@@ -136,3 +136,17 @@ int Eeprom::setLabel(lua_State* lua)
     update(ConfigIndex::Label, Value::checkArg<string>(lua, 1));
     return 0;
 }
+
+Value Eeprom::getDeviceInfo() const
+{
+    auto deviceInfoMap = Value::table();
+    deviceInfoMap.set("class", "memory");
+    deviceInfoMap.set("capacity", _bios_size_limit);
+    deviceInfoMap.set("description", "EEPROM");
+    deviceInfoMap.set("product", "FlashStick2k");
+    deviceInfoMap.set("size", _bios_size_limit);
+    deviceInfoMap.set("vendor", "MightyPirates GmbH & Co. KG");
+
+    return deviceInfoMap;
+}
+
