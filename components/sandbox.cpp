@@ -76,13 +76,3 @@ bool Sandbox::onInitialize()
 {
     return true;
 }
-
-extern "C" std::unique_ptr<Component> create_object()
-{
-    return std::make_unique<Sandbox>();
-}
-
-extern "C" std::string name()
-{
-    return "sandbox";
-}

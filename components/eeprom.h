@@ -31,6 +31,7 @@ class Eeprom : public Component
     vector<char> load(const string& path) const;
     bool postInit() override;
 
+    Value getDeviceInfo() const override;
   private:
     string _dir; // real on disk storage location
 

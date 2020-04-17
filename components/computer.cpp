@@ -343,8 +343,7 @@ int Computer::beep(lua_State* lua)
 
 int Computer::getDeviceInfo(lua_State* lua)
 {
-    luaL_error(lua, "getDeviceInfo not implemented");
-    return 0;
+    return ValuePack::ret(lua, getDeviceInfo());
 }
 
 int Computer::getProgramLocations(lua_State* lua)
@@ -761,4 +760,19 @@ int Computer::print(lua_State* lua)
 
     lout << msg;
     return ValuePack::ret(lua, true);
+}
+
+Value Computer::getDeviceInfo() const
+{
+    auto deviceInfoMap = Value::table();
+
+    for (const auto* pComponent : client()->components())
+    {
+        if (pComponent == this)
+            continue;
+
+        deviceInfoMap.set(pComponent->address(), pComponent->getDeviceInfo());
+    }
+
+    return deviceInfoMap;
 }

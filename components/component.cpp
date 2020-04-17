@@ -98,3 +98,8 @@ void Component::update(int key, const Value& value)
 {
     _config->set(key, value);
 }
+
+Value Component::getDeviceInfo() const
+{
+    return Value::table();
+}

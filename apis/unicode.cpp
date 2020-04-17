@@ -10,9 +10,9 @@ using std::ifstream;
 static const uint32_t end_1_byte = 0x00000080;
 static const uint32_t end_2_byte = 0x00000800;
 static const uint32_t end_3_byte = 0x00010000;
-static const uint32_t end_4_byte = 0x00200000;
-static const uint32_t end_5_byte = 0x04000000;
-static const uint32_t end_6_byte = 0x80000000;
+//static const uint32_t end_4_byte = 0x00200000;
+//static const uint32_t end_5_byte = 0x04000000;
+//static const uint32_t end_6_byte = 0x80000000;
 
 static const unsigned char continuation_bit = 0x80; // 10xx xxxx
 static const unsigned char set_2_bytes_bits = 0xC0; // 110x xxxx

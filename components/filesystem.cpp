@@ -42,7 +42,7 @@ public:
 
     virtual bool isOpen() const
     {
-        if (nullptr || _fs == nullptr)
+        if (_fs == nullptr)
             return false;
 
         return _isOpen;

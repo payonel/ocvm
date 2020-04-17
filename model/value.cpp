@@ -5,7 +5,6 @@
 
 const Value Value::nil; // the nil
 
-
 static bool validate_argument_type(lua_State* lua, int index, int type_id, bool nilok)
 {
     int top = lua_gettop(lua);
@@ -19,10 +18,10 @@ static bool validate_argument_type(lua_State* lua, int index, int type_id, bool 
     {
         if (id != LUA_TNIL || !nilok)
         {
-            luaL_error(lua, "bad arguments #%d (%s expected, got %s) ",
-                index,
-                lua_typename(lua, type_id),
-                lua_typename(lua, id));
+            std::stringstream ss;
+            ss << "bad arguments #" << index << " (" << lua_typename(lua, type_id);
+            ss << " expected, got " << lua_typename(lua, id) << ") ";
+            luaL_error(lua, ss.str().c_str());
         }
     }
 
