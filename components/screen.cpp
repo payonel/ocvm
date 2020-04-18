@@ -123,7 +123,8 @@ Gpu* Screen::gpu() const
   return _gpu;
 }
 
-Value Screen::getDeviceInfo() const {
+Value Screen::getDeviceInfo() const
+{
   auto deviceInfoMap = Value::table();
   deviceInfoMap.set("class", "display");
   deviceInfoMap.set("capacity", "8000");

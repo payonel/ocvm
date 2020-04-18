@@ -647,7 +647,8 @@ void Gpu::deflate_all()
   }
 }
 
-Value Gpu::getDeviceInfo() const {
+Value Gpu::getDeviceInfo() const
+{
   auto deviceInfoMap = Value::table();
   deviceInfoMap.set("class", "display");
   deviceInfoMap.set("capacity", "8000");
