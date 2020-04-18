@@ -1,8 +1,9 @@
 #pragma once
-#include <vector>
 #include <cstdint>
+#include <vector>
 using std::vector;
 
-namespace util {
-    uint32_t crc32(vector<char> data);
+namespace util
+{
+uint32_t crc32(vector<char> data);
 }

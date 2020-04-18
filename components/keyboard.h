@@ -1,28 +1,30 @@
 #pragma once
 #include "component.h"
-#include "model/value.h"
 #include "io/event.h"
+#include "model/value.h"
 
 class Screen;
 
 class Keyboard : public Component, public EventSource<KeyEvent>
 {
 public:
-    enum ConfigIndex
-    {
-        ScreenAddress = Component::ConfigIndex::Next
-    };
+  enum ConfigIndex
+  {
+    ScreenAddress = Component::ConfigIndex::Next
+  };
 
-    Keyboard();
-    ~Keyboard();
-    bool postInit() override;
-    RunState update() override;
-    void detach();
+  Keyboard();
+  ~Keyboard();
+  bool postInit() override;
+  RunState update() override;
+  void detach();
+
 protected:
-    bool onInitialize() override;
-    Screen* screen() const;
-private:
-    string _preferredScreen;
+  bool onInitialize() override;
+  Screen* screen() const;
 
-    static bool s_registered;
+private:
+  string _preferredScreen;
+
+  static bool s_registered;
 };

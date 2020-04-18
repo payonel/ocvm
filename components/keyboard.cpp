@@ -1,8 +1,8 @@
 #include "keyboard.h"
-#include "screen.h"
 #include "model/client.h"
-#include "model/log.h"
 #include "model/host.h"
+#include "model/log.h"
+#include "screen.h"
 using Logging::lout;
 
 bool Keyboard::s_registered = Host::registerComponentType<Keyboard>("keyboard");
@@ -13,74 +13,74 @@ Keyboard::Keyboard()
 
 Keyboard::~Keyboard()
 {
-    detach();
+  detach();
 }
 
 void Keyboard::detach()
 {
-    Screen* pScreen = screen();
-    if (pScreen)
-    {
-        pScreen->disconnectKeyboard(this);
-    }
+  Screen* pScreen = screen();
+  if (pScreen)
+  {
+    pScreen->disconnectKeyboard(this);
+  }
 }
 
 bool Keyboard::onInitialize()
 {
-    _preferredScreen = config().get(ConfigIndex::ScreenAddress).Or("").toString();
-    return true;
+  _preferredScreen = config().get(ConfigIndex::ScreenAddress).Or("").toString();
+  return true;
 }
 
 bool Keyboard::postInit()
 {
-    for (auto* pc : client()->components("screen", true))
+  for (auto* pc : client()->components("screen", true))
+  {
+    Screen* screen = dynamic_cast<Screen*>(pc);
+    if (screen && (_preferredScreen.empty() || _preferredScreen == screen->address()))
     {
-        Screen* screen = dynamic_cast<Screen*>(pc);
-        if (screen && (_preferredScreen.empty() || _preferredScreen == screen->address()))
-        {
-            return screen->connectKeyboard(this);
-        }
+      return screen->connectKeyboard(this);
     }
+  }
 
-    lout << "warning: kb had no screen to join\n";
-    return true;
+  lout << "warning: kb had no screen to join\n";
+  return true;
 }
 
 RunState Keyboard::update()
 {
-    KeyEvent ke;
-    while (EventSource<KeyEvent>::pop(ke))
+  KeyEvent ke;
+  while (EventSource<KeyEvent>::pop(ke))
+  {
+    if (ke.insert.size())
     {
-        if (ke.insert.size())
-        {
-            client()->pushSignal({"clipboard", address(), ke.insert});
-        }
-        else if (ke.keycode == 1)
-        {
-            lout << "shell abort";
-            return RunState::Halt;
-        }
-        else
-        {
-            client()->pushSignal({ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode});
-        }
+      client()->pushSignal({ "clipboard", address(), ke.insert });
     }
+    else if (ke.keycode == 1)
+    {
+      lout << "shell abort";
+      return RunState::Halt;
+    }
+    else
+    {
+      client()->pushSignal({ ke.bPressed ? "key_down" : "key_up", address(), ke.keysym, ke.keycode });
+    }
+  }
 
-    return RunState::Continue;
+  return RunState::Continue;
 }
 
 Screen* Keyboard::screen() const
 {
-    for (auto* pc : client()->components("screen", true))
+  for (auto* pc : client()->components("screen", true))
+  {
+    Screen* screen = dynamic_cast<Screen*>(pc);
+    for (const auto& kb_addr : screen->keyboards())
     {
-        Screen* screen = dynamic_cast<Screen*>(pc);
-        for (const auto& kb_addr : screen->keyboards())
-        {
-            if (kb_addr == address())
-            {
-                return screen;
-            }
-        }
+      if (kb_addr == address())
+      {
+        return screen;
+      }
     }
-    return nullptr;
+  }
+  return nullptr;
 }

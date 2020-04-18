@@ -10,10 +10,11 @@ class TermBuffer;
 class KeyboardTerminalDriver
 {
 public:
-    virtual vector<KeyEvent> parse(TermBuffer* buffer) = 0;
-    virtual vector<KeyEvent> idle() = 0;
-    virtual ~KeyboardTerminalDriver() {}
+  virtual vector<KeyEvent> parse(TermBuffer* buffer) = 0;
+  virtual vector<KeyEvent> idle() = 0;
+  virtual ~KeyboardTerminalDriver()
+  {
+  }
 
-    static std::unique_ptr<KeyboardTerminalDriver> create(bool bMaster);
+  static std::unique_ptr<KeyboardTerminalDriver> create(bool bMaster);
 };
-

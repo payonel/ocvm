@@ -1,10 +1,10 @@
 #pragma once
+#include "model/log.h"
+#include "model/luaproxy.h"
+#include "model/value.h"
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
-#include "model/value.h"
-#include "model/luaproxy.h"
-#include "model/log.h"
 
 class Component;
 typedef ValuePack (Component::*ComponentMethod)(const ValuePack& args);
@@ -13,40 +13,51 @@ class Client;
 
 enum class RunState
 {
-    Continue,
-    Reboot,
-    Halt
+  Continue,
+  Reboot,
+  Halt
 };
 
 class Component : public LuaProxy
 {
 public:
-    enum ConfigIndex
-    {
-        Type = 1,
-        Address,
-        Next
-    };
+  enum ConfigIndex
+  {
+    Type = 1,
+    Address,
+    Next
+  };
 
-    Component();
-    bool initialize(Client* client, Value& config);
-    virtual bool postInit() { return true; }
-    virtual ~Component() {}
-    string type() const;
-    string address() const;
-    int slot() const;
+  Component();
+  bool initialize(Client* client, Value& config);
+  virtual bool postInit()
+  {
+    return true;
+  }
+  virtual ~Component()
+  {
+  }
+  string type() const;
+  string address() const;
+  int slot() const;
 
-    virtual RunState update() { return RunState::Continue; }
+  virtual RunState update()
+  {
+    return RunState::Continue;
+  }
 
-    static string make_address();
+  static string make_address();
+  virtual Value getDeviceInfo() const;
+
 protected:
-    virtual bool onInitialize() = 0;
-    Client* client() const;
-    const Value& config() const;
-    void update(int key, const Value& value);
+  virtual bool onInitialize() = 0;
+  Client* client() const;
+  const Value& config() const;
+  void update(int key, const Value& value);
+
 private:
-    string _address;
-    int _slot;
-    Client* _client;
-    Value* _config;
+  string _address;
+  int _slot;
+  Client* _client;
+  Value* _config;
 };

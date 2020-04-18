@@ -4,20 +4,21 @@
 class SystemApi : public LuaProxy
 {
 public:
-    static SystemApi* get();
+  static SystemApi* get();
 
-    static int timeout(lua_State* lua);
-    static int allowGC(lua_State* lua);
-    static int allowBytecode(lua_State* lua);
+  static int timeout(lua_State* lua);
+  static int allowGC(lua_State* lua);
+  static int allowBytecode(lua_State* lua);
 
-    static int max_connections();
+  static int max_connections();
 
-    static void configure(const Value& settings);
+  static void configure(const Value& settings);
+
 private:
-    SystemApi();
+  SystemApi();
 
-    static double _timeout;
-    static bool _gc;
-    static bool _bytecode;
-    static int _max_connections;
+  static double _timeout;
+  static bool _gc;
+  static bool _bytecode;
+  static int _max_connections;
 };
