@@ -6,6 +6,7 @@
 #include "model/log.h"
 #include <memory>
 #include <string>
+#include <thread>
 
 using std::cerr;
 
@@ -219,19 +220,9 @@ string runVirtualMachine(const Args& args)
 
     do
     {
-        // init client config
-        Client client(&host, Logger::context().path);
-        // init lua environment
-        // // creates instances of host components
-        if (!client.load())
-            break;
-
-        do
-        {
-            run = client.run();
-	    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
-        while (run == RunState::Continue);
+      run = client.run();
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    } while (run == RunState::Continue);
 
     clientShutdownMessage = client.getAllCrashText();
   } while (run == RunState::Reboot);
