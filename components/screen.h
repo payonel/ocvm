@@ -40,6 +40,8 @@ public:
 
 protected:
   bool onInitialize() override;
+  
+  Value getDeviceInfo() const override;
 
 private:
   vector<Keyboard*> _keyboards;

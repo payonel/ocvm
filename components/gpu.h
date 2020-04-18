@@ -42,7 +42,7 @@ public:
   int maxDepth(lua_State* lua);
   int getPaletteColor(lua_State* lua);
   int setPaletteColor(lua_State* lua);
-
+  
   // Screen callbacks
   bool setResolution(int width, int height);
   void unbind();
@@ -64,6 +64,8 @@ protected:
   tuple<int, Value> makeColorContext(const Color& color);
 
   void resizeBuffer(int width, int height);
+  
+  Value getDeviceInfo() const override;
 
   // color mapping to oc 256 codes
   Color deflate(const Color& color);

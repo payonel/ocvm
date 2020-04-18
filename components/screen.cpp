@@ -123,6 +123,18 @@ Gpu* Screen::gpu() const
   return _gpu;
 }
 
+Value Screen::getDeviceInfo() const {
+  auto deviceInfoMap = Value::table();
+  deviceInfoMap.set("class", "display");
+  deviceInfoMap.set("capacity", "8000");
+  deviceInfoMap.set("description", "Text buffer");
+  deviceInfoMap.set("product", "Text Screen V0");
+  deviceInfoMap.set("vendor", "MightyPirates GmbH & Co. KG");
+  deviceInfoMap.set("width", "8");
+
+  return deviceInfoMap;
+};
+
 RunState Screen::update()
 {
   MouseEvent me;
