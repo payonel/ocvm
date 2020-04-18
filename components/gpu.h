@@ -65,6 +65,8 @@ protected:
 
   void resizeBuffer(int width, int height);
 
+  Value getDeviceInfo() const override;
+
   // color mapping to oc 256 codes
   Color deflate(const Color& color);
   void inflate_all();

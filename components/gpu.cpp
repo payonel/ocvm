@@ -646,3 +646,17 @@ void Gpu::deflate_all()
     cell.bg = deflate(cell.bg);
   }
 }
+
+Value Gpu::getDeviceInfo() const
+{
+  auto deviceInfoMap = Value::table();
+  deviceInfoMap.set("class", "display");
+  deviceInfoMap.set("capacity", "8000");
+  deviceInfoMap.set("description", "Graphics controller");
+  deviceInfoMap.set("product", "OCVM Supah GPU");
+  deviceInfoMap.set("vendor", "MightyPirates GmbH & Co. KG");
+  deviceInfoMap.set("clock", "1/1/1/1/1/1"); // Dummy value. Should be changed if ocvm ever gets proper throttling.
+  deviceInfoMap.set("width", "8");
+
+  return deviceInfoMap;
+};

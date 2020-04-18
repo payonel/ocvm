@@ -41,6 +41,8 @@ public:
 protected:
   bool onInitialize() override;
 
+  Value getDeviceInfo() const override;
+
 private:
   vector<Keyboard*> _keyboards;
   unique_ptr<Frame> _frame;
