@@ -37,8 +37,7 @@ struct Args
     FontsKey
   };
 
-  const string keys[FontsKey + 1] =
-  {
+  const string keys[FontsKey + 1] = {
     "log-allocs",
     "frame",
     "bios",
