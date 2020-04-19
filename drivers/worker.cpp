@@ -13,10 +13,6 @@ NiceWork::~NiceWork()
     std::this_thread::sleep_for(std::chrono::milliseconds(1000 / 20));
 }
 
-Worker::~Worker()
-{
-}
-
 bool Worker::isRunning()
 {
   return _pthread && _running;

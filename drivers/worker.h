@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <thread>
+#include <atomic>
 using std::mutex;
 using std::thread;
 using std::unique_lock;
@@ -13,13 +14,13 @@ public:
   ~NiceWork();
 
 private:
-  bool _work_done = false;
+  std::atomic_bool _work_done = false;
 };
 
 class Worker
 {
 public:
-  virtual ~Worker();
+  virtual ~Worker() = default;
   bool isRunning();
 
   bool start();

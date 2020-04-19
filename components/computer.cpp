@@ -497,6 +497,10 @@ RunState Computer::update()
     _baseline_initialized = true;
     lout << "lua env baseline: " << _baseline << endl;
   }
+  if (result == RunState::Continue && nargs == 0)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  }
   return result;
 }
 

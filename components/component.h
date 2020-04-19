@@ -34,9 +34,7 @@ public:
   {
     return true;
   }
-  virtual ~Component()
-  {
-  }
+  virtual ~Component() = default;
   string type() const;
   string address() const;
   int slot() const;
