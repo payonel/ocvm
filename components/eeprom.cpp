@@ -52,8 +52,10 @@ int Eeprom::getChecksum(lua_State* lua)
 {
   vector<char> bios = this->load(biosPath());
   uint32_t crc = util::crc32(bios);
+  std::stringstream ret;
+  ret << std::hex << crc;
 
-  return ValuePack::ret(lua, crc);
+  return ValuePack::ret(lua, ret.str());
 }
 
 int Eeprom::set(lua_State* lua)
