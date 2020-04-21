@@ -30,8 +30,16 @@ bool DataCard::onInitialize()
 int DataCard::crc32(lua_State* lua)
 {
   vector<char> value = Value::checkArg<vector<char>>(lua, 1);
-
-  return ValuePack::ret(lua, util::crc32(value));
+  uint32_t crc = util::crc32(value);
+  
+  vector<char> ret{
+		   (char)((crc >> 24) & 0xFF),
+		   (char)((crc >> 16) & 0xFF),
+		   (char)((crc >> 8) & 0xFF),
+		   (char)(crc & 0xFF),
+  };
+  
+  return ValuePack::ret(lua, ret);
 }
 
 int DataCard::md5(lua_State* lua)
