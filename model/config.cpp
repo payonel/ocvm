@@ -1,6 +1,5 @@
 #include "config.h"
 #include "model/log.h"
-#include <lua.hpp>
 
 #include "drivers/fs_utils.h"
 #include <iostream>

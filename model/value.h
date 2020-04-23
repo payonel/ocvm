@@ -1,6 +1,7 @@
 #pragma once
 
-#include <lua.hpp>
+#include "apis/native-lua.h"
+
 #include <map>
 #include <memory>
 #include <string>

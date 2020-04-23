@@ -7,12 +7,9 @@ class UserData : public LuaProxy
 {
 public:
   UserData();
-  virtual ~UserData()
-  {
-  }
-  virtual void dispose()
-  {
-  }
+  virtual ~UserData() = default;
+  virtual void dispose() = 0;
+private:
 };
 
 class UserDataApi : public LuaProxy

@@ -8,8 +8,8 @@ INC_DIRS ?= ./
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 ifneq ($(luapath),)
-	LDFLAGS?=${luapath}/src/liblua.a
-	INC_FLAGS+=-I${luapath}/src
+	LDFLAGS?=${luapath}/liblua.a
+	INC_FLAGS+=-I${luapath}
 else
 	LDFLAGS?=$(shell pkg-config lua$(lua) --libs 2>/dev/null || pkg-config lua5.3 --libs 2>/dev/null || echo -llua5.2)
 	INC_FLAGS+=$(shell pkg-config lua$(lua) --cflags 2>/dev/null || pkg-config lua5.3 --cflags 2>/dev/null || echo -I/usr/include/lua5.2)

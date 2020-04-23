@@ -9,7 +9,6 @@
 #include <chrono>
 #include <cstring>
 #include <iostream>
-#include <lua.hpp>
 #include <thread>
 using Logging::lout;
 using std::chrono::duration;
@@ -507,7 +506,8 @@ RunState Computer::update()
 RunState Computer::resume(int nargs)
 {
   //lout << "lua env resume: " << nargs << endl;
-  int status_id = lua_resume(_state, _machine, nargs);
+  int nres = 0;
+  int status_id = ocvm_resume(_state, _machine, nargs, &nres);
   /*
         Types of results
         1. OK
@@ -558,8 +558,7 @@ RunState Computer::resume(int nargs)
   else if (status_id == LUA_YIELD)
   {
     //lout << "lua env yielded\n";
-    int top = lua_gettop(_state);
-    if (top > 0)
+    if (nres > 0)
     {
       int type_id = lua_type(_state, 1);
       lua_Number timeout_limit = 0;
@@ -567,8 +566,8 @@ RunState Computer::resume(int nargs)
       {
       case LUA_TFUNCTION:
         lua_pcall(_state, -1, LUA_MULTRET, 0);
-        top = lua_gettop(_state);
-        return resume(top);
+        nres = lua_gettop(_state);
+        return resume(nres);
         break;
       case LUA_TNIL:
         timeout_limit = std::numeric_limits<lua_Number>::max();

@@ -1,6 +1,5 @@
 #include "value.h"
 #include <limits>
-#include <lua.hpp>
 #include <sstream>
 
 const Value Value::nil; // the nil

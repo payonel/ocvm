@@ -1,6 +1,5 @@
 #pragma once
 #include "value.h"
-#include <lua.hpp>
 #include <map>
 #include <string>
 #include <unordered_map>
