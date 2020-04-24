@@ -84,7 +84,7 @@ void Host::fontsPath(const string& fonts_path)
   _fonts_path = fonts_path;
   if (!UnicodeApi::configure(_fonts_path))
   {
-    std::cerr << "Failed lot load fonts: " << fonts_path << std::endl;
+    std::cerr << "Failed to load fonts: " << fonts_path << std::endl;
     ::exit(1);
   }
 }
