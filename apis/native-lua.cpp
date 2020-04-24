@@ -1,8 +1,5 @@
 #include "native-lua.h"
 
-#undef NDEBUG
-#include <cassert>
-
 int ocvm_resume(lua_State *L, lua_State *from, int narg, int *nres)
 {
   assert(nres != nullptr);

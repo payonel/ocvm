@@ -10,6 +10,9 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#undef NEDBUG
+#include <cassert>
+
 // lua 5.3 -> 5.4 changes lua_resume
 
 struct lua_State;
