@@ -42,18 +42,30 @@ static unsigned long _original_kb_mode = 0;
 #endif
 
 static struct sigaction sig_action_data;
+static termios* original_termios = nullptr;
 
-static inline void exit_function()
+static void exit_function()
 {
 #ifdef __linux__
   // leave raw mode
-  ioctl(0, KDSKBMODE, _original_kb_mode ? _original_kb_mode : K_UNICODE);
+  ioctl(0, KDSKBMODE, _original_kb_mode);
 #endif
+  if (original_termios)
+  {
+    ::tcsetattr(STDIN_FILENO, TCSANOW, original_termios);
+  }
+  cout << Ansi::mouse_prd_off;
+  cout << Ansi::cursor_on;
+  cout << Ansi::color_reset << flush;
+  delete original_termios;
+  original_termios = nullptr;
 }
 
 static void segfault_sigaction(int signal, siginfo_t* pSigInfo, void* arg)
 {
   exit_function();
+  cout << "\nocvm caught a SIGSEGV signal. " << flush;
+  std::abort();
 }
 
 void TtyReader::start(AnsiEscapeTerm* pTerm)
@@ -81,7 +93,7 @@ TtyReader* TtyReader::engine()
     memset(&sig_action_data, 0, sizeof(sig_action_data));
     sig_action_data.sa_sigaction = segfault_sigaction;
     sig_action_data.sa_flags = SA_SIGINFO;
-    sigaction(SIGTERM, &sig_action_data, nullptr);
+    sigaction(SIGSEGV, &sig_action_data, nullptr);
   }
   return &one;
 }
@@ -117,8 +129,8 @@ TtyReader::TtyReader()
 bool TtyReader::onStart()
 {
   //save current settings
-  _original = new termios;
-  ::tcgetattr(STDIN_FILENO, _original);
+  original_termios = new termios;
+  ::tcgetattr(STDIN_FILENO, original_termios);
 
   //put in raw mod
   termios raw;
@@ -134,10 +146,9 @@ bool TtyReader::onStart()
     if (ec != 0 || errno != 0)
     {
       // try to reset kb JUST IN CASE
-      ::ioctl(0, KDSKBMODE, K_UNICODE);
-      ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
-      cerr << "critical failure: could not set raw mode\n";
-      ::exit(1);
+      exit_function();
+      cerr << "\ncritical failure: could not set raw mode\n";
+      std::abort();
     }
 
     atexit(&exit_function);
@@ -231,15 +242,5 @@ bool TtyReader::runOnce()
 void TtyReader::onStop()
 {
   _pTerm = nullptr;
-#ifdef __linux__
-  // leave raw mode
-  ioctl(0, KDSKBMODE, _original_kb_mode);
-#endif
-  if (_original)
-  {
-    ::tcsetattr(STDIN_FILENO, TCSANOW, _original);
-  }
-  cout << Ansi::mouse_prd_off << flush;
-  delete _original;
-  _original = nullptr;
+  exit_function();
 }

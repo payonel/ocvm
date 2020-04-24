@@ -84,7 +84,6 @@ tuple<int, int> AnsiEscapeTerm::onOpen()
 void AnsiEscapeTerm::onClose()
 {
   TtyReader::engine()->stop();
-  cout << Ansi::cursor_on;
   cout << Ansi::set_pos(1, 1);
   cout << flush;
 }

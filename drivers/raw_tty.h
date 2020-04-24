@@ -30,7 +30,6 @@ private:
 
   bool _master_tty;
   bool _terminal_out;
-  termios* _original = nullptr;
   TermBuffer _buffer;
 
   unique_ptr<MouseTerminalDriver> _mouse_drv;
