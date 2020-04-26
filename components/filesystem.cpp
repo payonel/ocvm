@@ -448,7 +448,7 @@ int Filesystem::write(lua_State* lua)
   vector<char> data = Value::checkArg<vector<char>>(lua, 2);
   pfh->write(data);
 
-  return ValuePack::ret(lua, true);
+  return 0;
 }
 
 int Filesystem::close(lua_State* lua)
@@ -461,7 +461,7 @@ int Filesystem::close(lua_State* lua)
   }
 
   pfh->close();
-  return 0;
+  return ValuePack::ret(lua);
 }
 
 int Filesystem::getLabel(lua_State* lua)
