@@ -15,15 +15,24 @@ bool Eeprom::s_registered = Host::registerComponentType<Eeprom>("eeprom");
 
 Eeprom::Eeprom()
 {
-  add("set", &Eeprom::set);
-  add("get", &Eeprom::get);
-  add("getData", &Eeprom::getData);
-  add("setData", &Eeprom::setData);
-  add("getSize", &Eeprom::getSize);
-  add("getDataSize", &Eeprom::getDataSize);
-  add("getLabel", &Eeprom::getLabel);
-  add("setLabel", &Eeprom::setLabel);
-  add("getChecksum", &Eeprom::getChecksum);
+  add("set", &Eeprom::set,
+      "function(data:string) -- Overwrite the currently stored byte array.");
+  add("get", &Eeprom::get,
+      "function():string -- Get the currently stored byte array.");
+  add("getData", &Eeprom::getData,
+      "function():string -- Get the currently stored byte array.");
+  add("setData", &Eeprom::setData,
+      "function(data:string) -- Overwrite the currently stored byte array.");
+  add("getSize", &Eeprom::getSize,
+      "function():number -- Get the storage capacity of this EEPROM.");
+  add("getDataSize", &Eeprom::getDataSize,
+      "function():number -- Get the storage capacity of this EEPROM.");
+  add("getLabel", &Eeprom::getLabel,
+      "function():string -- Get the label of the EEPROM.");
+  add("setLabel", &Eeprom::setLabel,
+      "function(data:string):string -- Set the label of the EEPROM.");
+  add("getChecksum", &Eeprom::getChecksum,
+      "function():string -- Get the checksum of the data on this EEPROM.");
 }
 
 bool Eeprom::onInitialize()

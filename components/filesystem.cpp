@@ -231,24 +231,42 @@ Filesystem::Filesystem()
     : _isReadOnly(true)
     , _tmpfs(false)
 {
-  add("open", &Filesystem::open);
-  add("read", &Filesystem::read);
-  add("write", &Filesystem::write);
-  add("close", &Filesystem::close);
-  add("getLabel", &Filesystem::getLabel);
-  add("setLabel", &Filesystem::setLabel);
-  add("list", &Filesystem::list);
-  add("isDirectory", &Filesystem::isDirectory);
-  add("exists", &Filesystem::exists);
-  add("isReadOnly", &Filesystem::isReadOnly);
-  add("seek", &Filesystem::seek);
-  add("size", &Filesystem::size);
-  add("lastModified", &Filesystem::lastModified);
-  add("spaceUsed", &Filesystem::spaceUsed);
-  add("spaceTotal", &Filesystem::spaceTotal);
-  add("remove", &Filesystem::remove);
-  add("makeDirectory", &Filesystem::makeDirectory);
-  add("rename", &Filesystem::rename);
+  add("open", &Filesystem::open,
+      "function(path:string[, mode:string='r']):userdata -- Opens a new file descriptor and returns its handle.");
+  add("read", &Filesystem::read,
+      "function(handle:userdata, count:number):string or nil -- Reads up to the specified amount of data from an open file descriptor with the specified handle. Returns nil when EOF is reached.");
+  add("write", &Filesystem::write,
+      "function(handle:userdata, value:string):boolean -- Writes the specified data to an open file descriptor with the specified handle.");
+  add("close", &Filesystem::close,
+      "function(handle:userdata) -- Closes an open file descriptor with the specified handle.");
+  add("getLabel", &Filesystem::getLabel,
+      "function():string -- Get the current label of the drive.");
+  add("setLabel", &Filesystem::setLabel,
+      "function(value:string):string -- Sets the label of the drive. Returns the new value, which may be truncated.");
+  add("list", &Filesystem::list,
+      "function(path:string):table -- Returns a list of names of objects in the directory at the specified absolute path in the file system.");
+  add("isDirectory", &Filesystem::isDirectory,
+      "function(path:string):boolean -- Returns whether the object at the specified absolute path in the file system is a directory.");
+  add("exists", &Filesystem::exists,
+      "function(path:string):boolean -- Returns whether an object exists at the specified absolute path in the file system.");
+  add("isReadOnly", &Filesystem::isReadOnly,
+      "function():boolean -- Returns whether the file system is read-only.");
+  add("seek", &Filesystem::seek,
+      "function(handle:userdata, whence:string, offset:number):number -- Seeks in an open file descriptor with the specified handle. Returns the new pointer position.");
+  add("size", &Filesystem::size,
+      "function(path:string):number -- Returns the size of the object at the specified absolute path in the file system.");
+  add("lastModified", &Filesystem::lastModified,
+      "function(path:string):number -- Returns the (real world) timestamp of when the object at the specified absolute path in the file system was modified.");
+  add("spaceUsed", &Filesystem::spaceUsed,
+      "function():number -- The currently used capacity of the file system, in bytes.");
+  add("spaceTotal", &Filesystem::spaceTotal,
+      "function():number -- The overall capacity of the file system, in bytes.");
+  add("remove", &Filesystem::remove,
+      "function(path:string):boolean -- Removes the object at the specified absolute path in the file system.");
+  add("makeDirectory", &Filesystem::makeDirectory,
+      "function(path:string):boolean -- Creates a directory at the specified absolute path in the file system. Creates parent directories, if necessary.");
+  add("rename", &Filesystem::rename,
+      "function(from:string, to:string):boolean -- Renames/moves an object from the first specified absolute path in the file system to the second.");
 }
 
 bool Filesystem::onInitialize()
