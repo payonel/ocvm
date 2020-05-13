@@ -30,7 +30,6 @@ public:
   int isWireless(lua_State*);
   int close(lua_State*);
   int getWakeMessage(lua_State*);
-  int maxPacketSize(lua_State*);
   int isOpen(lua_State*);
   int broadcast(lua_State*);
   int send(lua_State*);

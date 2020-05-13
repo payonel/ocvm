@@ -17,7 +17,6 @@ Modem::Modem()
   add("isWireless", &Modem::isWireless);
   add("close", &Modem::close);
   add("getWakeMessage", &Modem::getWakeMessage);
-  add("maxPacketSize", &Modem::maxPacketSize);
   add("isOpen", &Modem::isOpen);
   add("broadcast", &Modem::broadcast);
   add("send", &Modem::send);
@@ -181,11 +180,6 @@ int Modem::close(lua_State* lua)
 int Modem::getWakeMessage(lua_State* lua)
 {
   return ValuePack::ret(lua, Value::nil, "not supported");
-}
-
-int Modem::maxPacketSize(lua_State* lua)
-{
-  return ValuePack::ret(lua, _maxPacketSize);
 }
 
 int Modem::isOpen(lua_State* lua)
