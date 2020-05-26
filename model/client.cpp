@@ -242,7 +242,7 @@ int Client::component_invoke(lua_State* lua)
 
   int stacked = pc->invoke(methodName, lua);
   lua_pushboolean(lua, true);
-  lua_rotate(lua, 1, 1);
+  lua_insert(lua, 1);
   return stacked + 1;
 }
 
