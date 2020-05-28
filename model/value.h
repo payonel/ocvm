@@ -18,32 +18,20 @@ class Value
 {
 public:
   Value(const vector<char>& v);
-  Value(const string& v)
-      : Value(vector<char>(v.begin(), v.end()))
-  {
-  }
+  Value(const string& v) : Value(vector<char>(v.begin(), v.end())) {}
   Value(bool b);
   Value(double d);
   Value(const void* p, bool bLight);
-  Value(int n)
-      : Value(size_t(n))
-  {
-  }
-  Value(const char* cstr)
-      : Value(string(cstr))
-  {
-  }
-  Value(int64_t n)
-      : Value(size_t(n))
-  {
-  }
-  Value(unsigned int n)
-      : Value(size_t(n))
-  {
-  }
-  Value(size_t n);
+  Value(const char* cstr) : Value(string(cstr)) {}
+
+  Value(uint64_t n);
+  Value(int64_t n) : Value(uint64_t(n)) {}
+  Value(uint32_t n) : Value(uint64_t(n)) {}
+  Value(int32_t n) : Value(uint64_t(n)) {}
+
   Value(lua_State*);
   Value(lua_State*, int);
+
   Value();
 
   static string stack(lua_State* state);

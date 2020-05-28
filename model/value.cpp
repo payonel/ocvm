@@ -157,7 +157,7 @@ Value::Value(bool b)
   _bool = b;
 }
 
-Value::Value(size_t n)
+Value::Value(uint64_t n)
 {
   _id = LUA_TNUMBER;
   _type = "number";

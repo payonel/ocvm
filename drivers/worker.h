@@ -14,7 +14,7 @@ public:
   ~NiceWork();
 
 private:
-  std::atomic_bool _work_done = false;
+  std::atomic_bool _work_done { false };
 };
 
 class Worker
