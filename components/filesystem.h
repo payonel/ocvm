@@ -1,6 +1,5 @@
 #pragma once
 #include "component.h"
-#include "model/value.h"
 
 #include <fstream>
 #include <set>
