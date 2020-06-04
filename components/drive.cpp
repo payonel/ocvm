@@ -87,7 +87,7 @@ int Drive::getLabel(lua_State* lua)
 
 int Drive::writeSector(lua_State* lua)
 {
-  int sector = Value::checkArg<int>(lua, 1);
+  int sector = Value::checkArg<int>(lua, 1) - 1;
   std::vector<char> data = Value::checkArg<std::vector<char>>(lua, 2);
   validateSector(lua, sector);
   data.resize(getSectorSize());
