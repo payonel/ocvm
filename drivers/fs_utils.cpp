@@ -245,6 +245,22 @@ bool fs_utils::rename(const string& from, const string& to)
   return ec.value() == 0;
 }
 
+bool fs_utils::resize(const string& path, int size)
+{
+  if (size < 0)
+  {
+    return false;
+  }
+  if (static_cast<uintmax_t>(size) > std::numeric_limits<uintmax_t>::max())
+  {
+    return false;
+  }
+
+  error_code ec;
+  fs::resize_file(path, size, ec);
+  return ec.value() == 0;
+}
+
 void fs_utils::set_prog_name(const string& prog_name)
 {
   g_prog_name = prog_name;

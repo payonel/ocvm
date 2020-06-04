@@ -26,6 +26,7 @@ uint64_t lastModified(const string& path);
 
 bool remove(const string& path);
 bool rename(const string& from, const string& to);
+bool resize(const string& path, int size);
 
 bool run_safely(function<void()> func, function<void(const string&)> onError = nullptr);
 
