@@ -4,11 +4,15 @@
 // Lua header files for C++
 // <<extern "C">> not supplied automatically because Lua also compiles as C++
 
+#if __has_include("lua.hpp")
+#include <lua.hpp>
+#else
 extern "C" {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 }
+#endif
 
 #undef NEDBUG
 #include <cassert>
