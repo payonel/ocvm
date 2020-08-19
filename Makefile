@@ -2,6 +2,9 @@ ifeq ($(lua),)
 	lua=5.2
 endif
 
+WGET_PATH = $(shell which wget)
+WGET_OPTS = -O
+
 TARGET_EXEC ?= ocvm
 
 INC_DIRS ?= ./
@@ -40,7 +43,13 @@ ifeq ($(shell uname -s 2>/dev/null),Haiku)
 	SRCS+=$(wildcard $(SRC_DIRS)haiku/*.cpp)
 endif
 
-ifeq (, $(shell which wget))
+ifeq ($(shell uname -s 2>/dev/null), FreeBSD)
+	WGET_PATH = $(shell which fetch)
+	WGET_OPTS = -o 
+	CXX = g++
+endif
+
+ifeq (, $(WGET_PATH))
 	SRCS := $(filter-out $(SRC_DIRS)drivers/internet_http.cpp,$(SRCS))
 endif
 
@@ -64,10 +73,10 @@ system/.keep:
 	@echo Downloading OpenComputers system files
 	mkdir -p system
 	touch system/.keep
-	command -v svn && svn checkout https://github.com/MightyPirates/OpenComputers/trunk/src/main/resources/assets/opencomputers/loot system/loot || echo "\n\e[36;1mwarning: svn not found. The build will continue, you can manually prepare \`.system/\`\e[m\n"
-	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/machine.lua -O system/machine.lua
-	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/bios.lua -O system/bios.lua
-	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/font.hex -O system/font.hex
+	@command -v svn && svn checkout https://github.com/MightyPirates/OpenComputers/trunk/src/main/resources/assets/opencomputers/loot system/loot || echo "\n\e[36;1mwarning: svn not found. The build will continue, you can manually prepare \`.system/\`\e[m\n"
+	$(WGET_PATH) https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/machine.lua $(WGET_OPTS) system/machine.lua
+	$(WGET_PATH) https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/bios.lua $(WGET_OPTS) system/bios.lua
+	$(WGET_PATH) https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/font.hex $(WGET_OPTS) system/font.hex
 
 .PHONY: clean
 

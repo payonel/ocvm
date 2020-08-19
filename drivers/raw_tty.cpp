@@ -25,6 +25,10 @@
 #define KDSKBMODE 0x4B45 /* sets current keyboard mode */
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/kbio.h> /* KDGKBMODE and KDSKBMODE */
+#endif
+
 #include <signal.h>
 #include <string.h> // memset
 #include <time.h>

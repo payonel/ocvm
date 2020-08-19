@@ -12,6 +12,11 @@ using std::ofstream;
 #include <mach-o/dyld.h>
 #endif
 
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
+
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -300,6 +305,11 @@ string proc_root()
     auto len = path.size();
     auto reduced = len < size ? len : size;
     ::memcpy(buf, path.data(), reduced);
+#elif __FreeBSD__
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+    size_t len = sizeof(buf);
+    sysctl(mib, 4, buf, &len, NULL, 0);
+
 #else
     ssize_t len = ::readlink("/proc/self/exe", buf, size);
     if (len >= size) // yikes, abort
@@ -311,6 +321,7 @@ string proc_root()
 
     buf[len] = 0;
     path = buf;
+    cerr << path << endl;
 
     // remove proc file name
     size_t last_slash = path.find_last_of("/");
