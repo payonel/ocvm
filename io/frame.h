@@ -37,7 +37,7 @@ class Frame
 protected:
   // REQUIRED PURE VIRTUALS
   // this is called when the emulator wants you to render text in your window
-  virtual void onWrite(int x, int y, const Cell& cell) = 0;
+  virtual void onWrite(int x, int y, const Cell& cell, ColorState& cst) = 0;
 
   // It is required to return the initial size of the window from onOpen
   // If the user later changes the size of the window ...
@@ -94,7 +94,7 @@ public:
   bool update();
 
   // called by the gpu
-  void write(int x, int y, const Cell& cell);
+  void write(int x, int y, const Cell& cell, ColorState& _cst);
   void clear();
 
   // size is updated by calling winched

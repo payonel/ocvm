@@ -495,7 +495,7 @@ int Gpu::set(int x, int y, const Cell& cell, bool bForce)
           pNext->locked = false;
       }
       if (_screen)
-        _screen->frame()->write(x, y, cell);
+        _screen->frame()->write(x, y, cell, _color_state);
       *pCell = cell;
     }
   }
@@ -592,7 +592,7 @@ void Gpu::invalidate()
   {
     for (int x = 1; x <= _width; x++)
     {
-      _screen->frame()->write(x, y, *get(x, y));
+      _screen->frame()->write(x, y, *get(x, y), _color_state);
     }
   }
 }
