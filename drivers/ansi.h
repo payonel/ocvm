@@ -1,5 +1,6 @@
 #pragma once
 
+#include "color/color_types.h"
 #include <string>
 #include <vector>
 using std::string;
@@ -27,6 +28,6 @@ static const string save_pos = esc + "s";
 static const string restore_pos = esc + "u";
 static const string color_reset = esc + "0m";
 
-string set_color(const Color& fg, const Color& bg);
+string set_color(const Color& fg, const Color& bg, ColorState& cst);
 string set_pos(int x, int y);
 };

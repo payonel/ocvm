@@ -386,10 +386,15 @@ int Gpu::setColorContext(lua_State* lua, bool bBack)
   }
 
   auto& ref = bBack ? _bg : _fg;
+
+  // store these here - otherwise we get incorrect return values
+  int orgb = ref.rgb;
+  bool opaletted = ref.paletted;
+
   auto ctx = makeColorContext(ref);
   ref = { rgb, p };
 
-  return ValuePack::ret(lua, std::get<0>(ctx), std::get<1>(ctx));
+  return ValuePack::ret(lua, orgb, opaletted);
 }
 
 int Gpu::getColorAssignment(lua_State* lua, bool bBack)
@@ -495,7 +500,7 @@ int Gpu::set(int x, int y, const Cell& cell, bool bForce)
           pNext->locked = false;
       }
       if (_screen)
-        _screen->frame()->write(x, y, cell);
+        _screen->frame()->write(x, y, cell, _color_state);
       *pCell = cell;
     }
   }
@@ -592,7 +597,7 @@ void Gpu::invalidate()
   {
     for (int x = 1; x <= _width; x++)
     {
-      _screen->frame()->write(x, y, *get(x, y));
+      _screen->frame()->write(x, y, *get(x, y), _color_state);
     }
   }
 }

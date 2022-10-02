@@ -12,7 +12,7 @@ public:
   virtual ~AnsiEscapeTerm();
 
 protected:
-  void onWrite(int x, int y, const Cell& cell) override;
+  void onWrite(int x, int y, const Cell& cell, ColorState& cst) override;
   virtual tuple<int, int> onOpen() override;
   void onUpdate() override;
   void onClose() override;

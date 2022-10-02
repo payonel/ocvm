@@ -119,7 +119,7 @@ string AnsiEscapeTerm::scrub(const string& value) const
   return replace_all(value, "\t", string{ (char)226, (char)144, (char)137, ' ' });
 }
 
-void AnsiEscapeTerm::onWrite(int x, int y, const Cell& cell)
+void AnsiEscapeTerm::onWrite(int x, int y, const Cell& cell, ColorState& cst)
 {
   string cmd = "";
   if (x != _x || y != _y)
@@ -134,7 +134,7 @@ void AnsiEscapeTerm::onWrite(int x, int y, const Cell& cell)
     }
   }
   if (cell.fg.rgb != _fg_rgb || cell.bg.rgb != _bg_rgb)
-    cmd += Ansi::set_color(cell.fg, cell.bg);
+    cmd += Ansi::set_color(cell.fg, cell.bg, cst);
 
   string text = scrub(cell.value);
   cout << cmd << text;
