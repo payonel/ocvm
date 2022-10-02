@@ -1,5 +1,5 @@
 ifeq ($(lua),)
-	lua=5.3
+	lua=5.2
 endif
 
 TARGET_EXEC ?= ocvm
