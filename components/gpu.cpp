@@ -386,10 +386,15 @@ int Gpu::setColorContext(lua_State* lua, bool bBack)
   }
 
   auto& ref = bBack ? _bg : _fg;
+
+  // store these here - otherwise we get incorrect return values
+  int orgb = ref.rgb;
+  bool opaletted = ref.paletted;
+
   auto ctx = makeColorContext(ref);
   ref = { rgb, p };
 
-  return ValuePack::ret(lua, std::get<0>(ctx), std::get<1>(ctx));
+  return ValuePack::ret(lua, orgb, opaletted);
 }
 
 int Gpu::getColorAssignment(lua_State* lua, bool bBack)
