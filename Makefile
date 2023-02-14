@@ -11,8 +11,8 @@ ifneq ($(luapath),)
 	LDFLAGS?=${luapath}/liblua.a
 	INC_FLAGS+=-I${luapath}
 else
-	LDFLAGS?=$(shell pkg-config lua$(lua) --libs 2>/dev/null || pkg-config lua5.3 --libs 2>/dev/null || echo -llua5.2)
-	INC_FLAGS+=$(shell pkg-config lua$(lua) --cflags 2>/dev/null || pkg-config lua5.3 --cflags 2>/dev/null || echo -I/usr/include/lua5.2)
+	LDFLAGS?=$(shell pkg-config lua$(lua) --libs 2>/dev/null || echo -llua$(lua))
+	INC_FLAGS+=$(shell pkg-config lua$(lua) --cflags 2>/dev/null || echo -I/usr/include/lua$(lua))
 endif
 
 ifneq ($(prof),)
