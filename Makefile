@@ -1,5 +1,5 @@
 ifeq ($(lua),)
-	lua=5.2
+	lua=5.4
 endif
 
 TARGET_EXEC ?= ocvm
@@ -11,8 +11,8 @@ ifneq ($(luapath),)
 	LDFLAGS?=${luapath}/liblua.a
 	INC_FLAGS+=-I${luapath}
 else
-	LDFLAGS?=$(shell pkg-config lua$(lua) --libs 2>/dev/null || pkg-config lua5.3 --libs 2>/dev/null || echo -llua5.2)
-	INC_FLAGS+=$(shell pkg-config lua$(lua) --cflags 2>/dev/null || pkg-config lua5.3 --cflags 2>/dev/null || echo -I/usr/include/lua5.2)
+	LDFLAGS?=$(shell pkg-config lua$(lua) --libs 2>/dev/null || pkg-config lua5.4 --libs 2>/dev/null || pkg-config lua5.3 --libs 2>/dev/null || pkg-config lua5.2 --libs 2>/dev/null)
+	INC_FLAGS+=$(shell pkg-config lua$(lua) --cflags 2>/dev/null || pkg-config lua5.4 --cflags 2>/dev/null || pkg-config lua5.3 --cflags 2>/dev/null || pkg-config lua5.2 --cflags 2>/dev/null)
 endif
 
 ifneq ($(prof),)
