@@ -50,7 +50,7 @@ DEPS := $(OBJS:.o=.d)
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -Wall -g --std=c++17 -O0 -Wl,--no-as-needed
 
-$(TARGET_EXEC): $(OBJS) system/.keep
+$(TARGET_EXEC): $(OBJS) system
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
 	@echo done
 
@@ -60,11 +60,14 @@ $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-system/.keep:
+system:
 	@echo Downloading OpenComputers system files
-	mkdir -p system
-	touch system/.keep
-	command -v svn && svn checkout https://github.com/MightyPirates/OpenComputers/trunk/src/main/resources/assets/opencomputers/loot system/loot || echo "\n\e[36;1mwarning: svn not found. The build will continue, you can manually prepare \`.system/\`\e[m\n"
+
+	git clone -n --depth=1 --filter=tree:0 https://github.com/MightyPirates/OpenComputers/ system/
+	cd system; git sparse-checkout set --no-cone /src/main/resources/assets/opencomputers/loot/; git checkout
+	mv system/src/main/resources/assets/opencomputers/loot/ system/
+	rm -r system/src/
+
 	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/machine.lua -O system/machine.lua
 	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/bios.lua -O system/bios.lua
 	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/font.hex -O system/font.hex
@@ -72,4 +75,4 @@ system/.keep:
 .PHONY: clean
 
 clean:
-	$(RM) -r $(BUILD_DIR) $(TARGET_EXEC) $(TARGET_EXEC)-profiled
+	$(RM) -r $(BUILD_DIR) $(TARGET_EXEC) $(TARGET_EXEC)-profiled system/
