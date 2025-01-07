@@ -1,24 +1,19 @@
-ifeq ($(lua),)
-	lua=5.2
-endif
+lua ?= lua
 
 TARGET_EXEC ?= ocvm
+OPENCOMPUTERS=https://github.com/MightyPirates/OpenComputers/
 
-INC_DIRS ?= ./
-INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+LUA_CFLAGS  := $(shell pkg-config --cflags $(lua) --silence-errors)
+LUA_LDFLAGS := $(shell pkg-config --libs $(lua) --silence-errors)
 
-ifneq ($(luapath),)
-	LDFLAGS?=${luapath}/liblua.a
-	INC_FLAGS+=-I${luapath}
-else
-	LDFLAGS?=$(shell pkg-config lua$(lua) --libs 2>/dev/null || pkg-config lua5.3 --libs 2>/dev/null || echo -llua5.2)
-	INC_FLAGS+=$(shell pkg-config lua$(lua) --cflags 2>/dev/null || pkg-config lua5.3 --cflags 2>/dev/null || echo -I/usr/include/lua5.2)
+ifeq ($(strip $(LUA_CFLAGS) $(LUA_LDFLAGS)),)
+    $(error "ERROR: pkg-config failed to find lua package: '$(lua)'")
 endif
 
-ifneq ($(prof),)
-	LDFLAGS+=-L../gperftools-2.5/.libs/ -lprofiler
-	TARGET_EXEC:=$(TARGET_EXEC)-profiled
-endif
+HOST=$(shell uname -s)
+
+ldflags.Haiku = -lnetwork
+dirs.Haiku    = haiku
 
 LDFLAGS+=-lstdc++
 ifeq ($(shell uname -s 2>/dev/null),Haiku)
@@ -27,49 +22,55 @@ else
 	LDFLAGS+=-lstdc++fs -pthread -ldl
 endif
 
-SRC_DIRS ?= ./
-SRCS=$(wildcard $(SRC_DIRS)*.cpp)
-SRCS+=$(wildcard $(SRC_DIRS)apis/*.cpp)
-SRCS+=$(wildcard $(SRC_DIRS)color/*.cpp)
-SRCS+=$(wildcard $(SRC_DIRS)components/*.cpp)
-SRCS+=$(wildcard $(SRC_DIRS)drivers/*.cpp)
-SRCS+=$(wildcard $(SRC_DIRS)io/*.cpp)
-SRCS+=$(wildcard $(SRC_DIRS)model/*.cpp)
-SRCS+=$(wildcard $(SRC_DIRS)util/*.cpp)
-ifeq ($(shell uname -s 2>/dev/null),Haiku)
-	SRCS+=$(wildcard $(SRC_DIRS)haiku/*.cpp)
-endif
+SRC_DIRS = . apis color components drivers io model util $(dirs.$(HOST))
+SRCS = $(foreach dir, $(SRC_DIRS), $(wildcard $(dir)/*.cpp))
 
-ifeq (, $(shell which wget))
-	SRCS := $(filter-out $(SRC_DIRS)drivers/internet_http.cpp,$(SRCS))
-endif
+CXXFLAGS += $(LUA_CFLAGS)
+CXXFLAGS += -MMD -MP -Wall -g --std=c++17 -O0 -Wl,--no-as-needed
+CXXFLAGS += $(addprefix -I,$(SRC_DIRS))
+LDFLAGS  += $(LUA_LDFLAGS) $(ldflags.$(HOST))
+
+SYSTEM_DIR := system
+SYSTEM_FILES := $(SYSTEM_DIR)/
 
 BUILD_DIR ?= ./bin
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CPPFLAGS ?= $(INC_FLAGS) -MMD -MP -Wall -g --std=c++17 -O0 -Wl,--no-as-needed
-
-$(TARGET_EXEC): $(OBJS) system/.keep
+$(TARGET_EXEC): $(OBJS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
-	@echo done
 
-# c++ source
 -include $(DEPS)
 $(BUILD_DIR)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-system/.keep:
-	@echo Downloading OpenComputers system files
-	mkdir -p system
-	touch system/.keep
-	command -v svn && svn checkout https://github.com/MightyPirates/OpenComputers/trunk/src/main/resources/assets/opencomputers/loot system/loot || echo "\n\e[36;1mwarning: svn not found. The build will continue, you can manually prepare \`.system/\`\e[m\n"
-	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/machine.lua -O system/machine.lua
-	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/bios.lua -O system/bios.lua
-	wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/font.hex -O system/font.hex
+deps:
+	@if ! command -v git >/dev/null; then \
+		echo deps cancelled: 'make deps' requires 'git' command. Aborting \
+		false; \
+	fi
+	@if [ -d $(SYSTEM_DIR) ]; then \
+		echo deps skipped: ./$(SYSTEM_DIR) already exists. To redownload system files, remove ./$(SYSTEM_DIR) and run 'make deps' again; \
+	else \
+		set -e; \
+		mkdir -p $(SYSTEM_DIR); \
+		cd $(SYSTEM_DIR); \
+		git clone -n --depth=1 --filter=tree:0 $(OPENCOMPUTERS); \
+		cd OpenComputers; \
+		git sparse-checkout set --no-cone /src/main/resources/assets/opencomputers/ && git checkout; \
+		set -x; \
+		mv src/main/resources/assets/opencomputers/loot ../; \
+		mv src/main/resources/assets/opencomputers/lua/machine.lua ../; \
+		mv src/main/resources/assets/opencomputers/lua/bios.lua ../; \
+		mv src/main/resources/assets/opencomputers/font.hex ../; \
+		cd ../..; \
+		rm -rf $(SYSTEM_DIR)/OpenComputers; \
+	fi
 
-.PHONY: clean
+help:
+	@echo See README.md for build instructions
+	@echo Likely all you need is: make deps \$$\$$ make
 
 clean:
-	$(RM) -r $(BUILD_DIR) $(TARGET_EXEC) $(TARGET_EXEC)-profiled
+	$(RM) -r $(BUILD_DIR) $(TARGET_EXEC)

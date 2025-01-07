@@ -22,23 +22,27 @@ But this should be a lot of fun!
 
 **How to Build**
 
-Just run `make` in the source root. If successful, you should have a `ocvm` binary. Run it using `./ocvm`
+Run `make deps` at least once to download OpenComputers machine system files. These files are cached and not deleted by `make clean`. Delete the temporary `system` directory manually if you want `make deps` to redownload them
 
-There are some requirements for building:
-1. svn: The Makefile will download OpenComputers source files
-    If you do have svn available, or prefer to prepare the system/ dir by hand, from the source root:
-    1. mkdir system
-    2. `wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/machine.lua -O system/machine.lua`
-    3. `wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/lua/bios.lua -O system/bios.lua`
-    4. `wget https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.7.10/src/main/resources/assets/opencomputers/font.hex -O system/font.hex`
+Run `make` to build
 
-2. g++ 5.4 with c++14 support (experimental/filesystem is used)
-3. lua5.2 (`make lua=5.3` to use lua5.3)
+Run `./ocvm`
+
+1. tools required: c++ compiler and lua sdk files
+2. c++17 support
+3. pkg-config defaults to `lua`. If your system has a different lua pkg name, you can override the default with `make lua=lua5.3`. If you are unsure, see your systems lua packages with `pkg-config --list-all`.
 4. A vt100 compatible terminal
+
+**Custom Build Overrides**
+
+* lua=lua
+  - You can override the lua pkg config with 'lua' environment variable: e.g. `make lua=lua5.2`
+
+* CXX=g++
+  - You can override the lua pkg config with 'lua' environment variable: e.g. `make CXX=g++-12`
 
 **Future Scope**
 
-I plan to add support for building ocvm on Mac using boost filesystem and clang+llvm
-
+I plan to add support for building ocvm on Mac using boost filesystem
 I do not plan to add support for non-ansi terminals nor windows. If this works in cygwin it wasn't on purpose
 
