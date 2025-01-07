@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <cstdint>
 using std::function;
 using std::string;
 using std::vector;
