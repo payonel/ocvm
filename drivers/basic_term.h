@@ -5,6 +5,6 @@
 class BasicTerm : public Frame
 {
 protected:
-  void onWrite(int x, int y, const Cell& cell) override;
+  void onWrite(int x, int y, const Cell& cell, ColorState& cst) override;
   tuple<int, int> onOpen() override;
 };

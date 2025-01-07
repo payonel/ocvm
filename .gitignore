@@ -3,3 +3,4 @@ ocvm**
 system/**
 /log
 stack.log
+tmp/**

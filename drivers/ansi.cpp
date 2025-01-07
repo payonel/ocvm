@@ -32,17 +32,36 @@ static const unsigned char oc_to_ansi[256] =
 };
 // clang-format on
 
-string to_ansi(unsigned char deflated_rgb, bool foreground)
+string to_ansi_deflated(unsigned char deflated_rgb, bool foreground)
 {
   stringstream ss;
   ss << (foreground ? "3" : "4") << "8;5;" << (int)oc_to_ansi[deflated_rgb];
   return ss.str();
 }
 
-string Ansi::set_color(const Color& fg, const Color& bg)
+string to_ansi_rgb(int rgb, bool foreground)
 {
-  string fg_txt = to_ansi(fg.code, true);
-  string bg_txt = to_ansi(bg.code, false);
+  stringstream ss;
+  ss << (foreground ? "3" : "4") << "8;2;" << (int)((rgb >> 16) & 0xFF) << ";" << (int)((rgb >> 8) & 0xFF) << ";" << (int)(rgb & 0xFF);
+  return ss.str();
+}
+
+string to_ansi(const Color& col, bool foreground, ColorState& cst)
+{
+  if (col.paletted)
+  {
+    return to_ansi_rgb(cst.palette[col.rgb], foreground);
+  }
+  else
+  {
+    return to_ansi_deflated(col.code, foreground);
+  }
+}
+
+string Ansi::set_color(const Color& fg, const Color& bg, ColorState& cst)
+{
+  string fg_txt = to_ansi(fg, true, cst);
+  string bg_txt = to_ansi(bg, false, cst);
 
   return esc + fg_txt + ";" + bg_txt + "m";
 }

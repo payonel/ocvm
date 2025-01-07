@@ -1,7 +1,7 @@
 #include "basic_term.h"
 #include <iostream>
 
-void BasicTerm::onWrite(int x, int y, const Cell& cell)
+void BasicTerm::onWrite(int x, int y, const Cell& cell, ColorState& cst)
 {
   std::cout << cell.value;
 }

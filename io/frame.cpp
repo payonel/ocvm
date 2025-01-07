@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "color/color_types.h"
 
 Frame::~Frame()
 {
@@ -29,11 +30,11 @@ void Frame::close()
   _screen = nullptr;
 }
 
-void Frame::write(int x, int y, const Cell& cell)
+void Frame::write(int x, int y, const Cell& cell, ColorState& cst)
 {
   if (cell.locked || !on())
     return;
-  onWrite(x, y, cell);
+  onWrite(x, y, cell, cst);
 }
 
 tuple<int, int> Frame::size() const
